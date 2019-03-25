@@ -14,7 +14,7 @@ find_package(gazebo REQUIRED)
 link_directories(${GAZEBO_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${PCL_LIBRARY_DIRS})
 
-add_library(${PROJECT_NAME} src/plugin.cc)
+add_library(${PROJECT_NAME} src/pongbotq_plugin.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 catkin_package(
 #   INCLUDE_DIRS include

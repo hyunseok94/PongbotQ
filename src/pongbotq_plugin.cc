@@ -14,7 +14,7 @@
 namespace gazebo                          
 {
 
-class PIDJoints : public ModelPlugin             
+class PongBotQ_plugin : public ModelPlugin             
   {
     
     physics::LinkPtr REAR_BODY;    
@@ -153,7 +153,7 @@ class PIDJoints : public ModelPlugin
       
      //setting for getting dt
       this->last_update_time = this->model->GetWorld()->GetSimTime();
-      this->update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&PIDJoints::UpdatePID, this));
+      this->update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&PongBotQ_plugin::UpdateAlgorithm, this));
 
       //setting for IMU sensor
       this->Sensor = sensors::get_sensor("IMU");
@@ -166,39 +166,43 @@ class PIDJoints : public ModelPlugin
       P_angular_velocity_z = n.advertise<std_msgs::Float64>("angular_velocity_z",1);
       ros::Rate loop_rate(1000);
   }
-    void UpdatePID()
-    {
-      //setting for getting dt  
-      common::Time current_time = this->model->GetWorld()->GetSimTime();
-      dt = current_time.Double() - this->last_update_time.Double();
-      time=time+dt;
-      
-      //getting angular_velocity and linear acceleration.
-      angular_velocity_x = this->IMU->AngularVelocity(false)[0];
-      angular_velocity_y = this->IMU->AngularVelocity(false)[1];
-      angular_velocity_z = this->IMU->AngularVelocity(false)[2];
-      linear_acc_x = this->IMU->LinearAcceleration(false)[0];
-      linear_acc_y = this->IMU->LinearAcceleration(false)[1];
-      linear_acc_z = this->IMU->LinearAcceleration(false)[2];
-       
-     //Apply force to joint
-      this->FL_ROTATOR1_JOINT->SetForce(1,10);
-      //this->FL_ROTATOR1_JOINT->SetForce(1,10);
-
-
-    //setting for getting dt
-      this->last_update_time = current_time;
-      
-    //getting readable angular_velocity data
-      m_Times.data = current_time.Double();
-      m_angular_velocity_x.data = angular_velocity_x;
-      m_angular_velocity_y.data = angular_velocity_y;
-      m_angular_velocity_z.data = angular_velocity_z;
-      P_Times.publish(m_Times);
-      P_angular_velocity_x.publish(m_angular_velocity_x);
-      P_angular_velocity_y.publish(m_angular_velocity_y);
-      P_angular_velocity_z.publish(m_angular_velocity_z);
-    }
+  void UpdateAlgorithm();
   };
-    GZ_REGISTER_MODEL_PLUGIN(PIDJoints);
+    GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
+}
+
+
+void gazebo::PongBotQ_plugin::UpdateAlgorithm()
+{ //* Writing realtime code here!!
+  
+  //setting for getting dt  
+  common::Time current_time = this->model->GetWorld()->GetSimTime();
+  dt = current_time.Double() - this->last_update_time.Double();
+  time=time+dt;
+
+  //getting angular_velocity and linear acceleration.
+  angular_velocity_x = this->IMU->AngularVelocity(false)[0];
+  angular_velocity_y = this->IMU->AngularVelocity(false)[1];
+  angular_velocity_z = this->IMU->AngularVelocity(false)[2];
+  linear_acc_x = this->IMU->LinearAcceleration(false)[0];
+  linear_acc_y = this->IMU->LinearAcceleration(false)[1];
+  linear_acc_z = this->IMU->LinearAcceleration(false)[2];
+
+ //Apply force to joint
+  this->FL_ROTATOR1_JOINT->SetForce(1,10);
+  //this->FL_ROTATOR1_JOINT->SetForce(1,10);
+
+
+//setting for getting dt
+  this->last_update_time = current_time;
+
+//getting readable angular_velocity data
+  m_Times.data = current_time.Double();
+  m_angular_velocity_x.data = angular_velocity_x;
+  m_angular_velocity_y.data = angular_velocity_y;
+  m_angular_velocity_z.data = angular_velocity_z;
+  P_Times.publish(m_Times);
+  P_angular_velocity_x.publish(m_angular_velocity_x);
+  P_angular_velocity_y.publish(m_angular_velocity_y);
+  P_angular_velocity_z.publish(m_angular_velocity_z);
 }
