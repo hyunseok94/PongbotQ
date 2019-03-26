@@ -26,120 +26,132 @@ using namespace RigidBodyDynamics::Math;
 namespace gazebo                          
 {
 
-class PongBotQ_plugin : public ModelPlugin             
-  {
-    
-    physics::LinkPtr REAR_BODY;    
-    physics::LinkPtr FRONT_BODY;
-    physics::LinkPtr FL_HIP;
-    physics::LinkPtr FL_THIGH;
-    physics::LinkPtr FL_ROTATOR1;
-    physics::LinkPtr FL_ROTATOR2;
-    physics::LinkPtr FL_ROTATOR3;
-    physics::LinkPtr FR_HIP;
-    physics::LinkPtr FR_THIGH;
-    physics::LinkPtr FR_ROTATOR1;
-    physics::LinkPtr FR_ROTATOR2;
-    physics::LinkPtr FR_ROTATOR3;
-    physics::LinkPtr RL_HIP;
-    physics::LinkPtr RL_THIGH;
-    physics::LinkPtr RL_ROTATOR1;
-    physics::LinkPtr RL_ROTATOR2;
-    physics::LinkPtr RL_ROTATOR3;
-    physics::LinkPtr RR_HIP;
-    physics::LinkPtr RR_THIGH;
-    physics::LinkPtr RR_ROTATOR1;
-    physics::LinkPtr RR_ROTATOR2;
-    physics::LinkPtr RR_ROTATOR3;
-
-    physics::JointPtr WAIST_JOINT;                     
-    physics::JointPtr FL_HIP_JOINT;
-    physics::JointPtr FL_THIGH_JOINT;
-    physics::JointPtr FL_ROTATOR1_JOINT;
-    physics::JointPtr FL_ROTATOR2_JOINT;                     
-    physics::JointPtr FL_ROTATOR3_JOINT;
-    physics::JointPtr FR_HIP_JOINT;
-    physics::JointPtr FR_THIGH_JOINT;
-    physics::JointPtr FR_ROTATOR1_JOINT;
-    physics::JointPtr FR_ROTATOR2_JOINT;                     
-    physics::JointPtr FR_ROTATOR3_JOINT;
-    physics::JointPtr RL_HIP_JOINT;
-    physics::JointPtr RL_THIGH_JOINT;
-    physics::JointPtr RL_ROTATOR1_JOINT;
-    physics::JointPtr RL_ROTATOR2_JOINT;                     
-    physics::JointPtr RL_ROTATOR3_JOINT;
-    physics::JointPtr RR_HIP_JOINT;
-    physics::JointPtr RR_THIGH_JOINT;
-    physics::JointPtr RR_ROTATOR1_JOINT;
-    physics::JointPtr RR_ROTATOR2_JOINT;                     
-    physics::JointPtr RR_ROTATOR3_JOINT;
-    physics::ModelPtr model;
-    
-    //  PID
-    common::PID pid_FL_HR, pid_FL_HP, pid_FL_KN;
-    common::PID pid_FR_HR, pid_FR_HP, pid_FR_KN;
-    common::PID pid_RL_HR, pid_RL_HP, pid_RL_KN;
-    common::PID pid_RR_HR, pid_RR_HP, pid_RR_KN;
-    common::PID pid_WAIST;
-    
-    //setting for getting <dt>(=derivative time) 
-    common::Time last_update_time;
-    event::ConnectionPtr update_connection; 
-    double dt; 
-    double time=0;
-    
-   //setting for IMU sensor
-    sensors::SensorPtr Sensor;
-    sensors::ImuSensorPtr IMU;
-    double IMU_Update;
-    double angular_velocity_x;
-    double angular_velocity_y;
-    double angular_velocity_z;
-    double linear_acc_x = 0;
-    double linear_acc_y = 0;
-    double linear_acc_z = 0;
-
-    //setting for rqt telecommunication
-    ros::NodeHandle n;
-    ros::Publisher P_Times;
-    ros::Publisher P_angular_velocity_x;
-    ros::Publisher P_angular_velocity_y;
-    ros::Publisher P_angular_velocity_z;
-    std_msgs::Float64 m_Times;
-    std_msgs::Float64 m_angular_velocity_x;
-    std_msgs::Float64 m_angular_velocity_y;
-    std_msgs::Float64 m_angular_velocity_z;
-    
-    // DH PARA
-    double tar_deg[13] = {0,   30, -60,
-                         -60,  30,   0,
-                          0,  -30,  60,
-                          60, -30,   0,
-                          0}; 
-    double angle_err[13];
-    
-    
-    
-    
-    //For model load
-    public: void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
+    class PongBotQ_plugin : public ModelPlugin             
     {
-        // model = link + joint +sensor
-         this->model = _model;
+    
+        physics::LinkPtr REAR_BODY;    
+        physics::LinkPtr FRONT_BODY;
+        physics::LinkPtr FL_HIP;
+        physics::LinkPtr FL_THIGH;
+        physics::LinkPtr FL_ROTATOR1;
+        physics::LinkPtr FL_ROTATOR2;
+        physics::LinkPtr FL_ROTATOR3;
+        physics::LinkPtr FR_HIP;
+        physics::LinkPtr FR_THIGH;
+        physics::LinkPtr FR_ROTATOR1;
+        physics::LinkPtr FR_ROTATOR2;
+        physics::LinkPtr FR_ROTATOR3;
+        physics::LinkPtr RL_HIP;
+        physics::LinkPtr RL_THIGH;
+        physics::LinkPtr RL_ROTATOR1;
+        physics::LinkPtr RL_ROTATOR2;
+        physics::LinkPtr RL_ROTATOR3;
+        physics::LinkPtr RR_HIP;
+        physics::LinkPtr RR_THIGH;
+        physics::LinkPtr RR_ROTATOR1;
+        physics::LinkPtr RR_ROTATOR2;
+        physics::LinkPtr RR_ROTATOR3;
+
+        physics::JointPtr WAIST_JOINT;                     
+        physics::JointPtr FL_HIP_JOINT;
+        physics::JointPtr FL_THIGH_JOINT;
+        physics::JointPtr FL_ROTATOR1_JOINT;
+        physics::JointPtr FL_ROTATOR2_JOINT;                     
+        physics::JointPtr FL_ROTATOR3_JOINT;
+        physics::JointPtr FR_HIP_JOINT;
+        physics::JointPtr FR_THIGH_JOINT;
+        physics::JointPtr FR_ROTATOR1_JOINT;
+        physics::JointPtr FR_ROTATOR2_JOINT;                     
+        physics::JointPtr FR_ROTATOR3_JOINT;
+        physics::JointPtr RL_HIP_JOINT;
+        physics::JointPtr RL_THIGH_JOINT;
+        physics::JointPtr RL_ROTATOR1_JOINT;
+        physics::JointPtr RL_ROTATOR2_JOINT;                     
+        physics::JointPtr RL_ROTATOR3_JOINT;
+        physics::JointPtr RR_HIP_JOINT;
+        physics::JointPtr RR_THIGH_JOINT;
+        physics::JointPtr RR_ROTATOR1_JOINT;
+        physics::JointPtr RR_ROTATOR2_JOINT;                     
+        physics::JointPtr RR_ROTATOR3_JOINT;
+        physics::ModelPtr model;
+
+        //  PID
+        common::PID pid_FL_HR, pid_FL_HP, pid_FL_KN;
+        common::PID pid_FR_HR, pid_FR_HP, pid_FR_KN;
+        common::PID pid_RL_HR, pid_RL_HP, pid_RL_KN;
+        common::PID pid_RR_HR, pid_RR_HP, pid_RR_KN;
+        common::PID pid_WAIST;
+
+        //setting for getting <dt>(=derivative time) 
+        common::Time last_update_time;
+        event::ConnectionPtr update_connection; 
+        double dt; 
+        double time=0;
+
+        //setting for IMU sensor
+        sensors::SensorPtr Sensor;
+        sensors::ImuSensorPtr IMU;
+        double IMU_Update;
+        double angular_velocity_x;
+        double angular_velocity_y;
+        double angular_velocity_z;
+        double linear_acc_x = 0;
+        double linear_acc_y = 0;
+        double linear_acc_z = 0;
+
+        //setting for rqt telecommunication
+        ros::NodeHandle n;
+        ros::Publisher P_Times;
+        ros::Publisher P_angular_velocity_x;
+        ros::Publisher P_angular_velocity_y;
+        ros::Publisher P_angular_velocity_z;
+        std_msgs::Float64 m_Times;
+        std_msgs::Float64 m_angular_velocity_x;
+        std_msgs::Float64 m_angular_velocity_y;
+        std_msgs::Float64 m_angular_velocity_z;
+
+        // DH PARA
+        double tar_deg[13] = {0,   30, -60,
+                             -60,  30,   0,
+                              0,  -30,  60,
+                              60, -30,   0,
+                              0}; 
+        double angle_err[13];
+    
+    
+    
+    
+        //For model load
+        public: void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
+        {
+            // model = link + joint +sensor
+            this->model = _model;
+
+            rbdl_check_api_version(RBDL_API_VERSION);
+
+            int version_test;
+            version_test = rbdl_get_api_version();
+            printf("rbdl api version = %d\n", version_test);
+
+            Model* pongbot_q_model = new Model();
+
+//            Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V1/model.urdf",pongbot_q_model,true,true);
+            Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V1/urdf/PONGBOT_Q_V1.urdf",pongbot_q_model,true,false);
+            
+        //         if (!Addons::URDFReadFromFile ("./root/.gazebo/models/PONGBOT_Q_V1/model.urdf", pongbot_q_model, false)) {
+        //		std::cerr << "Error loading model ./root/.gazebo/models/PONGBOT_Q_V1/model.urdf" << std::endl;
+        //		abort();
+        //	 }
+
+        //         if (!Addons::URDFReadFromFile ("./root/.gazebo/models/PONGBOT_Q_V1/urdf/PONGBOT_Q_V1.urdf", pongbot_q_model, false)) {
+        //		std::cerr << "Error loading model ./root/.gazebo/models/PONGBOT_Q_V1/urdf/PONGBOT_Q_V1.urdf" << std::endl;
+        //		abort();
+        //	 }
+
+
          
-         rbdl_check_api_version(RBDL_API_VERSION);
-         
-         int version_test;
-         version_test = rbdl_get_api_version();
-         printf("rbdl api version = %d\n", version_test);
-         
-         Model* pongbot_q_model = new Model();
-         
-//         if (!Addons::URDFReadFromFile ("./root/.gazebo/models/PONGBOT_Q_V1/model.urdf", pongbot_q_model, false)) {
-//		std::cerr << "Error loading model ./root/.gazebo/models/PONGBOT_Q_V1/model.urdf" << std::endl;
-//		abort();
-//	}
-        //LINK DEFINITION
+
+         //LINK DEFINITION
          this->REAR_BODY = this->model->GetLink("REAR_BODY");
          this->FRONT_BODY = this->model->GetLink("FRONT_BODY");
          this->FL_HIP = this->model->GetLink("FL_HIP");
