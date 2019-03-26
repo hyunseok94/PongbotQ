@@ -11,12 +11,17 @@
 #include <functional>
 #include <ignition/math/Vector3.hh>
 #include "Eigen/Dense"
+#include <rbdl/rbdl.h>
+#include <rbdl/addons/urdfreader/urdfreader.h>
 
 #define PI      3.141592
 #define D2R     PI/180
 #define R2D     180/PI
 
 using Eigen::MatrixXd;
+
+using namespace RigidBodyDynamics;
+using namespace RigidBodyDynamics::Math;
 
 namespace gazebo                          
 {
@@ -121,7 +126,19 @@ class PongBotQ_plugin : public ModelPlugin
     {
         // model = link + joint +sensor
          this->model = _model;
-
+         
+         rbdl_check_api_version(RBDL_API_VERSION);
+         
+         int version_test;
+         version_test = rbdl_get_api_version();
+         printf("rbdl api version = %d\n", version_test);
+         
+         Model* pongbot_q_model = new Model();
+         
+//         if (!Addons::URDFReadFromFile ("./root/.gazebo/models/PONGBOT_Q_V1/model.urdf", pongbot_q_model, false)) {
+//		std::cerr << "Error loading model ./root/.gazebo/models/PONGBOT_Q_V1/model.urdf" << std::endl;
+//		abort();
+//	}
         //LINK DEFINITION
          this->REAR_BODY = this->model->GetLink("REAR_BODY");
          this->FRONT_BODY = this->model->GetLink("FRONT_BODY");
@@ -299,22 +316,22 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
       printf("pid_RL_HR = %f\n",this->pid_RL_HR.GetCmd());
     }
     if(this->pid_RL_HP.GetCmd() >= 1000 || this->pid_RL_HP.GetCmd() <= -1000){
-      printf("FR_HR = %f\n",this->pid_RL_HP.GetCmd());
+      printf("pid_RL_HP = %f\n",this->pid_RL_HP.GetCmd());
     }
     if(this->pid_RL_KN.GetCmd() >= 1000 || this->pid_RL_KN.GetCmd() <= -1000){
       printf("pid_RL_KN = %f\n",this->pid_RL_KN.GetCmd());
     }
     if(this->pid_RR_HR.GetCmd() >= 1000 || this->pid_RR_HR.GetCmd() <= -1000){
-      printf("FR_HR = %f\n",this->pid_RR_HR.GetCmd());
+      printf("pid_RR_HR = %f\n",this->pid_RR_HR.GetCmd());
     }
     if(this->pid_RR_HP.GetCmd() >= 1000 || this->pid_RR_HP.GetCmd() <= -1000){
-      printf("FR_HR = %f\n",this->pid_RR_HP.GetCmd());
+      printf("pid_RR_HP = %f\n",this->pid_RR_HP.GetCmd());
     }
     if(this->pid_RR_KN.GetCmd() >= 1000 || this->pid_RR_KN.GetCmd() <= -1000){
-      printf("FR_HR = %f\n",this->pid_RR_KN.GetCmd());
+      printf("pid_RR_KN = %f\n",this->pid_RR_KN.GetCmd());
     }
     if(this->pid_WAIST.GetCmd() >= 1000 || this->pid_WAIST.GetCmd() <= -1000){
-      printf("FR_HR = %f\n",this->pid_WAIST.GetCmd());
+      printf("pid_WAIST = %f\n",this->pid_WAIST.GetCmd());
     }
 
 //setting for getting dt
