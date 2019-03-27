@@ -22,7 +22,7 @@ using Eigen::MatrixXd;
 
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
-
+ 
 namespace gazebo                          
 {
 
