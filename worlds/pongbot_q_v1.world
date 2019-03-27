@@ -25,7 +25,7 @@
 
 
    <include>
-      <uri>model://PONGBOT_Q_V1</uri>
+      <uri>model://PONGBOT_Q_V2</uri>
      	<pose frame=''>0 0 1 0 0 0</pose>
        <plugin name="plugin" filename="libpongbot_q_v1.so"/>
     </include>
