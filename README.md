@@ -28,4 +28,4 @@ Step 8. 시뮬레이션 실행을 위해 터미널 창에 roslaunch pongbot_q_v1
 
 이로써, 시뮬레이션이 진행된다.
 
-
+참고사항 : develop_HSKim의 권한이 user이기 때문에 model plugin 파일("pongbotq_plugin.cc")의 190번째 줄 코드 "Addons::URDFReaderFromFie("/home/hyunseok~")"을 활성화하였고, root 계정의 권한으로 사용하려면, 189번째 줄 코드"Addons::URDFReaderFromFile("/root~")"를 주석 해제할 것.
