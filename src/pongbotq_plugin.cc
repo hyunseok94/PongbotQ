@@ -564,10 +564,10 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 { //* Writing realtime code here!!
     VectorXd Encoder(17); 
     MatrixXd FR_C_IE(3,3), FL_C_IE(3,3), RR_C_IE(3,3), RL_C_IE(3,3);
-    VectorXd FR_Force_E(2), FL_Force_E(2), RR_Force_E(2), RL_Force_E(2);
-    VectorXd FR_Force_I(2), FL_Force_I(2), RR_Force_I(2), RL_Force_I(2);
-    VectorXd FR_Torque_E(2), FL_Torque_E(2), RR_Torque_E(2), RL_Torque_E(2);
-    VectorXd FR_Torque_I(2), FL_Torque_I(2), RR_Torque_I(2), RL_Torque_I(2);
+    VectorXd FR_Force_E(3), FL_Force_E(3), RR_Force_E(3), RL_Force_E(3);
+    VectorXd FR_Force_I(3), FL_Force_I(3), RR_Force_I(3), RL_Force_I(3);
+    VectorXd FR_Torque_E(3), FL_Torque_E(3), RR_Torque_E(3), RL_Torque_E(3);
+    VectorXd FR_Torque_I(3), FL_Torque_I(3), RR_Torque_I(3), RL_Torque_I(3);
     
     
     //setting for getting dt  
