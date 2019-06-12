@@ -29,7 +29,6 @@ using namespace RigidBodyDynamics::Math;
 
 namespace gazebo
 {
-
     class PongBotQ_plugin : public ModelPlugin
     {
         physics::LinkPtr REAR_BODY;
@@ -106,9 +105,7 @@ namespace gazebo
         double RR_torque_x, RR_torque_y, RR_torque_z;
         double RL_force_x, RL_force_y, RL_force_z;
         double RL_torque_x, RL_torque_y, RL_torque_z;
-        double FR_total_force, FL_total_force, RR_total_force, RL_total_force;
-        double total_force;
-
+        
         //setting for rqt telecommunication
         ros::NodeHandle n;
         ros::Publisher P_Times;
@@ -128,11 +125,7 @@ namespace gazebo
         ros::Publisher P_RL_force_x;
         ros::Publisher P_RL_force_y;
         ros::Publisher P_RL_force_z;
-        ros::Publisher P_FR_total_force;
-        ros::Publisher P_FL_total_force;
-        ros::Publisher P_RR_total_force;
-        ros::Publisher P_RL_total_force;
-
+ 
         std_msgs::Float64 m_Times;
         std_msgs::Float64 m_angular_velocity_x;
         std_msgs::Float64 m_angular_velocity_y;
@@ -149,10 +142,6 @@ namespace gazebo
         std_msgs::Float64 m_RL_force_x;
         std_msgs::Float64 m_RL_force_y;
         std_msgs::Float64 m_RL_force_z;
-        std_msgs::Float64 m_FR_total_force;
-        std_msgs::Float64 m_FL_total_force;
-        std_msgs::Float64 m_RR_total_force;
-        std_msgs::Float64 m_RL_total_force;
 
         // DH PARA
         double tar_deg[13] = {0, 30, -60,
@@ -161,7 +150,7 @@ namespace gazebo
             60, -30, 0,
             0};
         double angle_err[13];
-
+        double encoder_angle[13];
         // Adding CRobot Class by BKCho
         CRobot PongBotQ;
 
@@ -173,6 +162,294 @@ namespace gazebo
     };
     GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
 }
+
+MatrixXd getTransformI0()
+{
+    MatrixXd tmp_m(4, 4);
+    tmp_m <<  1, 0, 0, 0\
+            , 0, 1, 0, 0\
+            , 0, 0, 1, 0\
+            , 0, 0, 0, 1;
+    return tmp_m;
+}
+
+MatrixXd F_jointToTransform01(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(12);
+    tmp_m <<  cos(qq), -sin(qq), 0,   0.35\
+            , sin(qq),  cos(qq), 0,      0\
+            ,       0,        0, 1, 0.0352\
+            ,       0,        0, 0,     1;
+    return tmp_m;
+}
+
+MatrixXd FL_jointToTransform12(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(5);
+    tmp_m <<   1,       0,        0,    0.35\
+            ,  0, cos(qq), -sin(qq),   0.115\
+            ,  0, sin(qq),  cos(qq), -0.0355\
+            ,  0,       0,        0,       1;
+    return tmp_m;
+}
+
+MatrixXd FL_jointToTransform23(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(4);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0,  0.105\
+            , -sin(qq), 0, cos(qq),      0\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd FL_jointToTransform34(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(3);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0,      0\
+            , -sin(qq), 0, cos(qq), -0.305\
+            ,        0, 0,       0,     1;
+    return tmp_m;
+}
+
+MatrixXd FL_jointToTransform4E(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(14);
+    tmp_m <<  cos(qq), 0, sin(qq), -0.015\
+           ,        0, 1,       0,      0\
+           , -sin(qq), 0, cos(qq), -0.288\
+           ,        0, 0,       0,     1;
+    return tmp_m;
+}
+
+MatrixXd FL_getTransformIE(VectorXd q)
+{
+    MatrixXd T_I0(4, 4), T_01(4, 4), T_12(4, 4), T_23(4, 4), T_34(4, 4), T_4E(4, 4);
+    MatrixXd T_IE(4, 4);
+    T_I0 = getTransformI0();
+    T_01 = F_jointToTransform01(q);
+    T_12 = FL_jointToTransform12(q);
+    T_23 = FL_jointToTransform23(q);
+    T_34 = FL_jointToTransform34(q);
+    T_4E = FL_jointToTransform4E(q);
+    T_IE = T_I0 * T_01 * T_12 * T_23 * T_34 * T_4E;
+    return T_IE;
+}
+
+MatrixXd FL_jointToRotMat(VectorXd q)
+{
+    MatrixXd C_IE(3, 3);
+    MatrixXd T_IE(4, 4);
+    T_IE = FL_getTransformIE(q);
+    C_IE = T_IE.block(0, 0, 3, 3);
+    return C_IE;
+}
+
+MatrixXd FR_jointToTransform12(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(0);
+    tmp_m <<   1,       0,        0,    0.35\
+            ,  0, cos(qq), -sin(qq),  -0.115\
+            ,  0, sin(qq),  cos(qq), -0.0355\
+            ,  0,       0,        0,       1;
+    return tmp_m;
+}
+
+MatrixXd FR_jointToTransform23(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(1);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0, -0.105\
+            , -sin(qq), 0, cos(qq),      0\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd FR_jointToTransform34(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(2);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0,      0\
+            , -sin(qq), 0, cos(qq), -0.305\
+            ,        0, 0,       0,     1;
+    return tmp_m;
+}
+
+MatrixXd FR_jointToTransform4E(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(13);
+    tmp_m <<  cos(qq), 0, sin(qq), -0.015\
+           ,        0, 1,       0,      0\
+           , -sin(qq), 0, cos(qq), -0.288\
+           ,        0, 0,       0,     1;
+    return tmp_m;
+}
+
+MatrixXd FR_getTransformIE(VectorXd q)
+{
+    MatrixXd T_I0(4, 4), T_01(4, 4), T_12(4, 4), T_23(4, 4), T_34(4, 4), T_4E(4, 4);
+    MatrixXd T_IE(4, 4);
+    T_I0 = getTransformI0();
+    T_01 = F_jointToTransform01(q);
+    T_12 = FR_jointToTransform12(q);
+    T_23 = FR_jointToTransform23(q);
+    T_34 = FR_jointToTransform34(q);
+    T_4E = FR_jointToTransform4E(q);
+    T_IE = T_I0 * T_01 * T_12 * T_23 * T_34 * T_4E;
+    return T_IE;
+}
+
+MatrixXd FR_jointToRotMat(VectorXd q)
+{
+    MatrixXd C_IE(3, 3);
+    MatrixXd T_IE(4, 4);
+    T_IE = FR_getTransformIE(q);
+    C_IE = T_IE.block(0, 0, 3, 3);
+    return C_IE;
+}
+
+MatrixXd RL_jointToTransform01(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(6);
+    tmp_m <<   1,       0,        0,       0\
+            ,  0, cos(qq), -sin(qq),   0.115\
+            ,  0, sin(qq),  cos(qq),       0\
+            ,  0,       0,        0,       1;
+    return tmp_m;
+}
+
+MatrixXd RL_jointToTransform12(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(7);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0,  0.105\
+            , -sin(qq), 0, cos(qq),      0\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd RL_jointToTransform23(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(8);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0,      0\
+            , -sin(qq), 0, cos(qq), -0.305\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd RL_jointToTransform3E(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(16);
+    tmp_m <<   cos(qq), 0, sin(qq),  0.015\
+            ,        0, 1,       0,      0\
+            , -sin(qq), 0, cos(qq), -0.288\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd RL_getTransformIE(VectorXd q)
+{
+    MatrixXd T_I0(4, 4), T_01(4, 4), T_12(4, 4), T_23(4, 4), T_3E(4, 4);
+    MatrixXd T_IE(4, 4);
+    T_I0 = getTransformI0();
+    T_01 = RL_jointToTransform01(q);
+    T_12 = RL_jointToTransform12(q);
+    T_23 = RL_jointToTransform23(q);
+    T_3E = RL_jointToTransform3E(q);
+    T_IE = T_I0 * T_01 * T_12 * T_23 * T_3E;
+    return T_IE;
+}
+
+MatrixXd RL_jointToRotMat(VectorXd q)
+{
+    MatrixXd C_IE(3, 3);
+    MatrixXd T_IE(4, 4);
+    T_IE = RL_getTransformIE(q);
+    C_IE = T_IE.block(0, 0, 3, 3);
+    return C_IE;
+}
+
+MatrixXd RR_jointToTransform01(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(11);
+    tmp_m <<   1,       0,        0,        0\
+            ,  0, cos(qq), -sin(qq),   -0.115\
+            ,  0, sin(qq),  cos(qq),        0\
+            ,  0,       0,        0,        1;
+    return tmp_m;
+}
+
+MatrixXd RR_jointToTransform12(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(10);
+    tmp_m <<   cos(qq), 0, sin(qq),       0\
+            ,        0, 1,       0,  -0.105\
+            , -sin(qq), 0, cos(qq),       0\
+            ,        0, 0,       0,       1;
+    return tmp_m;
+}
+
+MatrixXd RR_jointToTransform23(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(9);
+    tmp_m <<   cos(qq), 0, sin(qq),      0\
+            ,        0, 1,       0,      0\
+            , -sin(qq), 0, cos(qq), -0.305\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd RR_jointToTransform3E(VectorXd q)
+{
+    MatrixXd tmp_m(4, 4);
+    double qq = q(15);
+    tmp_m <<   cos(qq), 0, sin(qq),  0.015\
+            ,        0, 1,       0,      0\
+            , -sin(qq), 0, cos(qq), -0.288\
+            ,        0, 0,       0,      1;
+    return tmp_m;
+}
+
+MatrixXd RR_getTransformIE(VectorXd q)
+{
+    MatrixXd T_I0(4, 4), T_01(4, 4), T_12(4, 4), T_23(4, 4), T_3E(4, 4);
+    MatrixXd T_IE(4, 4);
+    T_I0 = getTransformI0();
+    T_01 = RR_jointToTransform01(q);
+    T_12 = RR_jointToTransform12(q);
+    T_23 = RR_jointToTransform23(q);
+    T_3E = RR_jointToTransform3E(q);
+    T_IE = T_I0 * T_01 * T_12 * T_23 * T_3E;
+    return T_IE;
+}
+
+MatrixXd RR_jointToRotMat(VectorXd q)
+{
+    MatrixXd C_IE(3, 3);
+    MatrixXd T_IE(4, 4);
+    T_IE = RR_getTransformIE(q);
+    C_IE = T_IE.block(0, 0, 3, 3);
+    return C_IE;
+}
+
 
 void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
 {
@@ -255,11 +532,7 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     P_RL_force_x = n.advertise<std_msgs::Float64>("RL_force_x", 1);
     P_RL_force_y = n.advertise<std_msgs::Float64>("RL_force_y", 1);
     P_RL_force_z = n.advertise<std_msgs::Float64>("RL_force_z", 1);
-    P_FR_total_force = n.advertise<std_msgs::Float64>("FR_total_force", 1);
-    P_FL_total_force = n.advertise<std_msgs::Float64>("FL_total_force", 1);
-    P_RR_total_force = n.advertise<std_msgs::Float64>("RR_total_force", 1);
-    P_RL_total_force = n.advertise<std_msgs::Float64>("RL_total_force", 1);
-
+ 
     // =================== PID GAIN TUNNING ==================== //
 
     //this->pid_FR_HR.Init(50, 0.1, 5, 200, -200, 1000, -1000);
@@ -289,7 +562,14 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
 
 void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 { //* Writing realtime code here!!
-
+    VectorXd Encoder(17); 
+    MatrixXd FR_C_IE(3,3), FL_C_IE(3,3), RR_C_IE(3,3), RL_C_IE(3,3);
+    VectorXd FR_Force_E(2), FL_Force_E(2), RR_Force_E(2), RL_Force_E(2);
+    VectorXd FR_Force_I(2), FL_Force_I(2), RR_Force_I(2), RL_Force_I(2);
+    VectorXd FR_Torque_E(2), FL_Torque_E(2), RR_Torque_E(2), RL_Torque_E(2);
+    VectorXd FR_Torque_I(2), FL_Torque_I(2), RR_Torque_I(2), RL_Torque_I(2);
+    
+    
     //setting for getting dt  
     common::Time current_time = this->model->GetWorld()->GetSimTime();
     dt = current_time.Double() - this->last_update_time.Double();
@@ -303,7 +583,25 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     linear_acc_y = this->IMU->LinearAcceleration(false)[1];
     linear_acc_z = this->IMU->LinearAcceleration(false)[2];
 
-    //getting Force and Torque from FT sensor
+     //coordinate encoder angle[radian)]
+    Encoder[0]=this->FR_HIP_JOINT->GetAngle(0).Radian();
+    Encoder[1]=this->FR_THIGH_JOINT->GetAngle(0).Radian();
+    Encoder[2]=this->FR_CALF_JOINT->GetAngle(0).Radian();
+    Encoder[13]=PI/4; //FR_TIP
+    Encoder[5]=this->FL_HIP_JOINT->GetAngle(0).Radian();
+    Encoder[4]=this->FL_THIGH_JOINT->GetAngle(0).Radian();
+    Encoder[3]=this->FL_CALF_JOINT->GetAngle(0).Radian();
+    Encoder[14]=PI/4; //FL_TIP
+    Encoder[6]=this->RL_HIP_JOINT->GetAngle(0).Radian();
+    Encoder[7]=this->RL_THIGH_JOINT->GetAngle(0).Radian();
+    Encoder[8]=this->RL_CALF_JOINT->GetAngle(0).Radian();
+    Encoder[16]=-PI/4; //RL_TIP
+    Encoder[11]=this->RR_HIP_JOINT->GetAngle(0).Radian();
+    Encoder[10]=this->RR_THIGH_JOINT->GetAngle(0).Radian();
+    Encoder[9]=this->RR_CALF_JOINT->GetAngle(0).Radian();
+    Encoder[15]=-PI/4; //RR_TIP
+    Encoder[12]=this->WAIST_JOINT->GetAngle(0).Radian();
+       
     ///getting Force and Torque of Front Right Leg
     wrench = this->FR_TIP_JOINT->GetForceTorque(0);
 #if GAZEBO_MAJOR_VERSION >= 8
@@ -314,13 +612,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     torque = wrench.body2Torque.Ign();
 #endif
 
-    FR_force_x = force.X();
-    FR_force_y = force.Y();
-    FR_force_z = force.Z();
-    FR_torque_x = torque.X();
-    FR_torque_y = torque.Y();
-    FR_torque_z = torque.Z();
-
+    FR_Force_E[0] = force.X();
+    FR_Force_E[1] = force.Y();
+    FR_Force_E[2] = force.Z();
+    FR_Torque_E[0] = torque.X();
+    FR_Torque_E[1] = torque.Y();
+    FR_Torque_E[2] = torque.Z();
+    FR_C_IE=FR_jointToRotMat(Encoder);
+    FR_Force_I=FR_C_IE*FR_Force_E;
+    FR_Torque_I=FR_C_IE*FR_Torque_E;
+    //std::cout << "FR=" << std::endl << FR_Force_I << std::endl;
+    
     ///getting Force and Torque of Front Left Leg
     wrench = this->FL_TIP_JOINT->GetForceTorque(0);
 #if GAZEBO_MAJOR_VERSION >= 8
@@ -330,13 +632,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
 #endif
-    FL_force_x = force.X();
-    FL_force_y = force.Y();
-    FL_force_z = force.Z();
-    FL_torque_x = torque.X();
-    FL_torque_y = torque.Y();
-    FL_torque_z = torque.Z();
-
+    FL_Force_E[0] = force.X();
+    FL_Force_E[1] = force.Y();
+    FL_Force_E[2] = force.Z();
+    FL_Torque_E[0] = torque.X();
+    FL_Torque_E[1] = torque.Y();
+    FL_Torque_E[2] = torque.Z();
+    FL_C_IE=FL_jointToRotMat(Encoder);
+    FL_Force_I=FL_C_IE*FL_Force_E;
+    FL_Torque_I=FL_C_IE*FL_Torque_E;
+    //std::cout << "FL=" << std::endl << FL_Force_I << std::endl;
+     
     ///getting Force and Torque of Rear Right Leg
     wrench = this->RR_TIP_JOINT->GetForceTorque(0);
 #if GAZEBO_MAJOR_VERSION >= 8
@@ -346,13 +652,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
 #endif
-    RR_force_x = force.X();
-    RR_force_y = force.Y();
-    RR_force_z = force.Z();
-    RR_torque_x = torque.X();
-    RR_torque_y = torque.Y();
-    RR_torque_z = torque.Z();
-
+    RR_Force_E[0] = force.X();
+    RR_Force_E[1] = force.Y();
+    RR_Force_E[2] = force.Z();
+    RR_Torque_E[0] = torque.X();
+    RR_Torque_E[1] = torque.Y();
+    RR_Torque_E[2] = torque.Z();
+    RR_C_IE=RR_jointToRotMat(Encoder);
+    RR_Force_I=RR_C_IE*RR_Force_E;
+    RR_Torque_I=RR_C_IE*RR_Torque_E;
+    //std::cout << "RR=" << std::endl << RR_Force_I << std::endl;
+    
     ///getting Force and Torque of Rear Left Leg
     wrench = this->RL_TIP_JOINT->GetForceTorque(0);
 #if GAZEBO_MAJOR_VERSION >= 8
@@ -362,21 +672,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
 #endif
-    RL_force_x = force.X();
-    RL_force_y = force.Y();
-    RL_force_z = force.Z();
-    RL_torque_x = torque.X();
-    RL_torque_y = torque.Y();
-    RL_torque_z = torque.Z();
-
-    FR_total_force = sqrt(pow(FR_force_x, 2) + pow(FR_force_y, 2) + pow(FR_force_z, 2));
-    FL_total_force = sqrt(pow(FL_force_x, 2) + pow(FL_force_y, 2) + pow(FL_force_z, 2));
-    RR_total_force = sqrt(pow(RR_force_x, 2) + pow(RR_force_y, 2) + pow(RR_force_z, 2));
-    RL_total_force = sqrt(pow(RL_force_x, 2) + pow(RL_force_y, 2) + pow(RL_force_z, 2));
-
-    total_force = FR_total_force + FR_total_force + FR_total_force + FR_total_force;
-    //std::cout << "total_force=" << std::endl << total_force << std::endl;
-
+    RL_Force_E[0] = force.X();
+    RL_Force_E[1] = force.Y();
+    RL_Force_E[2] = force.Z();
+    RL_Torque_E[0] = torque.X();
+    RL_Torque_E[1] = torque.Y();
+    RL_Torque_E[2] = torque.Z();
+    RL_C_IE=RL_jointToRotMat(Encoder);
+    RL_Force_I=RL_C_IE*RL_Force_E;
+    RL_Torque_I=RL_C_IE*RL_Torque_E;
+    //std::cout << "RL=" << std::endl << RL_Force_I << std::endl;
+    
     //* calculating errors
     angle_err[0] = this->FR_HIP_JOINT->GetAngle(0).Radian() - (tar_deg[0] * D2R);
     angle_err[1] = this->FR_THIGH_JOINT->GetAngle(0).Radian() - (tar_deg[1] * D2R);
@@ -421,7 +727,6 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     this->RR_THIGH_JOINT->SetForce(1, this->pid_RR_HP.GetCmd());
     this->RR_CALF_JOINT->SetForce(1, this->pid_RR_KN.GetCmd());
     this->WAIST_JOINT->SetForce(1, this->pid_WAIST.GetCmd());
-
 
     /*
     if (this->pid_FR_HR.GetCmd() >= 1000 || this->pid_FR_HR.GetCmd() <= -1000) {
@@ -473,23 +778,22 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     m_angular_velocity_x.data = angular_velocity_x;
     m_angular_velocity_y.data = angular_velocity_y;
     m_angular_velocity_z.data = angular_velocity_z;
-    m_FR_force_x.data = FR_force_x;
-    m_FR_force_y.data = FR_force_y;
-    m_FR_force_z.data = FR_force_z;
-    m_FL_force_x.data = FL_force_x;
-    m_FL_force_y.data = FL_force_y;
-    m_FL_force_z.data = FL_force_z;
-    m_RR_force_x.data = RR_force_x;
-    m_RR_force_y.data = RR_force_y;
-    m_RR_force_z.data = RR_force_z;
-    m_RL_force_x.data = RL_force_x;
-    m_RL_force_y.data = RL_force_y;
-    m_RL_force_z.data = RL_force_z;
-    m_FR_total_force.data = FR_total_force;
-    m_FL_total_force.data = FL_total_force;
-    m_RR_total_force.data = RR_total_force;
-    m_RL_total_force.data = RL_total_force;
+    
+    //getting readable force data
+    m_FR_force_x.data = FR_Force_I[0];
+    m_FR_force_y.data = FR_Force_I[1];
+    m_FR_force_z.data = FR_Force_I[2];
+    m_FL_force_x.data = FL_Force_I[0];
+    m_FL_force_y.data = FL_Force_I[1];
+    m_FL_force_z.data = FL_Force_I[2];
+    m_RR_force_x.data = RR_Force_I[0];
+    m_RR_force_y.data = RR_Force_I[1];
+    m_RR_force_z.data = RR_Force_I[2];
+    m_RL_force_x.data = RL_Force_I[0];
+    m_RL_force_y.data = RL_Force_I[1];
+    m_RL_force_z.data = RL_Force_I[2];
 
+    //publishing data
     P_Times.publish(m_Times);
     P_angular_velocity_x.publish(m_angular_velocity_x);
     P_angular_velocity_y.publish(m_angular_velocity_y);
@@ -506,8 +810,5 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     P_RL_force_x.publish(m_RL_force_x);
     P_RL_force_y.publish(m_RL_force_y);
     P_RL_force_z.publish(m_RL_force_z);
-    P_FR_total_force.publish(m_FR_total_force);
-    P_FL_total_force.publish(m_FL_total_force);
-    P_RR_total_force.publish(m_RR_total_force);
-    P_RL_total_force.publish(m_RL_total_force);
 }
+

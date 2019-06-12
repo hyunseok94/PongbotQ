@@ -275,12 +275,10 @@
         </friction>
         <contact>
           <ode>
-            <!--<soft_erp> 0.1 </soft_erp>
-            <soft_cfm> 1E-4 </soft_cfm>-->
             <kp>5000000</kp>
             <kd>5000</kd>
-            <!--<max_vel>0.1</max_vel>-->
-            <!--<min_depth>0.001</min_depth>-->
+            <max_vel>0.1</max_vel>
+            <min_depth>0.0001</min_depth>
           </ode>
         </contact>
       </surface>
@@ -510,8 +508,8 @@
             <soft_cfm> 1E-4 </soft_cfm>-->
             <kp>5000000</kp>
             <kd>5000</kd>
-            <!--<max_vel>0.1</max_vel>-->
-            <!--<min_depth>0.001</min_depth>-->
+            <max_vel>0.1</max_vel>
+            <min_depth>0.0001</min_depth>
           </ode>
         </contact>
       </surface>
@@ -795,8 +793,8 @@
             <soft_cfm> 1E-4 </soft_cfm>-->
             <kp>5000000</kp>
             <kd>5000</kd>
-            <!--<max_vel>0.1</max_vel>-->
-            <!--<min_depth>0.001</min_depth>-->
+            <max_vel>0.1</max_vel>
+            <min_depth>0.0001</min_depth>
           </ode>
         </contact>
       </surface>
@@ -1025,8 +1023,8 @@
             <soft_cfm> 1E-4 </soft_cfm>-->
             <kp>5000000</kp>
             <kd>5000</kd>
-            <!--<max_vel>0.1</max_vel>-->
-            <!--<min_depth>0.001</min_depth>-->
+            <max_vel>0.1</max_vel>
+            <min_depth>0.0001</min_depth>
           </ode>
         </contact>
       </surface>
