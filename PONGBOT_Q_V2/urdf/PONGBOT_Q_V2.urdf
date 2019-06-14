@@ -91,7 +91,7 @@
     <child
       link="RR_HIP" />
     <axis
-      xyz="-1 0 0" />
+      xyz="1 0 0" />
   </joint>
   <link
     name="RR_THIGH">
@@ -250,7 +250,7 @@
     <child
       link="RL_HIP" />
     <axis
-      xyz="-1 0 0" />
+      xyz="1 0 0" />
   </joint>
   <link
     name="RL_THIGH">
@@ -462,7 +462,7 @@
     <child
       link="FR_HIP" />
     <axis
-      xyz="-1 0 0" />
+      xyz="1 0 0" />
   </joint>
   <link
     name="FR_THIGH">
@@ -621,7 +621,7 @@
     <child
       link="FL_HIP" />
     <axis
-      xyz="-1 0 0" />
+      xyz="1 0 0" />
   </joint>
   <link
     name="FL_THIGH">

@@ -2,10 +2,10 @@
 <sdf version='1.6'>
   <model name='PONGBOT_Q_V2'>
 
-    <!--   <joint name="fixed to ground" type="fixed">
+  <!--<joint name="fixed to ground" type="fixed">
     <parent>world</parent>
     <child>REAR_BODY</child>
-  </joint> -->
+  </joint>-->
 
   <link name='REAR_BODY'>
     <pose frame=''>0 0 0 0 -0 0</pose>
@@ -119,7 +119,7 @@
     <child>RL_HIP</child>
     <parent>REAR_BODY</parent>
     <axis>
-      <xyz>-1 0 -0</xyz>
+      <xyz>1 0 -0</xyz>
       <limit>
         <lower>-3.141592</lower>
         <upper>3.141592</upper>
@@ -348,7 +348,7 @@
     <child>RR_HIP</child>
     <parent>REAR_BODY</parent>
     <axis>
-      <xyz>-1 0 -0</xyz>
+      <xyz>1 0 -0</xyz>
       <limit>
         <lower>-3.141592</lower>
         <upper>3.141592</upper>
@@ -633,7 +633,7 @@
     <child>FL_HIP</child>
     <parent>FRONT_BODY</parent>
     <axis>
-      <xyz>-1 0 -0</xyz>
+      <xyz>1 0 -0</xyz>
       <limit>
         <lower>-3.141592</lower>
         <upper>3.141592</upper>
@@ -863,7 +863,7 @@
     <child>FR_HIP</child>
     <parent>FRONT_BODY</parent>
     <axis>
-      <xyz>-1 0 -0</xyz>
+      <xyz>1 0 -0</xyz>
       <limit>
         <lower>-3.141592</lower>
         <upper>3.141592</upper>
