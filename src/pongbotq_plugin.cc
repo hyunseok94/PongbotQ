@@ -13,7 +13,8 @@
 #include "Eigen/Dense"
 #include <rbdl/rbdl.h>
 #include <rbdl/addons/urdfreader/urdfreader.h>
-#include <sensor_msgs/JointState.h>
+#include <sensor_msgs/JointState.h>             //for rviz
+#include <tf/transform_broadcaster.h>           //for rviz
 
 #include "CRobot.h" // by BKCho
 
@@ -121,6 +122,7 @@ namespace gazebo
 
         //setting for rqt telecommunication
         ros::NodeHandle n;
+
         ros::Publisher P_Times;
         ros::Publisher P_angular_velocity_x;
         ros::Publisher P_angular_velocity_y;
@@ -141,8 +143,6 @@ namespace gazebo
         ros::Publisher P_pitch;
         ros::Publisher P_roll;
         ros::Publisher P_yaw;
-        ros::Publisher P_World_angle_y;
-        ros::Publisher P_joint_states;
 
         std_msgs::Float64 m_Times;
         std_msgs::Float64 m_angular_velocity_x;
@@ -163,8 +163,13 @@ namespace gazebo
         std_msgs::Float64 m_pitch;
         std_msgs::Float64 m_roll;
         std_msgs::Float64 m_yaw;
-        std_msgs::Float64 m_World_angle_y;
+
+        // Rviz variable setting
+        ros::Publisher P_joint_states;
         sensor_msgs::JointState m_joint_states;
+        tf::TransformBroadcaster broadcaster;
+        geometry_msgs::TransformStamped odom_trans;
+        math::Pose pose;
 
         // DH PARA
         //double tar_deg[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -213,10 +218,14 @@ namespace gazebo
         CRobot PongBotQ;
 
         //TEST
+        ros::Publisher P_World_angle_y;
+        std_msgs::Float64 m_World_angle_y;
         VectorXd xyz_angle = VectorXd::Zero(3);
         VectorXd xyz_quat = VectorXd::Zero(4);
         math::Quaternion World_Quaternion;
         double World_angle_y;
+
+
     public:
         //For model load
         void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
@@ -302,8 +311,8 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
 
     //************************FT Transformation Setting*********************************//
     //Rotation Matrix
-    ROT_FORWARD_TIP << cos(PI / 4), 0, sin(PI / 4), 0, 1, 0, -sin(PI / 4), 0, cos(PI / 4), 0;
-    ROT_REAR_TIP << cos(-PI / 4), 0, sin(-PI / 4), 0, 1, 0, -sin(-PI / 4), 0, cos(-PI / 4), 0;
+    ROT_FORWARD_TIP << cos(PI / 4), 0, sin(PI / 4), 0, 1, 0, -sin(PI / 4), 0, cos(PI / 4);
+    ROT_REAR_TIP << cos(-PI / 4), 0, sin(-PI / 4), 0, 1, 0, -sin(-PI / 4), 0, cos(-PI / 4);
 
     //************************ROS Msg Setting*********************************//
     //setting for communication
@@ -311,7 +320,6 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     P_angular_velocity_x = n.advertise<std_msgs::Float64>("angular_velocity_x", 1);
     P_angular_velocity_y = n.advertise<std_msgs::Float64>("angular_velocity_y", 1);
     P_angular_velocity_z = n.advertise<std_msgs::Float64>("angular_velocity_z", 1);
-
     P_RL_force_x = n.advertise<std_msgs::Float64>("RL_force_x", 1);
     P_RL_force_y = n.advertise<std_msgs::Float64>("RL_force_y", 1);
     P_RL_force_z = n.advertise<std_msgs::Float64>("RL_force_z", 1);
@@ -328,24 +336,28 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     P_roll = n.advertise<std_msgs::Float64>("roll", 1);
     P_yaw = n.advertise<std_msgs::Float64>("yaw", 1);
     P_World_angle_y = n.advertise<std_msgs::Float64>("World_angle_y", 1);
-    P_joint_states = n.advertise<sensor_msgs::JointState>("joint_states", 1);
 
-    //******************************rviz*************************************//
+
+    //**************************rviz inital setting*************************************//
+    P_joint_states = n.advertise<sensor_msgs::JointState>("joint_states", 1);
     m_joint_states.name.resize(13);
     m_joint_states.position.resize(13);
+    odom_trans.header.frame_id = "odom";
+    odom_trans.child_frame_id = "REAR_BODY";
     //ros::Rate loop_rate(1000);
 }
 
 void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 { //* Writing realtime code here!!
-
+    //********************* Base Pose for rviz *****************************//
+    pose = this->model->GetWorldPose();
 
     //************************** Time ********************************//
     common::Time current_time = this->model->GetWorld()->GetSimTime();
     dt = current_time.Double() - this->last_update_time.Double();
     time = time + dt;
 
-    //************************** Imu ********************************//
+    //*********************** Imu(Complementary filter) ******************************//
     angular_velocity_x = 0.50 * angular_velocity_x + 0.50 * (this->IMU->AngularVelocity(false)[0]);
     angular_velocity_y = 0.50 * angular_velocity_y + 0.50 * (this->IMU->AngularVelocity(false)[1]);
     angular_velocity_z = 0.50 * angular_velocity_z + 0.50 * (this->IMU->AngularVelocity(false)[2]);
@@ -377,7 +389,6 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     yaw = angular_velocity_z*dt;
     roll = 0.9 * gyroAngleX * 180 / PI + 0.1 * accAngleX;
     pitch = 0.9 * gyroAngleY * 180 / PI + 0.1 * accAngleY;
-
 
 
     //************************** Encoder ********************************//
@@ -415,20 +426,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     //***************************Set Torque********************************//
 
-    xyz_angle << 0, 0, PI / 2;
-    xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
-    //xyz_angle << 0, 0, 90;
-    //xyz_quat = Quaternion::fromYXZAngles(xyz_angle);
+    //xyz_angle << 0, 0, PI / 2;
+    //xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
+    //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
 
-
-    basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
+    basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.pos.y, pose.pos.z;
     baseVel << 0, 0, 0, 0, 0, 0;
     jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
     jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
 
     PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
     PongBotQ.ComputeTorqueControl();
-
 
     //* Control law of PD Control + Gravity Compensation
     tau[0] = 10 * (angle_err[0]) + 2 * (0 - angle_vel[0]) + PongBotQ.joint[0].torque; //RL_HIP
@@ -450,22 +458,21 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     tau[12] = 20 * (angle_err[12]) + 5 * (0 - angle_vel[12]) + PongBotQ.joint[12].torque; //FR_CALF
 
     //* Control law of PD Control
-    //    tau[0] = 200 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
-    //    tau[1] = 400 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
-    //    tau[2] = 400 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
-    //    tau[3] = 200 * (angle_err[3]) + 10 * (0 - angle_vel[3]); //RR_HIP
-    //    tau[4] = 400 * (angle_err[4]) + 10 * (0 - angle_vel[4]); //RR_THIGH
-    //    tau[5] = 400 * (angle_err[5]) + 10 * (0 - angle_vel[5]); //RR_CALF
-    //
-    //    tau[6] = 200 * (angle_err[6]) + 10 * (0 - angle_vel[6]); //WAIST
-    //
-    //    tau[7] = 200 * (angle_err[7]) + 10 * (0 - angle_vel[7]); //FL_HIP
-    //    tau[8] = 400 * (angle_err[8]) + 10 * (0 - angle_vel[8]); //FL_THIGH
-    //    tau[9] = 400 * (angle_err[9]) + 10 * (0 - angle_vel[9]); //FL_CALF
-    //    tau[10] = 200 * (angle_err[10]) + 10 * (0 - angle_vel[10]); //FR_HIP
-    //    tau[11] = 400 * (angle_err[11]) + 10 * (0 - angle_vel[11]); //FR_THIGH
-    //    tau[12] = 400 * (angle_err[12]) + 10 * (0 - angle_vel[12]); //FR_CALF
-
+    //        tau[0] = 200 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
+    //        tau[1] = 400 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
+    //        tau[2] = 400 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
+    //        tau[3] = 200 * (angle_err[3]) + 10 * (0 - angle_vel[3]); //RR_HIP
+    //        tau[4] = 400 * (angle_err[4]) + 10 * (0 - angle_vel[4]); //RR_THIGH
+    //        tau[5] = 400 * (angle_err[5]) + 10 * (0 - angle_vel[5]); //RR_CALF
+    //    
+    //        tau[6] = 200 * (angle_err[6]) + 10 * (0 - angle_vel[6]); //WAIST
+    //    
+    //        tau[7] = 200 * (angle_err[7]) + 10 * (0 - angle_vel[7]); //FL_HIP
+    //        tau[8] = 400 * (angle_err[8]) + 10 * (0 - angle_vel[8]); //FL_THIGH
+    //        tau[9] = 400 * (angle_err[9]) + 10 * (0 - angle_vel[9]); //FL_CALF
+    //        tau[10] = 200 * (angle_err[10]) + 10 * (0 - angle_vel[10]); //FR_HIP
+    //        tau[11] = 400 * (angle_err[11]) + 10 * (0 - angle_vel[11]); //FR_THIGH
+    //        tau[12] = 400 * (angle_err[12]) + 10 * (0 - angle_vel[12]); //FR_CALF
 
     //* Applying torques
     this->RL_HIP_JOINT->SetForce(1, tau[0]);
@@ -642,34 +649,48 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     m_yaw.data = yaw;
     m_World_angle_y.data = World_angle_y;
 
-
-
-    m_joint_states.name[0] = "RL_HIP_JOINT";
-    m_joint_states.name[1] = "RL_THIGH_JOINT";
-    m_joint_states.name[2] = "RL_CALF_JOINT";
-    m_joint_states.name[3] = "RR_HIP_JOINT";
-    m_joint_states.name[4] = "RR_THIGH_JOINT";
-    m_joint_states.name[5] = "RR_CALF_JOINT";
+    //********************Rviz data**************************//
+    m_joint_states.header.stamp = ros::Time::now();
+    m_joint_states.name[0] = "RR_HIP_JOINT";
+    m_joint_states.name[1] = "RR_THIGH_JOINT";
+    m_joint_states.name[2] = "RR_CALF_JOINT";
+    m_joint_states.name[3] = "RL_HIP_JOINT";
+    m_joint_states.name[4] = "RL_THIGH_JOINT";
+    m_joint_states.name[5] = "RL_CALF_JOINT";
     m_joint_states.name[6] = "WAIST_JOINT";
-    m_joint_states.name[7] = "FL_HIP_JOINT";
-    m_joint_states.name[8] = "FL_THIGH_JOINT";
-    m_joint_states.name[9] = "FL_CALF_JOINT";
-    m_joint_states.name[10] = "FR_HIP_JOINT";
-    m_joint_states.name[11] = "FR_THIGH_JOINT";
-    m_joint_states.name[12] = "FR_CALF_JOINT";
-    m_joint_states.position[0] = Encoder[0];
-    m_joint_states.position[1] = Encoder[1];
-    m_joint_states.position[2] = Encoder[2];
-    m_joint_states.position[3] = Encoder[3];
-    m_joint_states.position[4] = Encoder[4];
-    m_joint_states.position[5] = Encoder[5];
-    m_joint_states.position[6] = Encoder[6];
-    m_joint_states.position[7] = Encoder[7];
-    m_joint_states.position[8] = Encoder[8];
-    m_joint_states.position[9] = Encoder[9];
-    m_joint_states.position[10] = Encoder[10];
-    m_joint_states.position[11] = Encoder[11];
-    m_joint_states.position[12] = Encoder[12];
+    m_joint_states.name[7] = "FR_HIP_JOINT";
+    m_joint_states.name[8] = "FR_THIGH_JOINT";
+    m_joint_states.name[9] = "FR_CALF_JOINT";
+    m_joint_states.name[10] = "FL_HIP_JOINT";
+    m_joint_states.name[11] = "FL_THIGH_JOINT";
+    m_joint_states.name[12] = "FL_CALF_JOINT";
+
+    m_joint_states.position[0] = Encoder[3]; //RR_HIP
+    m_joint_states.position[1] = Encoder[4]; //RR_THIGH
+    m_joint_states.position[2] = Encoder[5]; //RR_CALF
+    m_joint_states.position[3] = Encoder[0]; //RL_HIP
+    m_joint_states.position[4] = Encoder[1]; //RL_THIGH
+    m_joint_states.position[5] = Encoder[2]; //RL_CALF
+    m_joint_states.position[6] = Encoder[6]; //WAIST
+    m_joint_states.position[7] = Encoder[10]; //FL_HIP
+    m_joint_states.position[8] = Encoder[11]; //FL_THIGH 
+    m_joint_states.position[9] = Encoder[12]; //FL_CALF
+    m_joint_states.position[10] = Encoder[7]; //FR_HIP
+    m_joint_states.position[11] = Encoder[8]; //FR_THIGH 
+    m_joint_states.position[12] = Encoder[9]; //FR_CALF
+
+    odom_trans.header.stamp = ros::Time::now();
+    odom_trans.transform.translation.x = pose.pos.x;
+    odom_trans.transform.translation.y = pose.pos.y;
+    odom_trans.transform.translation.z = pose.pos.z;
+    odom_trans.transform.rotation.x = pose.rot.x;
+    odom_trans.transform.rotation.y = pose.rot.y;
+    odom_trans.transform.rotation.z = pose.rot.z;
+    odom_trans.transform.rotation.w = pose.rot.w;
+    //odom_trans.transform.translation.x = 0;
+    //odom_trans.transform.translation.y = 0;
+    //odom_trans.transform.translation.z = 0.6;
+    //odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(0);
 
     //publishing data
     P_Times.publish(m_Times);
@@ -691,6 +712,8 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     P_pitch.publish(m_pitch);
     P_roll.publish(m_roll);
     P_yaw.publish(m_yaw);
+    broadcaster.sendTransform(odom_trans);
+
     P_World_angle_y.publish(m_World_angle_y);
     P_joint_states.publish(m_joint_states);
 }

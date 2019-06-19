@@ -21,7 +21,7 @@ void CRobot::setRobotModel(Model* getModel)
     m_pModel->gravity = Vector3d(0., 0., -9.81);
     nDOF = m_pModel->dof_count - 6; //* get Degree of freedom, Except x,y,z,roll,pitch,yaw of the robot
     joint = new JOINT[nDOF]; //* only joint of the robot excepting x,y,z,roll,pitch,yaw of the robot 
-    RobotState = VectorNd::Zero(m_pModel->dof_count);
+    RobotState = VectorNd::Zero(m_pModel->q_size);
     RobotStatedot = VectorNd::Zero(m_pModel->dof_count);
     BasePosOri = VectorNd::Zero(6);
     BaseVel = VectorNd::Zero(6);

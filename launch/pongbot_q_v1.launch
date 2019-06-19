@@ -3,4 +3,5 @@
   <arg name="paused" default="true"/>
   <arg name="world_name" value="$(find pongbot_q_v1)/worlds/pongbot_q_v1.world"/>
  </include>
+ <include file="$(find pongbot_rviz)/launch/display.launch" />
 </launch>
