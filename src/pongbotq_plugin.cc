@@ -246,8 +246,8 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     version_test = rbdl_get_api_version();
     printf("rbdl api version = %d\n", version_test);
 
-    //Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
-    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+//    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
     PongBotQ.setRobotModel(pongbot_q_model);
 
     //************************Link & Joint Setting*********************************//
@@ -651,33 +651,33 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     //********************Rviz data**************************//
     m_joint_states.header.stamp = ros::Time::now();
-    m_joint_states.name[0] = "RR_HIP_JOINT";
-    m_joint_states.name[1] = "RR_THIGH_JOINT";
-    m_joint_states.name[2] = "RR_CALF_JOINT";
-    m_joint_states.name[3] = "RL_HIP_JOINT";
-    m_joint_states.name[4] = "RL_THIGH_JOINT";
-    m_joint_states.name[5] = "RL_CALF_JOINT";
+    m_joint_states.name[0] = "RL_HIP_JOINT";
+    m_joint_states.name[1] = "RL_THIGH_JOINT";
+    m_joint_states.name[2] = "RL_CALF_JOINT";
+    m_joint_states.name[3] = "RR_HIP_JOINT";
+    m_joint_states.name[4] = "RR_THIGH_JOINT";
+    m_joint_states.name[5] = "RR_CALF_JOINT";
     m_joint_states.name[6] = "WAIST_JOINT";
-    m_joint_states.name[7] = "FR_HIP_JOINT";
-    m_joint_states.name[8] = "FR_THIGH_JOINT";
-    m_joint_states.name[9] = "FR_CALF_JOINT";
-    m_joint_states.name[10] = "FL_HIP_JOINT";
-    m_joint_states.name[11] = "FL_THIGH_JOINT";
-    m_joint_states.name[12] = "FL_CALF_JOINT";
+    m_joint_states.name[7] = "FL_HIP_JOINT";
+    m_joint_states.name[8] = "FL_THIGH_JOINT";
+    m_joint_states.name[9] = "FL_CALF_JOINT";
+    m_joint_states.name[10] = "FR_HIP_JOINT";
+    m_joint_states.name[11] = "FR_THIGH_JOINT";
+    m_joint_states.name[12] = "FR_CALF_JOINT";
 
-    m_joint_states.position[0] = Encoder[3]; //RR_HIP
-    m_joint_states.position[1] = Encoder[4]; //RR_THIGH
-    m_joint_states.position[2] = Encoder[5]; //RR_CALF
-    m_joint_states.position[3] = Encoder[0]; //RL_HIP
-    m_joint_states.position[4] = Encoder[1]; //RL_THIGH
-    m_joint_states.position[5] = Encoder[2]; //RL_CALF
+    m_joint_states.position[0] = Encoder[0]; //RR_HIP
+    m_joint_states.position[1] = Encoder[1]; //RR_THIGH
+    m_joint_states.position[2] = Encoder[2]; //RR_CALF
+    m_joint_states.position[3] = Encoder[3]; //RL_HIP
+    m_joint_states.position[4] = Encoder[4]; //RL_THIGH
+    m_joint_states.position[5] = Encoder[5]; //RL_CALF
     m_joint_states.position[6] = Encoder[6]; //WAIST
-    m_joint_states.position[7] = Encoder[10]; //FL_HIP
-    m_joint_states.position[8] = Encoder[11]; //FL_THIGH 
-    m_joint_states.position[9] = Encoder[12]; //FL_CALF
-    m_joint_states.position[10] = Encoder[7]; //FR_HIP
-    m_joint_states.position[11] = Encoder[8]; //FR_THIGH 
-    m_joint_states.position[12] = Encoder[9]; //FR_CALF
+    m_joint_states.position[7] = Encoder[7]; //FL_HIP
+    m_joint_states.position[8] = Encoder[8]; //FL_THIGH 
+    m_joint_states.position[9] = Encoder[9]; //FL_CALF
+    m_joint_states.position[10] = Encoder[10]; //FR_HIP
+    m_joint_states.position[11] = Encoder[11]; //FR_THIGH 
+    m_joint_states.position[12] = Encoder[12]; //FR_CALF
 
     odom_trans.header.stamp = ros::Time::now();
     odom_trans.transform.translation.x = pose.pos.x;
