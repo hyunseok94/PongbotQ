@@ -5,7 +5,7 @@
   <!--<joint name="fixed to ground" type="fixed">
     <parent>world</parent>
     <child>REAR_BODY</child>
-  </joint>-->
+  </joint> -->
 
   <link name='REAR_BODY'>
     <pose frame=''>0 0 0 0 -0 0</pose>
@@ -21,7 +21,7 @@
         <izz>0.1812</izz>
       </inertia>
     </inertial>
-    <collision name='REAR_BODY_collision'>
+<!--    <collision name='REAR_BODY_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -29,7 +29,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/REAR_BODY.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='REAR_BODY_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -90,7 +90,7 @@
         <izz>0.0012</izz>
       </inertia>
     </inertial>
-    <collision name='RL_HIP_collision'>
+    <!--<collision name='RL_HIP_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -98,7 +98,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/RL_HIP.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='RL_HIP_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -145,7 +145,7 @@
         <izz>0.0024</izz>
       </inertia>
     </inertial>
-    <collision name='RL_THIGH_collision'>
+<!--    <collision name='RL_THIGH_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -153,7 +153,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/RL_THIGH.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='RL_THIGH_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -200,7 +200,7 @@
         <izz>0.0002</izz>
       </inertia>
     </inertial>
-    <collision name='RL_CALF_collision'>
+<!--    <collision name='RL_CALF_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -208,7 +208,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/RL_CALF.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='RL_CALF_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -302,6 +302,7 @@
         <frame>child</frame>
         <measure_direction>child_to_parent</measure_direction>
       </force_torque>
+	<visualize>true</visualize>
     </sensor>
   </joint>
 
@@ -319,7 +320,7 @@
         <izz>0.0012</izz>
       </inertia>
     </inertial>
-    <collision name='RR_HIP_collision'>
+   <!-- <collision name='RR_HIP_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -327,7 +328,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/RR_HIP.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='RR_HIP_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -374,7 +375,7 @@
         <izz>0.0024</izz>
       </inertia>
     </inertial>
-    <collision name='RR_THIGH_collision'>
+ <!--   <collision name='RR_THIGH_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -382,7 +383,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/RR_THIGH.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='RR_THIGH_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -429,7 +430,7 @@
         <izz>0.0002</izz>
       </inertia>
     </inertial>
-    <collision name='RR_CALF_collision'>
+<!--    <collision name='RR_CALF_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -437,7 +438,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/RR_CALF.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='RR_CALF_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -532,6 +533,7 @@
         <frame>child</frame>
         <measure_direction>child_to_parent</measure_direction>
       </force_torque>
+<visualize>true</visualize>
     </sensor>
   </joint>
 
@@ -549,7 +551,7 @@
         <izz>0.1674</izz>
       </inertia>
     </inertial>
-    <collision name='FRONT_BODY_collision'>
+  <!--  <collision name='FRONT_BODY_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -557,7 +559,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FRONT_BODY.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FRONT_BODY_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -604,7 +606,7 @@
         <izz>0.0012</izz>
       </inertia>
     </inertial>
-    <collision name='FL_HIP_collision'>
+<!--    <collision name='FL_HIP_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -612,7 +614,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FL_HIP.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FL_HIP_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -659,7 +661,7 @@
         <izz>0.0024</izz>
       </inertia>
     </inertial>
-    <collision name='FL_THIGH_collision'>
+ <!--   <collision name='FL_THIGH_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -667,7 +669,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FL_THIGH.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FL_THIGH_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -714,7 +716,7 @@
         <izz>0.0002</izz>
       </inertia>
     </inertial>
-    <collision name='FL_CALF_collision'>
+<!--    <collision name='FL_CALF_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -722,7 +724,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FL_CALF.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FL_CALF_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -817,6 +819,7 @@
         <frame>child</frame>
         <measure_direction>child_to_parent</measure_direction>
       </force_torque>
+<visualize>true</visualize>
     </sensor>
   </joint>
 
@@ -834,7 +837,7 @@
         <izz>0.0012</izz>
       </inertia>
     </inertial>
-    <collision name='FR_HIP_collision'>
+<!--    <collision name='FR_HIP_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -842,7 +845,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FR_HIP.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FR_HIP_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -889,7 +892,7 @@
         <izz>0.0024</izz>
       </inertia>
     </inertial>
-    <collision name='FR_THIGH_collision'>
+<!--    <collision name='FR_THIGH_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -897,7 +900,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FR_THIGH.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FR_THIGH_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -944,7 +947,7 @@
         <izz>0.0002</izz>
       </inertia>
     </inertial>
-    <collision name='FR_CALF_collision'>
+   <!-- <collision name='FR_CALF_collision'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
         <mesh>
@@ -952,7 +955,7 @@
           <uri>model://PONGBOT_Q_V2/meshes/FR_CALF.STL</uri>
         </mesh>
       </geometry>
-    </collision>
+    </collision>-->
     <visual name='FR_CALF_visual'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <geometry>
@@ -1047,6 +1050,7 @@
         <frame>child</frame>
         <measure_direction>child_to_parent</measure_direction>
       </force_torque>
+<visualize>true</visualize>
     </sensor>
   </joint>
 </model>
