@@ -15,12 +15,13 @@
 #include <rbdl/addons/urdfreader/urdfreader.h>
 #include <sensor_msgs/JointState.h>             //for rviz
 #include <tf/transform_broadcaster.h>           //for rviz
-
+#include <geometry_msgs/WrenchStamped.h>        //for rviz
 #include "CRobot.h" // by BKCho
 
 //#define PI      3.141592
 //#define D2R     PI/180
 //#define R2D     180/PI
+//#define gravity       9.81;
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -28,12 +29,12 @@ using Eigen::Vector3d;
 
 Model* pongbot_q_model = new Model();
 
-using namespace RigidBodyDynamics::Math;
+//using namespace RigidBodyDynamics::Math;
 
-// DH Add
-//enum ControlMode CONTROL_MODE;
-
-
+MatrixXd g_H(4, 4), g_Q(4, 4), g_R(4, 4);
+VectorXd g_x(4);
+MatrixXd g_P(4, 4);
+int g_firstRun;
 
 namespace gazebo
 {
@@ -95,13 +96,12 @@ namespace gazebo
         //setting for IMU sensor
         sensors::SensorPtr Sensor;
         sensors::ImuSensorPtr IMU;
-        double IMU_Update;
-        double angular_velocity_x;
-        double angular_velocity_y;
-        double angular_velocity_z;
-        double linear_acc_x = 0;
-        double linear_acc_y = 0;
-        double linear_acc_z = 0;
+        double angular_vel_x;
+        double angular_vel_y;
+        double angular_vel_z;
+        double linear_acc_x;
+        double linear_acc_y;
+        double linear_acc_z;
 
         double accAngleX = 0;
         double accAngleY = 0;
@@ -129,9 +129,12 @@ namespace gazebo
         ros::NodeHandle n;
 
         ros::Publisher P_Times;
-        ros::Publisher P_angular_velocity_x;
-        ros::Publisher P_angular_velocity_y;
-        ros::Publisher P_angular_velocity_z;
+        ros::Publisher P_angular_vel_x;
+        ros::Publisher P_angular_vel_y;
+        ros::Publisher P_angular_vel_z;
+        ros::Publisher P_linear_acc_x;
+        ros::Publisher P_linear_acc_y;
+        ros::Publisher P_linear_acc_z;
 
         ros::Publisher P_RL_force_x;
         ros::Publisher P_RL_force_y;
@@ -145,14 +148,31 @@ namespace gazebo
         ros::Publisher P_FR_force_x;
         ros::Publisher P_FR_force_y;
         ros::Publisher P_FR_force_z;
+
         ros::Publisher P_pitch;
         ros::Publisher P_roll;
         ros::Publisher P_yaw;
+        ros::Publisher P_kalman_pitch;
+        ros::Publisher P_kalman_roll;
+        ros::Publisher P_pitch_err;
+        ros::Publisher P_roll_err;
+        ros::Publisher P_roll_gyro;
+        ros::Publisher P_pitch_gyro;
+        ros::Publisher P_yaw_gyro;
+        ros::Publisher P_roll_acc;
+        ros::Publisher P_pitch_acc;
+        ros::Publisher P_yaw_acc;
+        ros::Publisher P_roll_comp;
+        ros::Publisher P_pitch_comp;
 
         std_msgs::Float64 m_Times;
-        std_msgs::Float64 m_angular_velocity_x;
-        std_msgs::Float64 m_angular_velocity_y;
-        std_msgs::Float64 m_angular_velocity_z;
+        std_msgs::Float64 m_angular_vel_x;
+        std_msgs::Float64 m_angular_vel_y;
+        std_msgs::Float64 m_angular_vel_z;
+        std_msgs::Float64 m_linear_acc_x;
+        std_msgs::Float64 m_linear_acc_y;
+        std_msgs::Float64 m_linear_acc_z;
+
         std_msgs::Float64 m_RL_force_x;
         std_msgs::Float64 m_RL_force_y;
         std_msgs::Float64 m_RL_force_z;
@@ -165,9 +185,22 @@ namespace gazebo
         std_msgs::Float64 m_FR_force_x;
         std_msgs::Float64 m_FR_force_y;
         std_msgs::Float64 m_FR_force_z;
+
         std_msgs::Float64 m_pitch;
         std_msgs::Float64 m_roll;
         std_msgs::Float64 m_yaw;
+        std_msgs::Float64 m_kalman_pitch;
+        std_msgs::Float64 m_kalman_roll;
+        std_msgs::Float64 m_pitch_err;
+        std_msgs::Float64 m_roll_err;
+        std_msgs::Float64 m_roll_gyro;
+        std_msgs::Float64 m_pitch_gyro;
+        std_msgs::Float64 m_yaw_gyro;
+        std_msgs::Float64 m_roll_acc;
+        std_msgs::Float64 m_pitch_acc;
+        std_msgs::Float64 m_yaw_acc;
+        std_msgs::Float64 m_roll_comp;
+        std_msgs::Float64 m_pitch_comp;
 
         // Rviz variable setting
         ros::Publisher P_joint_states;
@@ -176,8 +209,19 @@ namespace gazebo
         geometry_msgs::TransformStamped odom_trans;
         math::Pose pose;
 
+        ros::Publisher P_RL_force;
+        ros::Publisher P_RR_force;
+        ros::Publisher P_FL_force;
+        ros::Publisher P_FR_force;
+        geometry_msgs::WrenchStamped m_RL_force;
+        geometry_msgs::WrenchStamped m_RR_force;
+        geometry_msgs::WrenchStamped m_FL_force;
+        geometry_msgs::WrenchStamped m_FR_force;
+
+        //ros::Publisher P_joint_force;
         // DH PARA
-        //        double tar_deg[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        //double tar_deg[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        //double tar_deg[13] = {0, -30, 60, 0, -30, 60, 0, 0, 30, -60, 0, 30, -60};
         double tar_deg[13] = {0, -45, 90, 0, -45, 90, 0, 0, 45, -90, 0, 45, -90};
         VectorXd tau = VectorXd::Zero(13);
         VectorXd pre_Encoder = VectorXd::Zero(13); // Only 13 Joints
@@ -222,19 +266,37 @@ namespace gazebo
         // Adding CRobot Class by BKCho
         CRobot PongBotQ;
 
-        //TEST
-        ros::Publisher P_World_angle_y;
-        std_msgs::Float64 m_World_angle_y;
-        VectorXd xyz_angle = VectorXd::Zero(3);
-        VectorXd xyz_quat = VectorXd::Zero(4);
-        math::Quaternion World_Quaternion;
-        double World_angle_y;
+        //TEST_kalman
+        VectorXd EulerGyro = VectorXd::Zero(3);
+        VectorXd EulerAccel = VectorXd::Zero(3);
+        VectorXd z = VectorXd::Zero(4);
+        MatrixXd A = MatrixXd::Zero(4, 4);
+        VectorXd EulerKalman = VectorXd::Zero(3);
+        VectorXd Euler_err = VectorXd::Zero(3);
+
+
+        //TEST Complementary Filter
+        double pitch_gyro = 0;
+        double roll_gyro = 0;
+        double yaw_gyro = 0;
+        double pitch_acc = 0;
+        double roll_acc = 0;
+        double yaw_acc = 0;
+        double roll_comp = 0;
+        double pitch_comp = 0;
+
+        //double alpha_roll=0.9996;
+        //double alpha_roll=0.996;
+        //double alpha_roll=0.997;
+        double alpha_roll = 0.998;
+        double alpha_pitch = 0.999;
 
         // DH Parameters
-
+        VectorXd xyz_angle = VectorXd::Zero(3);
+        VectorXd xyz_quat = VectorXd::Zero(4);
         double init_pos_time = 1;
         double home_pos_time = 1;
-        //        double trot_time = 1;
+        double trot_time = 1;
 
         enum ControlMode
         {
@@ -283,8 +345,6 @@ namespace gazebo
         double ctc_cnt = 0, ctc_cnt2 = 0;
         bool trot_init_flag = false;
 
-
-
     public:
         //For model load
         void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
@@ -296,6 +356,99 @@ namespace gazebo
         void TROT_Traj(void);
     };
     GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
+}
+
+MatrixXd SystemMatrix(double wx, double wy, double wz, double dt)
+{
+    MatrixXd A(4, 4), tmp_matrix(4, 4);
+    tmp_matrix << 0, -wx, -wy, -wz \
+              , wx, 0, wz, -wy \
+              , wy, -wz, 0, wx \
+              , wz, wy, -wx, 0;
+
+    A = MatrixXd::Identity(4, 4) + dt * 1 / 2 * tmp_matrix;
+    return A;
+}
+
+VectorXd GetEulerAccel(double ax, double ay, double az)
+{
+    VectorXd EulerAccel(3);
+    double theta, phi;
+
+    phi = atan(ay / az);
+    theta = atan(ax / (sqrt(ay * ay + az * az)));
+
+    if (isnan(phi) || isnan(theta)) {
+        EulerAccel(0) = 0; //Roll
+        EulerAccel(1) = 0; //PITCH
+        EulerAccel(2) = 0;
+    }
+    else {
+        EulerAccel(0) = phi; //Roll
+        EulerAccel(1) = theta; //PITCH
+        EulerAccel(2) = 0;
+    }
+
+
+    return EulerAccel;
+}
+
+VectorXd EulerToQuaternion(double roll, double pitch, double yaw)
+{
+    VectorXd z(4);
+
+    z(0) = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
+    z(1) = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
+    z(2) = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(pitch / 2) * sin(yaw / 2);
+    z(3) = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(pitch / 2) * cos(yaw / 2);
+    return z;
+}
+
+VectorXd GetEulerKalman(MatrixXd A, VectorXd z)
+{
+    VectorXd EulerKalman(3);
+    VectorXd xp(4), x_new(4);
+    MatrixXd Pp(4, 4), P_new(4, 4);
+    MatrixXd tmp(4, 4), K(4, 4);
+
+    double phi, theta, psi;
+
+    if (g_firstRun == 0) {
+        //g_Q = 0.00001 * MatrixXd::Identity(4, 4);
+        //g_R = 100 * MatrixXd::Identity(4, 4);      
+        //g_Q = 0.00001 * MatrixXd::Identity(4, 4);
+        //g_R = 10 * MatrixXd::Identity(4, 4);  
+
+        g_Q = 0.00001 * MatrixXd::Identity(4, 4);
+        g_R = 100 * MatrixXd::Identity(4, 4);
+        //        g_Q = MatrixXd::Zero(4, 4);
+        //        g_R = MatrixXd::Zero(4, 4);
+
+        g_H = MatrixXd::Identity(4, 4);
+        g_P = MatrixXd::Identity(4, 4);
+        g_x << 1, 0, 0, 0;
+        g_firstRun = 1;
+
+    }
+    else {
+        xp = A * g_x;
+        Pp = A * g_P * A.transpose() + g_Q;
+        tmp = g_H * Pp * g_H.transpose() + g_R;
+        K = Pp * g_H.transpose() * tmp.inverse();
+        x_new = xp + K * (z - g_H * xp);
+        P_new = Pp - K * g_H*Pp;
+        g_x = x_new;
+        g_P = P_new;
+
+        phi = atan2(2 * (x_new(2) * x_new(3) + x_new(0) * x_new(1)), (1 - 2 * (x_new(1) * x_new(1) + x_new(2) * x_new(2))));
+        theta = -asin(2 * (x_new(1) * x_new(3) - x_new(0) * x_new(2)));
+        psi = atan2(2 * (x_new(1) * x_new(2) + x_new(0) * x_new(3)), (1 - 2 * (x_new(2) * x_new(2) + x_new(3) * x_new(3))));
+
+        EulerKalman(0) = phi * 180 / PI;
+        EulerKalman(1) = theta * 180 / PI;
+        EulerKalman(2) = psi * 180 / PI;
+        return EulerKalman;
+    }
 }
 
 void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
@@ -310,8 +463,8 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     version_test = rbdl_get_api_version();
     printf("rbdl api version = %d\n", version_test);
 
-    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, false);
-    //    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+//    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
     PongBotQ.setRobotModel(pongbot_q_model);
 
     //************************Link & Joint Setting*********************************//
@@ -381,9 +534,13 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     //************************ROS Msg Setting*********************************//
     //setting for communication
     P_Times = n.advertise<std_msgs::Float64>("times", 1);
-    P_angular_velocity_x = n.advertise<std_msgs::Float64>("angular_velocity_x", 1);
-    P_angular_velocity_y = n.advertise<std_msgs::Float64>("angular_velocity_y", 1);
-    P_angular_velocity_z = n.advertise<std_msgs::Float64>("angular_velocity_z", 1);
+    P_angular_vel_x = n.advertise<std_msgs::Float64>("angular_vel_x", 1);
+    P_angular_vel_y = n.advertise<std_msgs::Float64>("angular_vel_y", 1);
+    P_angular_vel_z = n.advertise<std_msgs::Float64>("angular_vel_z", 1);
+    P_linear_acc_x = n.advertise<std_msgs::Float64>("linear_acc_x", 1);
+    P_linear_acc_y = n.advertise<std_msgs::Float64>("linear_acc_y", 1);
+    P_linear_acc_z = n.advertise<std_msgs::Float64>("linear_acc_z", 1);
+
     P_RL_force_x = n.advertise<std_msgs::Float64>("RL_force_x", 1);
     P_RL_force_y = n.advertise<std_msgs::Float64>("RL_force_y", 1);
     P_RL_force_z = n.advertise<std_msgs::Float64>("RL_force_z", 1);
@@ -399,8 +556,19 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     P_pitch = n.advertise<std_msgs::Float64>("pitch", 1);
     P_roll = n.advertise<std_msgs::Float64>("roll", 1);
     P_yaw = n.advertise<std_msgs::Float64>("yaw", 1);
-    P_World_angle_y = n.advertise<std_msgs::Float64>("World_angle_y", 1);
+    P_kalman_pitch = n.advertise<std_msgs::Float64>("kalman_pitch", 1);
+    P_kalman_roll = n.advertise<std_msgs::Float64>("kalman_roll", 1);
+    P_pitch_err = n.advertise<std_msgs::Float64>("pitch_err", 1);
+    P_roll_err = n.advertise<std_msgs::Float64>("roll_err", 1);
 
+    P_roll_gyro = n.advertise<std_msgs::Float64>("roll_gyro", 1);
+    P_pitch_gyro = n.advertise<std_msgs::Float64>("pitch_gyro", 1);
+    P_yaw_gyro = n.advertise<std_msgs::Float64>("yaw_gyro", 1);
+    P_roll_acc = n.advertise<std_msgs::Float64>("roll_acc", 1);
+    P_pitch_acc = n.advertise<std_msgs::Float64>("pitch_acc", 1);
+    P_yaw_acc = n.advertise<std_msgs::Float64>("yaw_acc", 1);
+    P_roll_comp = n.advertise<std_msgs::Float64>("roll_comp", 1);
+    P_pitch_comp = n.advertise<std_msgs::Float64>("pitch_comp", 1);
 
     //**************************rviz inital setting*************************************//
     P_joint_states = n.advertise<sensor_msgs::JointState>("joint_states", 1);
@@ -408,6 +576,15 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     m_joint_states.position.resize(13);
     odom_trans.header.frame_id = "odom";
     odom_trans.child_frame_id = "REAR_BODY";
+
+    P_RL_force = n.advertise<geometry_msgs::WrenchStamped>("RL_force", 1000);
+    P_RR_force = n.advertise<geometry_msgs::WrenchStamped>("RR_force", 1000);
+    P_FL_force = n.advertise<geometry_msgs::WrenchStamped>("FL_force", 1000);
+    P_FR_force = n.advertise<geometry_msgs::WrenchStamped>("FR_force", 1000);
+    m_RL_force.header.frame_id = "RL_TIP";
+    m_RR_force.header.frame_id = "RR_TIP";
+    m_FL_force.header.frame_id = "FL_TIP";
+    m_FR_force.header.frame_id = "FR_TIP";
     //ros::Rate loop_rate(1000);
 }
 
@@ -421,39 +598,41 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     dt = current_time.Double() - this->last_update_time.Double();
     time = time + dt;
 
-    //*********************** Imu(Complementary filter) ******************************//
-    angular_velocity_x = 0.50 * angular_velocity_x + 0.50 * (this->IMU->AngularVelocity(false)[0]);
-    angular_velocity_y = 0.50 * angular_velocity_y + 0.50 * (this->IMU->AngularVelocity(false)[1]);
-    angular_velocity_z = 0.50 * angular_velocity_z + 0.50 * (this->IMU->AngularVelocity(false)[2]);
+    //*********************** Imu(Kalman filter) ******************************//
+    angular_vel_x = this->IMU->AngularVelocity(false)[0];
+    angular_vel_y = this->IMU->AngularVelocity(false)[1];
+    angular_vel_z = this->IMU->AngularVelocity(false)[2];
 
-    //angular_velocity_x = this->IMU->AngularVelocity(false)[0];
-    //angular_velocity_y = this->IMU->AngularVelocity(false)[1];
-    //angular_velocity_z = this->IMU->AngularVelocity(false)[2];
+    linear_acc_x = this->IMU->LinearAcceleration(false)[0];
+    linear_acc_y = this->IMU->LinearAcceleration(false)[1];
+    linear_acc_z = this->IMU->LinearAcceleration(false)[2];
 
-    //linear_acc_x = this->IMU->LinearAcceleration(false)[0];
-    //linear_acc_y = this->IMU->LinearAcceleration(false)[1];
-    //linear_acc_z = this->IMU->LinearAcceleration(false)[2];
+    pitch = pose.rot.GetPitch();
+    roll = pose.rot.GetRoll();
+    yaw = pose.rot.GetYaw();
 
-    linear_acc_x = 0.999 * linear_acc_z + 0.001 * (this->IMU->LinearAcceleration(false)[0]);
-    linear_acc_y = 0.999 * linear_acc_z + 0.001 * (this->IMU->LinearAcceleration(false)[1]);
-    linear_acc_z = 0.999 * linear_acc_z + 0.001 * (this->IMU->LinearAcceleration(false)[2]);
+    roll_gyro = roll_gyro + angular_vel_x*dt;
+    pitch_gyro = pitch_gyro + angular_vel_y*dt;
+    yaw_gyro = yaw_gyro + angular_vel_z*dt;
 
-    World_Quaternion = this->REAR_BODY->GetWorldPose().rot;
-    World_angle_y = World_Quaternion.GetAsEuler().y;
+    roll_acc = atan(linear_acc_y / linear_acc_z);
+    pitch_acc = atan(linear_acc_x / sqrt(linear_acc_y * linear_acc_y + linear_acc_z * linear_acc_z));
+    yaw_acc = 0;
 
-    //Complementary filter
-    accAngleX = (atan2(linear_acc_y, sqrt(pow(linear_acc_x, 2) + pow(linear_acc_z, 2))))*180 / PI;
-    accAngleY = (atan2(-linear_acc_x, sqrt(pow(linear_acc_y, 2) + pow(linear_acc_z, 2))))*180 / PI;
-    //gyroAngleX = (gyroAngleX + angular_velocity_x*dt)*180/PI;
-    ///gyroAngleY = (gyroAngleY + angular_velocity_y*dt)*180/PI;
-    gyroAngleX = gyroAngleX + angular_velocity_x * dt;
-    gyroAngleY = gyroAngleY + angular_velocity_y * dt;
+    if (isnan(roll_acc) || isnan(pitch_acc)) {
+        roll_acc = 0;
+        pitch_acc = 0;
+    }
 
-    //yaw = yaw + angular_velocity_z*dt;
-    yaw = angular_velocity_z*dt;
-    roll = 0.9 * gyroAngleX * 180 / PI + 0.1 * accAngleX;
-    pitch = 0.9 * gyroAngleY * 180 / PI + 0.1 * accAngleY;
+    roll_comp = alpha_roll * (angular_vel_x * dt + roll_comp)+(1 - alpha_roll) * roll_acc;
+    pitch_comp = alpha_pitch * (angular_vel_y * dt + pitch_comp)+(1 - alpha_pitch) * pitch_acc;
 
+
+    //TEST1(Kalman filter)
+//    A = SystemMatrix(angular_vel_x, angular_vel_y, angular_vel_z, dt);
+//    EulerAccel = GetEulerAccel(linear_acc_x, linear_acc_y, linear_acc_z);
+//    z = EulerToQuaternion(EulerAccel[0], EulerAccel[1], EulerAccel[2]); //z=(w,x,y,z)
+//    EulerKalman = GetEulerKalman(A, z);
 
     //************************** Encoder ********************************//
     Encoder[0] = this->RL_HIP_JOINT->GetAngle(0).Radian();
@@ -487,16 +666,12 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         angle_err[i] = (tar_deg[i] * D2R) - Encoder[i];
     }
 
-
     // ******************* DH : Trajectory Generation ****************** //
 
     xyz_angle << 0, 0, 0; //PI / 2;
     xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
     PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
-    //    cout<< "quat al = " << xyz_quat << endl;
-    //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
-
-    //    basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, 45*PI/180;//pose.rot.z;
+   
     basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2]; //pose.rot.z;
     baseVel << 0, 0, 0, 0, 0, 0;
     jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
@@ -508,10 +683,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
 
 
-
-
     static unsigned int ctr_cnt = 0;
-
 
     // next time, I will get this value(CONTROL_MODE) from rqt.
     if (ctr_cnt < init_pos_time / dt) {
@@ -527,8 +699,6 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     }
 
     ctr_cnt++;
-
-
 
     if (CONTROL_MODE == INIT_POS) {
         Init_Pos_Traj();
@@ -555,10 +725,10 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     }
     else if (TROT_PHASE == STANCE_RLFR) {
-        PongBotQ.Fc_RL = -tmp_Fc2; 
+        PongBotQ.Fc_RL = -tmp_Fc2;
         PongBotQ.Fc_RR = 0;
         PongBotQ.Fc_FL = 0;
-        PongBotQ.Fc_FR = -tmp_Fc2; 
+        PongBotQ.Fc_FR = -tmp_Fc2;
 
     }
     else if (TROT_PHASE == STANCE_RRFL) {
@@ -566,30 +736,24 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         PongBotQ.Fc_RR = -tmp_Fc2;
         PongBotQ.Fc_FL = -tmp_Fc2;
         PongBotQ.Fc_FR = 0;
-
     }
 
-
-
-
-
     if (CONTROL_MODE != INIT_POS) {
-        //        xyz_angle << 0, 0, 0; //PI / 2;
-        //        xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
-        //        PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
-        //        //    cout<< "quat al = " << xyz_quat << endl;
-        //        //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
-        //
-        //        //    basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, 45*PI/180;//pose.rot.z;
-        //        basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2]; //pose.rot.z;
-        //        baseVel << 0, 0, 0, 0, 0, 0;
-        //        jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
-        //        jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
-        //
-        //        //    cout << "jointAngle =" << jointAngle.transpose()*R2D << endl;
-        //
-        //        pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
-        //        PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
+//        xyz_angle << 0, 0, 0; //PI / 2;
+//        xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
+//        PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
+//        //    cout<< "quat al = " << xyz_quat << endl;
+//        //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
+//        //basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, 45*PI/180;//pose.rot.z;
+//        basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2]; //pose.rot.z;
+//        baseVel << 0, 0, 0, 0, 0, 0;
+//        jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
+//        jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
+//
+//        //    cout << "jointAngle =" << jointAngle.transpose()*R2D << endl;
+//
+//        pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
+//        PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
         PongBotQ.ComputeTorqueControl();
 
         //* Control law of PD Control + Gravity Compensation
@@ -613,66 +777,53 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     }
 
-
-
-
-    //***************************Set Torque********************************//
-
-    //    xyz_angle << 0, 0, 0;//PI / 2;
-    //    xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
-    //    PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
-    ////    cout<< "quat al = " << xyz_quat << endl;
-    //    //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
-    //
-    ////    basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, 45*PI/180;//pose.rot.z;
-    //    basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];//pose.rot.z;
-    //    baseVel << 0, 0, 0, 0, 0, 0;
-    //    jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
-    //    jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
-    //    
-    ////    cout << "jointAngle =" << jointAngle.transpose()*R2D << endl;
-    //    
-    //    pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
-    //    PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
-    //    PongBotQ.ComputeTorqueControl();
-    //
-    //    //* Control law of PD Control + Gravity Compensation
-    //    tau[0] = PongBotQ.joint[0].torque;//10 * (angle_err[0]) + 2 * (0 - angle_vel[0]) + PongBotQ.joint[0].torque; //RL_HIP
-    //    tau[1] = PongBotQ.joint[1].torque;//20 * (angle_err[1]) + 5 * (0 - angle_vel[1]) + PongBotQ.joint[1].torque; //RL_THIGH
-    //    tau[2] = PongBotQ.joint[2].torque;//20 * (angle_err[2]) + 5 * (0 - angle_vel[2]) + PongBotQ.joint[2].torque; //RL_CALF
-    //
-    //    tau[3] = PongBotQ.joint[3].torque;//10 * (angle_err[3]) + 2 * (0 - angle_vel[3]) + PongBotQ.joint[3].torque; //RR_HIP
-    //    tau[4] = PongBotQ.joint[4].torque;//20 * (angle_err[4]) + 5 * (0 - angle_vel[4]) + PongBotQ.joint[4].torque; //RR_THIGH
-    //    tau[5] = PongBotQ.joint[5].torque;//20 * (angle_err[5]) + 5 * (0 - angle_vel[5]) + PongBotQ.joint[5].torque; //RR_CALF
-    //
-    //    tau[6] = PongBotQ.joint[6].torque;//10 * (angle_err[6]) + 2 * (0 - angle_vel[6]) + PongBotQ.joint[6].torque; //WAIST
-    //
-    //    tau[7] = PongBotQ.joint[7].torque;//10 * (angle_err[7]) + 2 * (0 - angle_vel[7]) + PongBotQ.joint[7].torque; //FL_THIP
-    //    tau[8] = PongBotQ.joint[8].torque;//20 * (angle_err[8]) + 5 * (0 - angle_vel[8]) + PongBotQ.joint[8].torque; //FL_THIGH
-    //    tau[9] = PongBotQ.joint[9].torque;//20 * (angle_err[9]) + 5 * (0 - angle_vel[9]) + PongBotQ.joint[9].torque; //FL_CALF
-    //
-    //    tau[10] = PongBotQ.joint[10].torque;//10 * (angle_err[10]) + 2 * (0 - angle_vel[10]) + PongBotQ.joint[10].torque; //FR_HIP
-    //    tau[11] = PongBotQ.joint[11].torque;//20 * (angle_err[11]) + 5 * (0 - angle_vel[11]) + PongBotQ.joint[11].torque; //FR_THIGH
-    //    tau[12] = PongBotQ.joint[12].torque;//20 * (angle_err[12]) + 5 * (0 - angle_vel[12]) + PongBotQ.joint[12].torque; //FR_CALF
-
-
-
-    //* Control law of PD Control
-    //        tau[0] = 200 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
-    //        tau[1] = 400 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
-    //        tau[2] = 400 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
-    //        tau[3] = 200 * (angle_err[3]) + 10 * (0 - angle_vel[3]); //RR_HIP
-    //        tau[4] = 400 * (angle_err[4]) + 10 * (0 - angle_vel[4]); //RR_THIGH
-    //        tau[5] = 400 * (angle_err[5]) + 10 * (0 - angle_vel[5]); //RR_CALF
-    //    
-    //        tau[6] = 200 * (angle_err[6]) + 10 * (0 - angle_vel[6]); //WAIST
-    //    
-    //        tau[7] = 200 * (angle_err[7]) + 10 * (0 - angle_vel[7]); //FL_HIP
-    //        tau[8] = 400 * (angle_err[8]) + 10 * (0 - angle_vel[8]); //FL_THIGH
-    //        tau[9] = 400 * (angle_err[9]) + 10 * (0 - angle_vel[9]); //FL_CALF
-    //        tau[10] = 200 * (angle_err[10]) + 10 * (0 - angle_vel[10]); //FR_HIP
-    //        tau[11] = 400 * (angle_err[11]) + 10 * (0 - angle_vel[11]); //FR_THIGH
-    //        tau[12] = 400 * (angle_err[12]) + 10 * (0 - angle_vel[12]); //FR_CALF
+        //***************************Set Torque********************************//
+    
+//            PongBotQ.QQ << pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w;
+//            basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, pose.rot.z;
+//            baseVel << 0, 0, 0, 0, 0, 0;
+//            jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
+//            jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
+//        
+//            pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
+//            PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
+//            PongBotQ.ComputeTorqueControl();
+//        
+//            //* Control law of PD Control + Gravity Compensation
+//            //    tau[0] = 10 * (angle_err[0]) + 2 * (0 - angle_vel[0]) + PongBotQ.joint[0].torque; //RL_HIP
+//            //    tau[1] = 20 * (angle_err[1]) + 5 * (0 - angle_vel[1]) + PongBotQ.joint[1].torque; //RL_THIGH
+//            //    tau[2] = 20 * (angle_err[2]) + 5 * (0 - angle_vel[2]) + PongBotQ.joint[2].torque; //RL_CALF
+//            //
+//            //    tau[3] = 10 * (angle_err[3]) + 2 * (0 - angle_vel[3]) + PongBotQ.joint[3].torque; //RR_HIP
+//            //    tau[4] = 20 * (angle_err[4]) + 5 * (0 - angle_vel[4]) + PongBotQ.joint[4].torque; //RR_THIGH
+//            //    tau[5] = 20 * (angle_err[5]) + 5 * (0 - angle_vel[5]) + PongBotQ.joint[5].torque; //RR_CALF
+//            //
+//            //    tau[6] = 10 * (angle_err[6]) + 2 * (0 - angle_vel[6]) + PongBotQ.joint[6].torque; //WAIST
+//            //
+//            //    tau[7] = 10 * (angle_err[7]) + 2 * (0 - angle_vel[7]) + PongBotQ.joint[7].torque; //FL_THIP
+//            //    tau[8] = 20 * (angle_err[8]) + 5 * (0 - angle_vel[8]) + PongBotQ.joint[8].torque; //FL_THIGH
+//            //    tau[9] = 20 * (angle_err[9]) + 5 * (0 - angle_vel[9]) + PongBotQ.joint[9].torque; //FL_CALF
+//            //
+//            //    tau[10] = 10 * (angle_err[10]) + 2 * (0 - angle_vel[10]) + PongBotQ.joint[10].torque; //FR_HIP
+//            //    tau[11] = 20 * (angle_err[11]) + 5 * (0 - angle_vel[11]) + PongBotQ.joint[11].torque; //FR_THIGH
+//            //    tau[12] = 20 * (angle_err[12]) + 5 * (0 - angle_vel[12]) + PongBotQ.joint[12].torque; //FR_CALF
+//        
+//            //* Control law of PD Control
+//            tau[0] = 200 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
+//            tau[1] = 400 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
+//            tau[2] = 400 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
+//            tau[3] = 200 * (angle_err[3]) + 10 * (0 - angle_vel[3]); //RR_HIP
+//            tau[4] = 400 * (angle_err[4]) + 10 * (0 - angle_vel[4]); //RR_THIGH
+//            tau[5] = 400 * (angle_err[5]) + 10 * (0 - angle_vel[5]); //RR_CALF
+//        
+//            tau[6] = 200 * (angle_err[6]) + 10 * (0 - angle_vel[6]); //WAIST
+//        
+//            tau[7] = 200 * (angle_err[7]) + 10 * (0 - angle_vel[7]); //FL_HIP
+//            tau[8] = 400 * (angle_err[8]) + 10 * (0 - angle_vel[8]); //FL_THIGH
+//            tau[9] = 400 * (angle_err[9]) + 10 * (0 - angle_vel[9]); //FL_CALF
+//            tau[10] = 200 * (angle_err[10]) + 10 * (0 - angle_vel[10]); //FR_HIP
+//            tau[11] = 400 * (angle_err[11]) + 10 * (0 - angle_vel[11]); //FR_THIGH
+//            tau[12] = 400 * (angle_err[12]) + 10 * (0 - angle_vel[12]); //FR_CALF
 
     //* Applying torques
     this->RL_HIP_JOINT->SetForce(1, tau[0]);
@@ -715,8 +866,6 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     RL_C_IE = RL_C_EI.transpose();
     RL_Force_I = RL_C_IE*RL_Force_E;
     RL_Torque_I = RL_C_IE*RL_Torque_E;
-
-    //    std::cout << "MATRIX" << PongBotQ.RL.T_matrix << std::endl;
 
     ///getting Force and Torque of Rear Right Leg
     wrench = this->RR_TIP_JOINT->GetForceTorque(0);
@@ -779,16 +928,18 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     FR_Force_I = FR_C_IE*FR_Force_E;
     FR_Torque_I = FR_C_IE*FR_Torque_E;
 
-
     //setting for getting dt
     this->last_update_time = current_time;
 
     //***************************RQT DATA********************************//
     //getting readable angular_velocity data
     m_Times.data = current_time.Double();
-    m_angular_velocity_x.data = angular_velocity_x;
-    m_angular_velocity_y.data = angular_velocity_y;
-    m_angular_velocity_z.data = angular_velocity_z;
+    m_angular_vel_x.data = angular_vel_x;
+    m_angular_vel_y.data = angular_vel_y;
+    m_angular_vel_z.data = angular_vel_z;
+    m_linear_acc_x.data = linear_acc_x;
+    m_linear_acc_y.data = linear_acc_y;
+    m_linear_acc_z.data = linear_acc_z;
 
     //getting readable force data
     m_FR_force_x.data = FR_Force_I[0];
@@ -803,10 +954,21 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     m_RL_force_x.data = RL_Force_I[0];
     m_RL_force_y.data = RL_Force_I[1];
     m_RL_force_z.data = RL_Force_I[2];
-    m_pitch.data = pitch;
-    m_roll.data = roll;
-    m_yaw.data = yaw;
-    m_World_angle_y.data = World_angle_y;
+    m_pitch.data = pitch * 180 / PI;
+    m_roll.data = roll * 180 / PI;
+    m_yaw.data = yaw * 180 / PI;
+    m_kalman_pitch.data = EulerKalman[1];
+    m_kalman_roll.data = EulerKalman[0];
+    m_pitch_err.data = pitch - EulerKalman[1];
+    m_roll_err.data = roll - EulerKalman[0];
+    m_roll_gyro.data = roll_gyro;
+    m_pitch_gyro.data = pitch_gyro;
+    m_yaw_gyro.data = yaw_gyro;
+    m_roll_acc.data = roll_acc;
+    m_pitch_acc.data = pitch_acc;
+    m_yaw_acc.data = yaw_acc;
+    m_roll_comp.data = roll_comp * 180 / PI;
+    m_pitch_comp.data = pitch_comp * 180 / PI;
 
     //********************Rviz data**************************//
     m_joint_states.header.stamp = ros::Time::now();
@@ -824,12 +986,12 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     m_joint_states.name[11] = "FR_THIGH_JOINT";
     m_joint_states.name[12] = "FR_CALF_JOINT";
 
-    m_joint_states.position[0] = Encoder[0]; //RR_HIP
-    m_joint_states.position[1] = Encoder[1]; //RR_THIGH
-    m_joint_states.position[2] = Encoder[2]; //RR_CALF
-    m_joint_states.position[3] = Encoder[3]; //RL_HIP
-    m_joint_states.position[4] = Encoder[4]; //RL_THIGH
-    m_joint_states.position[5] = Encoder[5]; //RL_CALF
+    m_joint_states.position[0] = Encoder[0]; //RL_HIP
+    m_joint_states.position[1] = Encoder[1]; //RL_THIGH
+    m_joint_states.position[2] = Encoder[2]; //RL_CALF
+    m_joint_states.position[3] = Encoder[3]; //RR_HIP
+    m_joint_states.position[4] = Encoder[4]; //RR_THIGH
+    m_joint_states.position[5] = Encoder[5]; //RR_CALF
     m_joint_states.position[6] = Encoder[6]; //WAIST
     m_joint_states.position[7] = Encoder[7]; //FL_HIP
     m_joint_states.position[8] = Encoder[8]; //FL_THIGH 
@@ -846,16 +1008,45 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     odom_trans.transform.rotation.y = pose.rot.y;
     odom_trans.transform.rotation.z = pose.rot.z;
     odom_trans.transform.rotation.w = pose.rot.w;
-    //odom_trans.transform.translation.x = 0;
-    //odom_trans.transform.translation.y = 0;
-    //odom_trans.transform.translation.z = 0.6;
-    //odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(0);
+
+    m_RL_force.header.stamp = ros::Time::now();
+    m_RL_force.wrench.force.x = RL_Force_I[0];
+    m_RL_force.wrench.force.y = RL_Force_I[1];
+    m_RL_force.wrench.force.z = RL_Force_I[2];
+    m_RL_force.wrench.torque.x = RL_Torque_I[0];
+    m_RL_force.wrench.torque.y = RL_Torque_I[1];
+    m_RL_force.wrench.torque.z = RL_Torque_I[2];
+    m_RR_force.header.stamp = ros::Time::now();
+    m_RR_force.wrench.force.x = RR_Force_I[0];
+    m_RR_force.wrench.force.y = RR_Force_I[1];
+    m_RR_force.wrench.force.z = RR_Force_I[2];
+    m_RR_force.wrench.torque.x = RR_Torque_I[0];
+    m_RR_force.wrench.torque.y = RR_Torque_I[1];
+    m_RR_force.wrench.torque.z = RR_Torque_I[2];
+    m_FL_force.header.stamp = ros::Time::now();
+    m_FL_force.wrench.force.x = FL_Force_I[0];
+    m_FL_force.wrench.force.y = FL_Force_I[1];
+    m_FL_force.wrench.force.z = FL_Force_I[2];
+    m_FL_force.wrench.torque.x = FL_Torque_I[0];
+    m_FL_force.wrench.torque.y = FL_Torque_I[1];
+    m_FL_force.wrench.torque.z = FL_Torque_I[2];
+    m_FR_force.header.stamp = ros::Time::now();
+    m_FR_force.wrench.force.x = FR_Force_I[0];
+    m_FR_force.wrench.force.y = FR_Force_I[1];
+    m_FR_force.wrench.force.z = FR_Force_I[2];
+    m_FR_force.wrench.torque.x = FR_Torque_I[0];
+    m_FR_force.wrench.torque.y = FR_Torque_I[1];
+    m_FR_force.wrench.torque.z = FR_Torque_I[2];
 
     //publishing data
     P_Times.publish(m_Times);
-    P_angular_velocity_x.publish(m_angular_velocity_x);
-    P_angular_velocity_y.publish(m_angular_velocity_y);
-    P_angular_velocity_z.publish(m_angular_velocity_z);
+    P_angular_vel_x.publish(m_angular_vel_x);
+    P_angular_vel_y.publish(m_angular_vel_y);
+    P_angular_vel_z.publish(m_angular_vel_z);
+    P_linear_acc_x.publish(m_linear_acc_x);
+    P_linear_acc_y.publish(m_linear_acc_y);
+    P_linear_acc_z.publish(m_linear_acc_z);
+
     P_FR_force_x.publish(m_FR_force_x);
     P_FR_force_y.publish(m_FR_force_y);
     P_FR_force_z.publish(m_FR_force_z);
@@ -868,18 +1059,33 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     P_RL_force_x.publish(m_RL_force_x);
     P_RL_force_y.publish(m_RL_force_y);
     P_RL_force_z.publish(m_RL_force_z);
+
+    broadcaster.sendTransform(odom_trans);
+    P_joint_states.publish(m_joint_states);
+    P_RL_force.publish(m_RL_force);
+    P_RR_force.publish(m_RR_force);
+    P_FL_force.publish(m_FL_force);
+    P_FR_force.publish(m_FR_force);
+
     P_pitch.publish(m_pitch);
     P_roll.publish(m_roll);
     P_yaw.publish(m_yaw);
-    broadcaster.sendTransform(odom_trans);
-
-    P_World_angle_y.publish(m_World_angle_y);
-    P_joint_states.publish(m_joint_states);
+    P_kalman_pitch.publish(m_kalman_pitch);
+    P_kalman_roll.publish(m_kalman_roll);
+    P_pitch_err.publish(m_pitch_err);
+    P_roll_err.publish(m_roll_err);
+    P_roll_gyro.publish(m_roll_gyro);
+    P_pitch_gyro.publish(m_pitch_gyro);
+    P_yaw_gyro.publish(m_yaw_gyro);
+    P_roll_acc.publish(m_roll_acc);
+    P_pitch_acc.publish(m_pitch_acc);
+    P_yaw_acc.publish(m_yaw_acc);
+    P_roll_comp.publish(m_roll_comp);
+    P_pitch_comp.publish(m_pitch_comp);
 }
 
 void gazebo::PongBotQ_plugin::Init_Pos_Traj(void)
 {
-
     tau[0] = 100 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
     tau[1] = 200 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
     tau[2] = 200 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
@@ -1081,22 +1287,22 @@ void gazebo::PongBotQ_plugin::TROT_Traj(void)
 
         for (unsigned int i = 0; i < 3; ++i) {
 
-//            if (i == 0) {
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];// + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//            }
-//            else if (i == 1) {
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];//PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//            }
-//            else { // z
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_vel[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time)*(sin(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_acc[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time) * PI2 / (dsp_time)*(cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
-//            }
-            
+            //            if (i == 0) {
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];// + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //            }
+            //            else if (i == 1) {
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];//PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //            }
+            //            else { // z
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_vel[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time)*(sin(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_acc[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time) * PI2 / (dsp_time)*(cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
+            //            }
+
             PongBotQ.target_EP[i] = PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
             PongBotQ.target_EP_vel[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time)*(sin(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
             PongBotQ.target_EP_acc[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time) * PI2 / (dsp_time)*(cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
@@ -1116,22 +1322,22 @@ void gazebo::PongBotQ_plugin::TROT_Traj(void)
 
         for (unsigned int i = 9; i < 12; ++i) {
 
-//            if (i == 9) {
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];//PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//            }
-//            else if (i == 10) {
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];//PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
-//            }
-//            else { // z
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_vel[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time)*(sin(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
-//                PongBotQ.target_EP_acc[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time) * PI2 / (dsp_time)*(cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
-//            }
-            
+            //            if (i == 9) {
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];//PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //            }
+            //            else if (i == 10) {
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];//PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_vel[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_acc[i] = 0;//(PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*(double) (ctc_cnt2) * dt));
+            //            }
+            //            else { // z
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_vel[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time)*(sin(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
+            //                PongBotQ.target_EP_acc[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time) * PI2 / (dsp_time)*(cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
+            //            }
+
             PongBotQ.target_EP[i] = PongBotQ.init_EP[i] + (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
             PongBotQ.target_EP_vel[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time)*(sin(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
             PongBotQ.target_EP_acc[i] = (PongBotQ.trot_goal_EP[i] - PongBotQ.init_EP[i]) / 2.0 * PI2 / (dsp_time) * PI2 / (dsp_time)*(cos(PI2 / (dsp_time)*(double) (ctc_cnt2) * dt));
@@ -1145,22 +1351,22 @@ void gazebo::PongBotQ_plugin::TROT_Traj(void)
     case STANCE_RLFR:
         for (unsigned int i = 0; i < 3; ++i) {
 
-//            if (i == 0) {
-//                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//            }
-//            else if (i == 1) {
-//                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//            }
-//            else { // z
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];
-//                PongBotQ.target_EP_vel[i] = 0;
-//                PongBotQ.target_EP_acc[i] = 0;
-//            }
-            
+            //            if (i == 0) {
+            //                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //            }
+            //            else if (i == 1) {
+            //                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //            }
+            //            else { // z
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];
+            //                PongBotQ.target_EP_vel[i] = 0;
+            //                PongBotQ.target_EP_acc[i] = 0;
+            //            }
+
             PongBotQ.target_EP[i] = PongBotQ.init_EP[i];
             PongBotQ.target_EP_vel[i] = 0;
             PongBotQ.target_EP_acc[i] = 0;
@@ -1181,30 +1387,28 @@ void gazebo::PongBotQ_plugin::TROT_Traj(void)
         }
 
         for (unsigned int i = 9; i < 12; ++i) {
-            
 
-//            if (i == 9) {
-//                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//            }
-//            else if (i == 10) {
-//                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
-//            }
-//            else { // z
-//                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];
-//                PongBotQ.target_EP_vel[i] = 0;
-//                PongBotQ.target_EP_acc[i] = 0;
-//            }
-            
+
+            //            if (i == 9) {
+            //                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //            }
+            //            else if (i == 10) {
+            //                PongBotQ.target_EP[i] = PongBotQ.trot_goal_EP[i] + (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * (1 - cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_vel[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2)*(sin(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //                PongBotQ.target_EP_acc[i] = (PongBotQ.init_EP[i] - PongBotQ.trot_goal_EP[i]) / 2.0 * PI2 / (dsp_time * 2) * PI2 / (dsp_time * 2)*(cos(PI2 / (dsp_time * 2)*((double) ((ctc_cnt2) * dt) - step_time)));
+            //            }
+            //            else { // z
+            //                PongBotQ.target_EP[i] = PongBotQ.init_EP[i];
+            //                PongBotQ.target_EP_vel[i] = 0;
+            //                PongBotQ.target_EP_acc[i] = 0;
+            //            }
+
             PongBotQ.target_EP[i] = PongBotQ.init_EP[i];
             PongBotQ.target_EP_vel[i] = 0;
             PongBotQ.target_EP_acc[i] = 0;
         }
         break;
-
     }
-
 }

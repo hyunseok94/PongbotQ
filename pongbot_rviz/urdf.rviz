@@ -6,6 +6,10 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /WrenchStamped1
+        - /WrenchStamped2
+        - /WrenchStamped3
+        - /WrenchStamped4
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -74,6 +78,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        FL_TIP:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         FRONT_BODY:
           Alpha: 1
           Show Axes: false
@@ -90,6 +99,11 @@ Visualization Manager:
           Show Trail: false
           Value: true
         FR_THIGH:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        FR_TIP:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -115,6 +129,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        RL_TIP:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         RR_CALF:
           Alpha: 1
           Show Axes: false
@@ -130,17 +149,74 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        RR_TIP:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 0.5
+      Arrow Width: 0.100000001
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.00300000003
+      Force Color: 204; 51; 51
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /FL_force
+      Torque Arrow Scale: 0
+      Torque Color: 204; 204; 51
+      Unreliable: false
+      Value: true
+    - Alpha: 0.5
+      Arrow Width: 0.100000001
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.00300000003
+      Force Color: 204; 51; 51
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /FR_force
+      Torque Arrow Scale: 0
+      Torque Color: 204; 204; 51
+      Unreliable: false
+      Value: true
+    - Alpha: 0.5
+      Arrow Width: 0.100000001
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.00300000003
+      Force Color: 204; 51; 51
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /RL_force
+      Torque Arrow Scale: 0
+      Torque Color: 204; 204; 51
+      Unreliable: false
+      Value: true
+    - Alpha: 0.5
+      Arrow Width: 0.100000001
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.00300000003
+      Force Color: 204; 51; 51
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /RR_force
+      Torque Arrow Scale: 0
+      Torque Color: 204; 204; 51
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: REAR_BODY
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -161,26 +237,146 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.97160459
+      Distance: 4.17299747
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.323718965
-        Y: 0.0556490347
-        Z: -0.273700505
+        X: 0.248679489
+        Y: 0.307642668
+        Z: 0.0380891711
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.940397918
+      Pitch: 0.220397815
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.26541376
-    Saved: ~
+      Yaw: 5.50040865
+    Saved:
+      - Class: rviz/Orbit
+        Distance: 2.76996255
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.0599999987
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0.323718965
+          Y: 0.0556490347
+          Z: -0.273700505
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.0500000007
+        Invert Z Axis: false
+        Name: Orbit
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.375397861
+        Target Frame: <Fixed Frame>
+        Value: Orbit (rviz)
+        Yaw: 5.58041
+      - Class: rviz/Orbit
+        Distance: 3.47464108
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.0599999987
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0.323718965
+          Y: 0.0556490347
+          Z: -0.273700505
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.0500000007
+        Invert Z Axis: false
+        Name: Orbit
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.375397861
+        Target Frame: <Fixed Frame>
+        Value: Orbit (rviz)
+        Yaw: 5.58041
+      - Class: rviz/Orbit
+        Distance: 3.47464108
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.0599999987
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0.323718965
+          Y: 0.0556490347
+          Z: -0.273700505
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.0500000007
+        Invert Z Axis: false
+        Name: Orbit
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.375397861
+        Target Frame: <Fixed Frame>
+        Value: Orbit (rviz)
+        Yaw: 5.58041
+      - Class: rviz/Orbit
+        Distance: 3.47464108
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.0599999987
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0.323718965
+          Y: 0.0556490347
+          Z: -0.273700505
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.0500000007
+        Invert Z Axis: false
+        Name: Orbit
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.375397861
+        Target Frame: <Fixed Frame>
+        Value: Orbit (rviz)
+        Yaw: 5.58041
+      - Class: rviz/Orbit
+        Distance: 3.47464108
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.0599999987
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0.323718965
+          Y: 0.0556490347
+          Z: -0.273700505
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.0500000007
+        Invert Z Axis: false
+        Name: Orbit
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.375397861
+        Target Frame: <Fixed Frame>
+        Value: Orbit (rviz)
+        Yaw: 5.58041
+      - Class: rviz/Orbit
+        Distance: 4.17299747
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.0599999987
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0.248679489
+          Y: 0.307642668
+          Z: 0.0380891711
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.0500000007
+        Invert Z Axis: false
+        Name: Orbit
+        Near Clip Distance: 0.00999999978
+        Pitch: 0.220397815
+        Target Frame: <Fixed Frame>
+        Value: Orbit (rviz)
+        Yaw: 5.50040865
 Window Geometry:
   Displays:
     collapsed: false

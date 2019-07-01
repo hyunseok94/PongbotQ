@@ -6,12 +6,12 @@
 #include <rbdl/addons/urdfreader/urdfreader.h>
 
 #define PI  3.14159265359
-#define PI2  6.28318530718
+#define PI2 6.28318530718
 #define GRAVITY 9.81
 
 #define onemsec 0.001
 #define onesec  1
-#define tasktime 0.001    
+#define tasktime 0.001
 #define onesecSize 1000 // 0.001 x 1000 = 1sec
 
 #define POSITIONCONTROLMODE 1
@@ -31,7 +31,7 @@ using namespace std;
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
-typedef struct Base //coordinate of Base 
+typedef struct Base //coordinate of Base
 {
     //* Current information
     double currentX, currentXvel, currentXacc;
@@ -110,17 +110,14 @@ typedef struct EndPoint {
     RigidBodyDynamics::Math::VectorNd refacc;
 
     RigidBodyDynamics::Math::VectorNd Target;
-    
+
     RigidBodyDynamics::Math::Matrix3d T_matrix;
 
     int ID;
 } ENDPOINT;
 
-
-
-
 class CRobot {
-   
+
 public:
     //Functions
     CRobot();
@@ -131,59 +128,59 @@ public:
     void getRobotState(VectorNd BasePosOri, VectorNd BaseVel, VectorNd jointAngle, VectorNd jointVel);
     void ComputeTorqueControl();
     void FTsensorTransformation();
-    
+
     //Variables
-    BASE base; //* coordinate of Body    
+    BASE base; //* coordinate of Body
     JOINT* joint; //* joints of the robot
     ENDPOINT FR, FL, RR, RL, front_body;
     int nDOF; //* number of DOFs of a robot
-    
+
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
     RigidBodyDynamics::Math::VectorNd RobotState;
     RigidBodyDynamics::Math::VectorNd RobotStatedot;
-    RigidBodyDynamics::Math::VectorNd RobotState2dot;
+     RigidBodyDynamics::Math::VectorNd RobotState2dot;
     RigidBodyDynamics::Math::VectorNd BasePosOri;
     RigidBodyDynamics::Math::VectorNd BaseVel;
     RigidBodyDynamics::Math::VectorNd JointAngle;
     RigidBodyDynamics::Math::VectorNd JointVel;
-    
+
     MatrixNd M_term = MatrixNd::Zero(19, 19);
     VectorNd hatNonLinearEffects = VectorNd::Zero(19);
     VectorNd G_term = VectorNd::Zero(19);
     VectorNd C_term = VectorNd::Zero(19);
     VectorNd CTC_Torque = VectorNd::Zero(19);
-    
+
     VectorNd EP_RL = Vector3d(0,0,0);
     VectorNd EP_RR = Vector3d(0,0,0);
     VectorNd EP_FL = Vector3d(0,0,0);
     VectorNd EP_FR = Vector3d(0,0,0);
-    
+
     double L3_x = 0.025516;
     double L3_y = 0.0;
     double L3_z = 0.304515;
-    
+
     VectorNd EP_OFFSET_RL = Vector3d( L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_RR = Vector3d( L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FL = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FR = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd Originbase = Vector3d(0, 0, 0);
-    
+
     VectorNd actual_EP = VectorNd::Zero(12);
     VectorNd actual_EP_vel = VectorNd::Zero(12);
     VectorNd actual_EP_acc = VectorNd::Zero(12);
-    
+
     MatrixNd J_RL = MatrixNd::Zero(3,19);
     MatrixNd J_RR = MatrixNd::Zero(3,19);
     MatrixNd J_FL = MatrixNd::Zero(3,19);
     MatrixNd J_FR = MatrixNd::Zero(3,19);
     MatrixNd J_FRONT_BODY = MatrixNd::Zero(6,19);
     MatrixNd J_BASE = MatrixNd::Zero(6,19);
-    
+
     MatrixNd J_A = MatrixNd::Zero(19,19);
-    
+
     VectorNd x_dot = VectorNd::Zero(19);
     VectorNd ddqZero = VectorNd::Zero(19);
-    
+
     VectorNd RL_dJdQ = Vector3d(0,0,0);
     VectorNd RR_dJdQ = Vector3d(0,0,0);
     VectorNd FL_dJdQ = Vector3d(0,0,0);
@@ -191,10 +188,10 @@ public:
     VectorNd FRONT_BODY_dJdQ = VectorNd::Zero(6);
     VectorNd base_dJdQ = VectorNd::Zero(6);
     VectorNd dJdQ = VectorNd::Zero(19);
-    
+
     VectorNd Fc = VectorNd::Zero(19);
     VectorNd x_2dot_cp = VectorNd::Zero(19);
-    
+
     VectorNd Kp_EP = VectorNd::Zero(12);//(100,100,100,100,100,100,100,100,100,100,100,100);
     VectorNd Kd_EP = VectorNd::Zero(12);//(1,1,1,1,1,1,1,1,1,1,1,1);
     VectorNd target_EP = VectorNd::Zero(12);
@@ -204,22 +201,10 @@ public:
     VectorNd init_EP = VectorNd::Zero(12);
 //    VectorNd init_goal_EP = VectorNd::Zero(12);
     VectorNd trot_goal_EP = VectorNd::Zero(12);
-    
-    
-    
-    
     double Fc_RL = 0, Fc_RR = 0, Fc_FL = 0, Fc_FR = 0;
-    
-    
-    
-    Quaternion QQ;
-    
-    
 
-    
-    
+    Quaternion QQ;
 private:
 };
 
 #endif /* CROBOT_H */
-
