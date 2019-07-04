@@ -160,8 +160,8 @@ void CRobot::ComputeTorqueControl()
         x_2dot_cp[i + 7] = target_EP_acc[i] + Kp_EP[i]*(target_EP[i] - actual_EP[i]) + Kd_EP[i]*(target_EP_vel[i] - actual_EP_vel[i]);
     }
 
-
-    RobotState2dot = J_A.inverse()*(x_2dot_cp - dJdQ);
+    RobotState2dot = J_A.partialPivLu().solve(x_2dot_cp - dJdQ);   //midium 0.65
+    //RobotState2dot = J_A.inverse()*(x_2dot_cp - dJdQ);
 
     CompositeRigidBodyAlgorithm(*m_pModel, RobotState, M_term, true);
     NonlinearEffects(*m_pModel, RobotState, RobotStatedot, hatNonLinearEffects);
