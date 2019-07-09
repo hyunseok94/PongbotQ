@@ -11,6 +11,7 @@
 #include <functional>
 #include <ignition/math/Vector3.hh>
 #include "Eigen/Dense"
+//#include <Eigen/Dense>
 #include <rbdl/rbdl.h>
 #include <rbdl/addons/urdfreader/urdfreader.h>
 #include <sensor_msgs/JointState.h>             //for rviz
@@ -23,6 +24,7 @@
 //#define R2D     180/PI
 //#define gravity       9.81;
 
+using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Vector3d;
@@ -223,10 +225,10 @@ namespace gazebo
         //double tar_deg[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         //double tar_deg[13] = {0, -30, 60, 0, -30, 60, 0, 0, 30, -60, 0, 30, -60};
         double tar_deg[13] = {0, -45, 90, 0, -45, 90, 0, 0, 45, -90, 0, 45, -90};
-        VectorXd tau = VectorXd::Zero(13);
-        VectorXd pre_Encoder = VectorXd::Zero(13); // Only 13 Joints
-        VectorXd angle_err = VectorXd::Zero(13);
-        VectorXd angle_vel = VectorXd::Zero(13);
+        VectorXd tar_torque = VectorXd::Zero(13);
+        VectorXd pre_actual_q = VectorXd::Zero(13); // Only 13 Joints
+        VectorXd q_err = VectorXd::Zero(13);
+        VectorXd actual_q_dot = VectorXd::Zero(13);
 
         //Gravity Compensation
         VectorXd basePosOri = VectorXd::Zero(6);
@@ -235,7 +237,7 @@ namespace gazebo
         VectorXd jointVel = VectorXd::Zero(13);
 
         // FT sensor Transformation
-        VectorXd Encoder = VectorXd::Zero(17); // 13 Joints + 4 Tips
+        VectorXd actual_q = VectorXd::Zero(17); // 13 Joints + 4 Tips
         VectorXd RL_Force_E = VectorXd::Zero(3);
         VectorXd RL_Force_I = VectorXd::Zero(3);
         VectorXd RL_Torque_E = VectorXd::Zero(3);
@@ -354,101 +356,12 @@ namespace gazebo
         void Home_Pos_Traj(void);
         void Pos_Init_Traj(void);
         void TROT_Traj(void);
+        MatrixXd SystemMatrix(double wx, double wy, double wz, double dt);
+        VectorXd GetEulerAccel(double ax, double ay, double az);
+        VectorXd EulerToQuaternion(double roll, double pitch, double yaw);
+        VectorXd GetEulerKalman(MatrixXd A, VectorXd z);
     };
     GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
-}
-
-MatrixXd SystemMatrix(double wx, double wy, double wz, double dt)
-{
-    MatrixXd A(4, 4), tmp_matrix(4, 4);
-    tmp_matrix << 0, -wx, -wy, -wz \
-              , wx, 0, wz, -wy \
-              , wy, -wz, 0, wx \
-              , wz, wy, -wx, 0;
-
-    A = MatrixXd::Identity(4, 4) + dt * 1 / 2 * tmp_matrix;
-    return A;
-}
-
-VectorXd GetEulerAccel(double ax, double ay, double az)
-{
-    VectorXd EulerAccel(3);
-    double theta, phi;
-
-    phi = atan(ay / az);
-    theta = atan(ax / (sqrt(ay * ay + az * az)));
-
-    if (isnan(phi) || isnan(theta)) {
-        EulerAccel(0) = 0; //Roll
-        EulerAccel(1) = 0; //PITCH
-        EulerAccel(2) = 0;
-    }
-    else {
-        EulerAccel(0) = phi; //Roll
-        EulerAccel(1) = theta; //PITCH
-        EulerAccel(2) = 0;
-    }
-
-
-    return EulerAccel;
-}
-
-VectorXd EulerToQuaternion(double roll, double pitch, double yaw)
-{
-    VectorXd z(4);
-
-    z(0) = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
-    z(1) = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
-    z(2) = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(pitch / 2) * sin(yaw / 2);
-    z(3) = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(pitch / 2) * cos(yaw / 2);
-    return z;
-}
-
-VectorXd GetEulerKalman(MatrixXd A, VectorXd z)
-{
-    VectorXd EulerKalman(3);
-    VectorXd xp(4), x_new(4);
-    MatrixXd Pp(4, 4), P_new(4, 4);
-    MatrixXd tmp(4, 4), K(4, 4);
-
-    double phi, theta, psi;
-
-    if (g_firstRun == 0) {
-        //g_Q = 0.00001 * MatrixXd::Identity(4, 4);
-        //g_R = 100 * MatrixXd::Identity(4, 4);      
-        //g_Q = 0.00001 * MatrixXd::Identity(4, 4);
-        //g_R = 10 * MatrixXd::Identity(4, 4);  
-
-        g_Q = 0.00001 * MatrixXd::Identity(4, 4);
-        g_R = 100 * MatrixXd::Identity(4, 4);
-        //        g_Q = MatrixXd::Zero(4, 4);
-        //        g_R = MatrixXd::Zero(4, 4);
-
-        g_H = MatrixXd::Identity(4, 4);
-        g_P = MatrixXd::Identity(4, 4);
-        g_x << 1, 0, 0, 0;
-        g_firstRun = 1;
-
-    }
-    else {
-        xp = A * g_x;
-        Pp = A * g_P * A.transpose() + g_Q;
-        tmp = g_H * Pp * g_H.transpose() + g_R;
-        K = Pp * g_H.transpose() * tmp.inverse();
-        x_new = xp + K * (z - g_H * xp);
-        P_new = Pp - K * g_H*Pp;
-        g_x = x_new;
-        g_P = P_new;
-
-        phi = atan2(2 * (x_new(2) * x_new(3) + x_new(0) * x_new(1)), (1 - 2 * (x_new(1) * x_new(1) + x_new(2) * x_new(2))));
-        theta = -asin(2 * (x_new(1) * x_new(3) - x_new(0) * x_new(2)));
-        psi = atan2(2 * (x_new(1) * x_new(2) + x_new(0) * x_new(3)), (1 - 2 * (x_new(2) * x_new(2) + x_new(3) * x_new(3))));
-
-        EulerKalman(0) = phi * 180 / PI;
-        EulerKalman(1) = theta * 180 / PI;
-        EulerKalman(2) = psi * 180 / PI;
-        return EulerKalman;
-    }
 }
 
 void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
@@ -463,8 +376,8 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     version_test = rbdl_get_api_version();
     printf("rbdl api version = %d\n", version_test);
 
-    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
-//    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+    //Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
     PongBotQ.setRobotModel(pongbot_q_model);
 
     //************************Link & Joint Setting*********************************//
@@ -624,46 +537,46 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         pitch_acc = 0;
     }
 
-    roll_comp = alpha_roll * (angular_vel_x * dt + roll_comp)+(1 - alpha_roll) * roll_acc;
-    pitch_comp = alpha_pitch * (angular_vel_y * dt + pitch_comp)+(1 - alpha_pitch) * pitch_acc;
-
-
-    //TEST1(Kalman filter)
-//    A = SystemMatrix(angular_vel_x, angular_vel_y, angular_vel_z, dt);
-//    EulerAccel = GetEulerAccel(linear_acc_x, linear_acc_y, linear_acc_z);
-//    z = EulerToQuaternion(EulerAccel[0], EulerAccel[1], EulerAccel[2]); //z=(w,x,y,z)
-//    EulerKalman = GetEulerKalman(A, z);
+    //    roll_comp = alpha_roll * (angular_vel_x * dt + roll_comp)+(1 - alpha_roll) * roll_acc;
+    //    pitch_comp = alpha_pitch * (angular_vel_y * dt + pitch_comp)+(1 - alpha_pitch) * pitch_acc;
+    //
+    //
+    //    //TEST1(Kalman filter)
+    //    A = SystemMatrix(angular_vel_x, angular_vel_y, angular_vel_z, dt);
+    //    EulerAccel = GetEulerAccel(linear_acc_x, linear_acc_y, linear_acc_z);
+    //    z = EulerToQuaternion(EulerAccel[0], EulerAccel[1], EulerAccel[2]); //z=(w,x,y,z)
+    //    EulerKalman = GetEulerKalman(A, z);
 
     //************************** Encoder ********************************//
-    Encoder[0] = this->RL_HIP_JOINT->GetAngle(0).Radian();
-    Encoder[1] = this->RL_THIGH_JOINT->GetAngle(0).Radian();
-    Encoder[2] = this->RL_CALF_JOINT->GetAngle(0).Radian();
+    actual_q[0] = this->RL_HIP_JOINT->GetAngle(0).Radian();
+    actual_q[1] = this->RL_THIGH_JOINT->GetAngle(0).Radian();
+    actual_q[2] = this->RL_CALF_JOINT->GetAngle(0).Radian();
 
-    Encoder[3] = this->RR_HIP_JOINT->GetAngle(0).Radian();
-    Encoder[4] = this->RR_THIGH_JOINT->GetAngle(0).Radian();
-    Encoder[5] = this->RR_CALF_JOINT->GetAngle(0).Radian();
+    actual_q[3] = this->RR_HIP_JOINT->GetAngle(0).Radian();
+    actual_q[4] = this->RR_THIGH_JOINT->GetAngle(0).Radian();
+    actual_q[5] = this->RR_CALF_JOINT->GetAngle(0).Radian();
 
-    Encoder[6] = this->WAIST_JOINT->GetAngle(0).Radian();
+    actual_q[6] = this->WAIST_JOINT->GetAngle(0).Radian();
 
-    Encoder[7] = this->FL_HIP_JOINT->GetAngle(0).Radian();
-    Encoder[8] = this->FL_THIGH_JOINT->GetAngle(0).Radian();
-    Encoder[9] = this->FL_CALF_JOINT->GetAngle(0).Radian();
+    actual_q[7] = this->FL_HIP_JOINT->GetAngle(0).Radian();
+    actual_q[8] = this->FL_THIGH_JOINT->GetAngle(0).Radian();
+    actual_q[9] = this->FL_CALF_JOINT->GetAngle(0).Radian();
 
-    Encoder[10] = this->FR_HIP_JOINT->GetAngle(0).Radian();
-    Encoder[11] = this->FR_THIGH_JOINT->GetAngle(0).Radian();
-    Encoder[12] = this->FR_CALF_JOINT->GetAngle(0).Radian();
+    actual_q[10] = this->FR_HIP_JOINT->GetAngle(0).Radian();
+    actual_q[11] = this->FR_THIGH_JOINT->GetAngle(0).Radian();
+    actual_q[12] = this->FR_CALF_JOINT->GetAngle(0).Radian();
 
-    Encoder[13] = -PI / 4; //RL_TIP
-    Encoder[14] = -PI / 4; //RR_TIP
-    Encoder[15] = PI / 4; //FL_TIP
-    Encoder[16] = PI / 4; //FR_TIP
+    actual_q[13] = -PI / 4; //RL_TIP
+    actual_q[14] = -PI / 4; //RR_TIP
+    actual_q[15] = PI / 4; //FL_TIP
+    actual_q[16] = PI / 4; //FR_TIP
 
     //* calculating errors
     // Angle & Angular velocity of leg
     for (int i = 0; i < 13; i++) {
-        angle_vel[i] = (Encoder[i] - pre_Encoder[i]) / dt;
-        pre_Encoder[i] = Encoder[i];
-        angle_err[i] = (tar_deg[i] * D2R) - Encoder[i];
+        actual_q_dot[i] = (actual_q[i] - pre_actual_q[i]) / dt;
+        pre_actual_q[i] = actual_q[i];
+        q_err[i] = (tar_deg[i] * D2R) - actual_q[i];
     }
 
     // ******************* DH : Trajectory Generation ****************** //
@@ -671,11 +584,11 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     xyz_angle << 0, 0, 0; //PI / 2;
     xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
     PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
-   
+
     basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2]; //pose.rot.z;
     baseVel << 0, 0, 0, 0, 0, 0;
-    jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
-    jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
+    jointAngle << actual_q[0], actual_q[1], actual_q[2], actual_q[3], actual_q[4], actual_q[5], actual_q[6], actual_q[7], actual_q[8], actual_q[9], actual_q[10], actual_q[11], actual_q[12];
+    jointVel << actual_q_dot[0], actual_q_dot[1], actual_q_dot[2], actual_q_dot[3], actual_q_dot[4], actual_q_dot[5], actual_q_dot[6], actual_q_dot[7], actual_q_dot[8], actual_q_dot[9], actual_q_dot[10], actual_q_dot[11], actual_q_dot[12];
 
     //    cout << "jointAngle =" << jointAngle.transpose()*R2D << endl;
 
@@ -739,110 +652,110 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     }
 
     if (CONTROL_MODE != INIT_POS) {
-//        xyz_angle << 0, 0, 0; //PI / 2;
-//        xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
-//        PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
-//        //    cout<< "quat al = " << xyz_quat << endl;
-//        //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
-//        //basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, 45*PI/180;//pose.rot.z;
-//        basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2]; //pose.rot.z;
-//        baseVel << 0, 0, 0, 0, 0, 0;
-//        jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
-//        jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
-//
-//        //    cout << "jointAngle =" << jointAngle.transpose()*R2D << endl;
-//
-//        pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
-//        PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
+        //        xyz_angle << 0, 0, 0; //PI / 2;
+        //        xyz_quat = Quaternion::fromXYZAngles(xyz_angle);
+        //        PongBotQ.QQ << xyz_quat[0], xyz_quat[1], xyz_quat[2], xyz_quat[3];
+        //        //    cout<< "quat al = " << xyz_quat << endl;
+        //        //basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2];
+        //        //basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, 45*PI/180;//pose.rot.z;
+        //        basePosOri << 0, 0, 0, xyz_quat[0], xyz_quat[1], xyz_quat[2]; //pose.rot.z;
+        //        baseVel << 0, 0, 0, 0, 0, 0;
+        //        jointAngle << actual_q[0], actual_q[1], actual_q[2], actual_q[3], actual_q[4], actual_q[5], actual_q[6], actual_q[7], actual_q[8], actual_q[9], actual_q[10], actual_q[11], actual_q[12];
+        //        jointVel << actual_q_dot[0], actual_q_dot[1], actual_q_dot[2], actual_q_dot[3], actual_q_dot[4], actual_q_dot[5], actual_q_dot[6], actual_q_dot[7], actual_q_dot[8], actual_q_dot[9], actual_q_dot[10], actual_q_dot[11], actual_q_dot[12];
+        //
+        //        //    cout << "jointAngle =" << jointAngle.transpose()*R2D << endl;
+        //
+        //        pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
+        //        PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
         PongBotQ.ComputeTorqueControl();
 
         //* Control law of PD Control + Gravity Compensation
-        tau[0] = PongBotQ.joint[0].torque; //10 * (angle_err[0]) + 2 * (0 - angle_vel[0]) + PongBotQ.joint[0].torque; //RL_HIP
-        tau[1] = PongBotQ.joint[1].torque; //20 * (angle_err[1]) + 5 * (0 - angle_vel[1]) + PongBotQ.joint[1].torque; //RL_THIGH
-        tau[2] = PongBotQ.joint[2].torque; //20 * (angle_err[2]) + 5 * (0 - angle_vel[2]) + PongBotQ.joint[2].torque; //RL_CALF
+        tar_torque[0] = PongBotQ.joint[0].torque; //10 * (q_err[0]) + 2 * (0 - actual_q_dot[0]) + PongBotQ.joint[0].torque; //RL_HIP
+        tar_torque[1] = PongBotQ.joint[1].torque; //20 * (q_err[1]) + 5 * (0 - actual_q_dot[1]) + PongBotQ.joint[1].torque; //RL_THIGH
+        tar_torque[2] = PongBotQ.joint[2].torque; //20 * (q_err[2]) + 5 * (0 - actual_q_dot[2]) + PongBotQ.joint[2].torque; //RL_CALF
 
-        tau[3] = PongBotQ.joint[3].torque; //10 * (angle_err[3]) + 2 * (0 - angle_vel[3]) + PongBotQ.joint[3].torque; //RR_HIP
-        tau[4] = PongBotQ.joint[4].torque; //20 * (angle_err[4]) + 5 * (0 - angle_vel[4]) + PongBotQ.joint[4].torque; //RR_THIGH
-        tau[5] = PongBotQ.joint[5].torque; //20 * (angle_err[5]) + 5 * (0 - angle_vel[5]) + PongBotQ.joint[5].torque; //RR_CALF
+        tar_torque[3] = PongBotQ.joint[3].torque; //10 * (q_err[3]) + 2 * (0 - actual_q_dot[3]) + PongBotQ.joint[3].torque; //RR_HIP
+        tar_torque[4] = PongBotQ.joint[4].torque; //20 * (q_err[4]) + 5 * (0 - actual_q_dot[4]) + PongBotQ.joint[4].torque; //RR_THIGH
+        tar_torque[5] = PongBotQ.joint[5].torque; //20 * (q_err[5]) + 5 * (0 - actual_q_dot[5]) + PongBotQ.joint[5].torque; //RR_CALF
 
-        tau[6] = PongBotQ.joint[6].torque; //10 * (angle_err[6]) + 2 * (0 - angle_vel[6]) + PongBotQ.joint[6].torque; //WAIST
+        tar_torque[6] = PongBotQ.joint[6].torque; //10 * (q_err[6]) + 2 * (0 - actual_q_dot[6]) + PongBotQ.joint[6].torque; //WAIST
 
-        tau[7] = PongBotQ.joint[7].torque; //10 * (angle_err[7]) + 2 * (0 - angle_vel[7]) + PongBotQ.joint[7].torque; //FL_THIP
-        tau[8] = PongBotQ.joint[8].torque; //20 * (angle_err[8]) + 5 * (0 - angle_vel[8]) + PongBotQ.joint[8].torque; //FL_THIGH
-        tau[9] = PongBotQ.joint[9].torque; //20 * (angle_err[9]) + 5 * (0 - angle_vel[9]) + PongBotQ.joint[9].torque; //FL_CALF
+        tar_torque[7] = PongBotQ.joint[7].torque; //10 * (q_err[7]) + 2 * (0 - actual_q_dot[7]) + PongBotQ.joint[7].torque; //FL_THIP
+        tar_torque[8] = PongBotQ.joint[8].torque; //20 * (q_err[8]) + 5 * (0 - actual_q_dot[8]) + PongBotQ.joint[8].torque; //FL_THIGH
+        tar_torque[9] = PongBotQ.joint[9].torque; //20 * (q_err[9]) + 5 * (0 - actual_q_dot[9]) + PongBotQ.joint[9].torque; //FL_CALF
 
-        tau[10] = PongBotQ.joint[10].torque; //10 * (angle_err[10]) + 2 * (0 - angle_vel[10]) + PongBotQ.joint[10].torque; //FR_HIP
-        tau[11] = PongBotQ.joint[11].torque; //20 * (angle_err[11]) + 5 * (0 - angle_vel[11]) + PongBotQ.joint[11].torque; //FR_THIGH
-        tau[12] = PongBotQ.joint[12].torque; //20 * (angle_err[12]) + 5 * (0 - angle_vel[12]) + PongBotQ.joint[12].torque; //FR_CALF
+        tar_torque[10] = PongBotQ.joint[10].torque; //10 * (q_err[10]) + 2 * (0 - actual_q_dot[10]) + PongBotQ.joint[10].torque; //FR_HIP
+        tar_torque[11] = PongBotQ.joint[11].torque; //20 * (q_err[11]) + 5 * (0 - actual_q_dot[11]) + PongBotQ.joint[11].torque; //FR_THIGH
+        tar_torque[12] = PongBotQ.joint[12].torque; //20 * (q_err[12]) + 5 * (0 - actual_q_dot[12]) + PongBotQ.joint[12].torque; //FR_CALF
 
     }
 
-        //***************************Set Torque********************************//
-    
-//            PongBotQ.QQ << pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w;
-//            basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, pose.rot.z;
-//            baseVel << 0, 0, 0, 0, 0, 0;
-//            jointAngle << Encoder[0], Encoder[1], Encoder[2], Encoder[3], Encoder[4], Encoder[5], Encoder[6], Encoder[7], Encoder[8], Encoder[9], Encoder[10], Encoder[11], Encoder[12];
-//            jointVel << angle_vel[0], angle_vel[1], angle_vel[2], angle_vel[3], angle_vel[4], angle_vel[5], angle_vel[6], angle_vel[7], angle_vel[8], angle_vel[9], angle_vel[10], angle_vel[11], angle_vel[12];
-//        
-//            pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
-//            PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
-//            PongBotQ.ComputeTorqueControl();
-//        
-//            //* Control law of PD Control + Gravity Compensation
-//            //    tau[0] = 10 * (angle_err[0]) + 2 * (0 - angle_vel[0]) + PongBotQ.joint[0].torque; //RL_HIP
-//            //    tau[1] = 20 * (angle_err[1]) + 5 * (0 - angle_vel[1]) + PongBotQ.joint[1].torque; //RL_THIGH
-//            //    tau[2] = 20 * (angle_err[2]) + 5 * (0 - angle_vel[2]) + PongBotQ.joint[2].torque; //RL_CALF
-//            //
-//            //    tau[3] = 10 * (angle_err[3]) + 2 * (0 - angle_vel[3]) + PongBotQ.joint[3].torque; //RR_HIP
-//            //    tau[4] = 20 * (angle_err[4]) + 5 * (0 - angle_vel[4]) + PongBotQ.joint[4].torque; //RR_THIGH
-//            //    tau[5] = 20 * (angle_err[5]) + 5 * (0 - angle_vel[5]) + PongBotQ.joint[5].torque; //RR_CALF
-//            //
-//            //    tau[6] = 10 * (angle_err[6]) + 2 * (0 - angle_vel[6]) + PongBotQ.joint[6].torque; //WAIST
-//            //
-//            //    tau[7] = 10 * (angle_err[7]) + 2 * (0 - angle_vel[7]) + PongBotQ.joint[7].torque; //FL_THIP
-//            //    tau[8] = 20 * (angle_err[8]) + 5 * (0 - angle_vel[8]) + PongBotQ.joint[8].torque; //FL_THIGH
-//            //    tau[9] = 20 * (angle_err[9]) + 5 * (0 - angle_vel[9]) + PongBotQ.joint[9].torque; //FL_CALF
-//            //
-//            //    tau[10] = 10 * (angle_err[10]) + 2 * (0 - angle_vel[10]) + PongBotQ.joint[10].torque; //FR_HIP
-//            //    tau[11] = 20 * (angle_err[11]) + 5 * (0 - angle_vel[11]) + PongBotQ.joint[11].torque; //FR_THIGH
-//            //    tau[12] = 20 * (angle_err[12]) + 5 * (0 - angle_vel[12]) + PongBotQ.joint[12].torque; //FR_CALF
-//        
-//            //* Control law of PD Control
-//            tau[0] = 200 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
-//            tau[1] = 400 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
-//            tau[2] = 400 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
-//            tau[3] = 200 * (angle_err[3]) + 10 * (0 - angle_vel[3]); //RR_HIP
-//            tau[4] = 400 * (angle_err[4]) + 10 * (0 - angle_vel[4]); //RR_THIGH
-//            tau[5] = 400 * (angle_err[5]) + 10 * (0 - angle_vel[5]); //RR_CALF
-//        
-//            tau[6] = 200 * (angle_err[6]) + 10 * (0 - angle_vel[6]); //WAIST
-//        
-//            tau[7] = 200 * (angle_err[7]) + 10 * (0 - angle_vel[7]); //FL_HIP
-//            tau[8] = 400 * (angle_err[8]) + 10 * (0 - angle_vel[8]); //FL_THIGH
-//            tau[9] = 400 * (angle_err[9]) + 10 * (0 - angle_vel[9]); //FL_CALF
-//            tau[10] = 200 * (angle_err[10]) + 10 * (0 - angle_vel[10]); //FR_HIP
-//            tau[11] = 400 * (angle_err[11]) + 10 * (0 - angle_vel[11]); //FR_THIGH
-//            tau[12] = 400 * (angle_err[12]) + 10 * (0 - angle_vel[12]); //FR_CALF
+    //***************************Set Torque********************************//
+
+    //            PongBotQ.QQ << pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w;
+    //            basePosOri << pose.pos.x, pose.pos.y, pose.pos.z, pose.rot.x, pose.rot.y, pose.rot.z;
+    //            baseVel << 0, 0, 0, 0, 0, 0;
+    //            jointAngle << actual_q[0], actual_q[1], actual_q[2], actual_q[3], actual_q[4], actual_q[5], actual_q[6], actual_q[7], actual_q[8], actual_q[9], actual_q[10], actual_q[11], actual_q[12];
+    //            jointVel << actual_q_dot[0], actual_q_dot[1], actual_q_dot[2], actual_q_dot[3], actual_q_dot[4], actual_q_dot[5], actual_q_dot[6], actual_q_dot[7], actual_q_dot[8], actual_q_dot[9], actual_q_dot[10], actual_q_dot[11], actual_q_dot[12];
+    //        
+    //            pongbot_q_model->SetQuaternion(PongBotQ.base.ID, PongBotQ.QQ, PongBotQ.RobotState);
+    //            PongBotQ.getRobotState(basePosOri, baseVel, jointAngle, jointVel);
+    //            PongBotQ.ComputeTorqueControl();
+    //        
+    //            //* Control law of PD Control + Gravity Compensation
+    //            //    tar_torque[0] = 10 * (q_err[0]) + 2 * (0 - actual_q_dot[0]) + PongBotQ.joint[0].torque; //RL_HIP
+    //            //    tar_torque[1] = 20 * (q_err[1]) + 5 * (0 - actual_q_dot[1]) + PongBotQ.joint[1].torque; //RL_THIGH
+    //            //    tar_torque[2] = 20 * (q_err[2]) + 5 * (0 - actual_q_dot[2]) + PongBotQ.joint[2].torque; //RL_CALF
+    //            //
+    //            //    tar_torque[3] = 10 * (q_err[3]) + 2 * (0 - actual_q_dot[3]) + PongBotQ.joint[3].torque; //RR_HIP
+    //            //    tar_torque[4] = 20 * (q_err[4]) + 5 * (0 - actual_q_dot[4]) + PongBotQ.joint[4].torque; //RR_THIGH
+    //            //    tar_torque[5] = 20 * (q_err[5]) + 5 * (0 - actual_q_dot[5]) + PongBotQ.joint[5].torque; //RR_CALF
+    //            //
+    //            //    tar_torque[6] = 10 * (q_err[6]) + 2 * (0 - actual_q_dot[6]) + PongBotQ.joint[6].torque; //WAIST
+    //            //
+    //            //    tar_torque[7] = 10 * (q_err[7]) + 2 * (0 - actual_q_dot[7]) + PongBotQ.joint[7].torque; //FL_THIP
+    //            //    tar_torque[8] = 20 * (q_err[8]) + 5 * (0 - actual_q_dot[8]) + PongBotQ.joint[8].torque; //FL_THIGH
+    //            //    tar_torque[9] = 20 * (q_err[9]) + 5 * (0 - actual_q_dot[9]) + PongBotQ.joint[9].torque; //FL_CALF
+    //            //
+    //            //    tar_torque[10] = 10 * (q_err[10]) + 2 * (0 - actual_q_dot[10]) + PongBotQ.joint[10].torque; //FR_HIP
+    //            //    tar_torque[11] = 20 * (q_err[11]) + 5 * (0 - actual_q_dot[11]) + PongBotQ.joint[11].torque; //FR_THIGH
+    //            //    tar_torque[12] = 20 * (q_err[12]) + 5 * (0 - actual_q_dot[12]) + PongBotQ.joint[12].torque; //FR_CALF
+    //        
+    //            //* Control law of PD Control
+    //            tar_torque[0] = 200 * (q_err[0]) + 10 * (0 - actual_q_dot[0]); //RL_HIP
+    //            tar_torque[1] = 400 * (q_err[1]) + 10 * (0 - actual_q_dot[1]); //RL_THIGH
+    //            tar_torque[2] = 400 * (q_err[2]) + 10 * (0 - actual_q_dot[2]); //RL_CALF
+    //            tar_torque[3] = 200 * (q_err[3]) + 10 * (0 - actual_q_dot[3]); //RR_HIP
+    //            tar_torque[4] = 400 * (q_err[4]) + 10 * (0 - actual_q_dot[4]); //RR_THIGH
+    //            tar_torque[5] = 400 * (q_err[5]) + 10 * (0 - actual_q_dot[5]); //RR_CALF
+    //        
+    //            tar_torque[6] = 200 * (q_err[6]) + 10 * (0 - actual_q_dot[6]); //WAIST
+    //        
+    //            tar_torque[7] = 200 * (q_err[7]) + 10 * (0 - actual_q_dot[7]); //FL_HIP
+    //            tar_torque[8] = 400 * (q_err[8]) + 10 * (0 - actual_q_dot[8]); //FL_THIGH
+    //            tar_torque[9] = 400 * (q_err[9]) + 10 * (0 - actual_q_dot[9]); //FL_CALF
+    //            tar_torque[10] = 200 * (q_err[10]) + 10 * (0 - actual_q_dot[10]); //FR_HIP
+    //            tar_torque[11] = 400 * (q_err[11]) + 10 * (0 - actual_q_dot[11]); //FR_THIGH
+    //            tar_torque[12] = 400 * (q_err[12]) + 10 * (0 - actual_q_dot[12]); //FR_CALF
 
     //* Applying torques
-    this->RL_HIP_JOINT->SetForce(1, tau[0]);
-    this->RL_THIGH_JOINT->SetForce(1, tau[1]);
-    this->RL_CALF_JOINT->SetForce(1, tau[2]);
+    this->RL_HIP_JOINT->SetForce(1, tar_torque[0]);
+    this->RL_THIGH_JOINT->SetForce(1, tar_torque[1]);
+    this->RL_CALF_JOINT->SetForce(1, tar_torque[2]);
 
-    this->RR_HIP_JOINT->SetForce(1, tau[3]);
-    this->RR_THIGH_JOINT->SetForce(1, tau[4]);
-    this->RR_CALF_JOINT->SetForce(1, tau[5]);
+    this->RR_HIP_JOINT->SetForce(1, tar_torque[3]);
+    this->RR_THIGH_JOINT->SetForce(1, tar_torque[4]);
+    this->RR_CALF_JOINT->SetForce(1, tar_torque[5]);
 
-    this->WAIST_JOINT->SetForce(1, tau[6]);
+    this->WAIST_JOINT->SetForce(1, tar_torque[6]);
 
-    this->FL_HIP_JOINT->SetForce(1, tau[7]);
-    this->FL_THIGH_JOINT->SetForce(1, tau[8]);
-    this->FL_CALF_JOINT->SetForce(1, tau[9]);
+    this->FL_HIP_JOINT->SetForce(1, tar_torque[7]);
+    this->FL_THIGH_JOINT->SetForce(1, tar_torque[8]);
+    this->FL_CALF_JOINT->SetForce(1, tar_torque[9]);
 
-    this->FR_HIP_JOINT->SetForce(1, tau[10]);
-    this->FR_THIGH_JOINT->SetForce(1, tau[11]);
-    this->FR_CALF_JOINT->SetForce(1, tau[12]);
+    this->FR_HIP_JOINT->SetForce(1, tar_torque[10]);
+    this->FR_THIGH_JOINT->SetForce(1, tar_torque[11]);
+    this->FR_CALF_JOINT->SetForce(1, tar_torque[12]);
 
     //***************************FT sensor********************************//
     PongBotQ.FTsensorTransformation();
@@ -986,19 +899,20 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     m_joint_states.name[11] = "FR_THIGH_JOINT";
     m_joint_states.name[12] = "FR_CALF_JOINT";
 
-    m_joint_states.position[0] = Encoder[0]; //RL_HIP
-    m_joint_states.position[1] = Encoder[1]; //RL_THIGH
-    m_joint_states.position[2] = Encoder[2]; //RL_CALF
-    m_joint_states.position[3] = Encoder[3]; //RR_HIP
-    m_joint_states.position[4] = Encoder[4]; //RR_THIGH
-    m_joint_states.position[5] = Encoder[5]; //RR_CALF
-    m_joint_states.position[6] = Encoder[6]; //WAIST
-    m_joint_states.position[7] = Encoder[7]; //FL_HIP
-    m_joint_states.position[8] = Encoder[8]; //FL_THIGH 
-    m_joint_states.position[9] = Encoder[9]; //FL_CALF
-    m_joint_states.position[10] = Encoder[10]; //FR_HIP
-    m_joint_states.position[11] = Encoder[11]; //FR_THIGH 
-    m_joint_states.position[12] = Encoder[12]; //FR_CALF
+    m_joint_states.position[0] = actual_q[0]; //RL_HIP
+    m_joint_states.position[1] = actual_q[1]; //RL_THIGH
+    m_joint_states.position[2] = actual_q[2]; //RL_CALF
+    m_joint_states.position[3] = actual_q[3]; //RR_HIP
+    m_joint_states.position[4] = actual_q[4]; //RR_THIGH
+    m_joint_states.position[5] = actual_q[5]; //RR_CALF
+    m_joint_states.position[6] = actual_q[6]; //WAIST
+    m_joint_states.position[7] = actual_q[7]; //FL_HIP
+    m_joint_states.position[8] = actual_q[8]; //FL_THIGH 
+    m_joint_states.position[9] = actual_q[9]; //FL_CALF
+    m_joint_states.position[10] = actual_q[10]; //FR_HIP
+    m_joint_states.position[11] = actual_q[11]; //FR_THIGH 
+    m_joint_states.position[12] = actual_q[12]; //FR_CALF
+
 
     odom_trans.header.stamp = ros::Time::now();
     odom_trans.transform.translation.x = pose.pos.x;
@@ -1066,7 +980,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     P_RR_force.publish(m_RR_force);
     P_FL_force.publish(m_FL_force);
     P_FR_force.publish(m_FR_force);
-
+    
     P_pitch.publish(m_pitch);
     P_roll.publish(m_roll);
     P_yaw.publish(m_yaw);
@@ -1086,21 +1000,21 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
 void gazebo::PongBotQ_plugin::Init_Pos_Traj(void)
 {
-    tau[0] = 100 * (angle_err[0]) + 10 * (0 - angle_vel[0]); //RL_HIP
-    tau[1] = 200 * (angle_err[1]) + 10 * (0 - angle_vel[1]); //RL_THIGH
-    tau[2] = 200 * (angle_err[2]) + 10 * (0 - angle_vel[2]); //RL_CALF
-    tau[3] = 100 * (angle_err[3]) + 10 * (0 - angle_vel[3]); //RR_HIP
-    tau[4] = 200 * (angle_err[4]) + 10 * (0 - angle_vel[4]); //RR_THIGH
-    tau[5] = 200 * (angle_err[5]) + 10 * (0 - angle_vel[5]); //RR_CALF
+    tar_torque[0] = 100 * (q_err[0]) + 10 * (0 - actual_q_dot[0]); //RL_HIP
+    tar_torque[1] = 200 * (q_err[1]) + 10 * (0 - actual_q_dot[1]); //RL_THIGH
+    tar_torque[2] = 200 * (q_err[2]) + 10 * (0 - actual_q_dot[2]); //RL_CALF
+    tar_torque[3] = 100 * (q_err[3]) + 10 * (0 - actual_q_dot[3]); //RR_HIP
+    tar_torque[4] = 200 * (q_err[4]) + 10 * (0 - actual_q_dot[4]); //RR_THIGH
+    tar_torque[5] = 200 * (q_err[5]) + 10 * (0 - actual_q_dot[5]); //RR_CALF
 
-    tau[6] = 100 * (angle_err[6]) + 10 * (0 - angle_vel[6]); //WAIST
+    tar_torque[6] = 100 * (q_err[6]) + 10 * (0 - actual_q_dot[6]); //WAIST
 
-    tau[7] = 100 * (angle_err[7]) + 10 * (0 - angle_vel[7]); //FL_HIP
-    tau[8] = 200 * (angle_err[8]) + 10 * (0 - angle_vel[8]); //FL_THIGH
-    tau[9] = 200 * (angle_err[9]) + 10 * (0 - angle_vel[9]); //FL_CALF
-    tau[10] = 100 * (angle_err[10]) + 10 * (0 - angle_vel[10]); //FR_HIP
-    tau[11] = 200 * (angle_err[11]) + 10 * (0 - angle_vel[11]); //FR_THIGH
-    tau[12] = 200 * (angle_err[12]) + 10 * (0 - angle_vel[12]); //FR_CALF
+    tar_torque[7] = 100 * (q_err[7]) + 10 * (0 - actual_q_dot[7]); //FL_HIP
+    tar_torque[8] = 200 * (q_err[8]) + 10 * (0 - actual_q_dot[8]); //FL_THIGH
+    tar_torque[9] = 200 * (q_err[9]) + 10 * (0 - actual_q_dot[9]); //FL_CALF
+    tar_torque[10] = 100 * (q_err[10]) + 10 * (0 - actual_q_dot[10]); //FR_HIP
+    tar_torque[11] = 200 * (q_err[11]) + 10 * (0 - actual_q_dot[11]); //FR_THIGH
+    tar_torque[12] = 200 * (q_err[12]) + 10 * (0 - actual_q_dot[12]); //FR_CALF
 }
 
 void gazebo::PongBotQ_plugin::Home_Pos_Traj(void)
@@ -1410,5 +1324,98 @@ void gazebo::PongBotQ_plugin::TROT_Traj(void)
             PongBotQ.target_EP_acc[i] = 0;
         }
         break;
+    }
+}
+
+MatrixXd gazebo::PongBotQ_plugin::SystemMatrix(double wx, double wy, double wz, double dt)
+{
+    MatrixXd A(4, 4), tmp_matrix(4, 4);
+    tmp_matrix << 0, -wx, -wy, -wz \
+              , wx, 0, wz, -wy \
+              , wy, -wz, 0, wx \
+              , wz, wy, -wx, 0;
+
+    A = MatrixXd::Identity(4, 4) + dt * 1 / 2 * tmp_matrix;
+    return A;
+}
+
+VectorXd gazebo::PongBotQ_plugin::GetEulerAccel(double ax, double ay, double az)
+{
+    VectorXd EulerAccel(3);
+    double theta, phi;
+
+    phi = atan(ay / az);
+    theta = atan(ax / (sqrt(ay * ay + az * az)));
+
+    if (isnan(phi) || isnan(theta)) {
+        EulerAccel(0) = 0; //Roll
+        EulerAccel(1) = 0; //PITCH
+        EulerAccel(2) = 0;
+    }
+    else {
+        EulerAccel(0) = phi; //Roll
+        EulerAccel(1) = theta; //PITCH
+        EulerAccel(2) = 0;
+    }
+
+
+    return EulerAccel;
+}
+
+VectorXd gazebo::PongBotQ_plugin::EulerToQuaternion(double roll, double pitch, double yaw)
+{
+    VectorXd z(4);
+
+    z(0) = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
+    z(1) = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
+    z(2) = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(pitch / 2) * sin(yaw / 2);
+    z(3) = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(pitch / 2) * cos(yaw / 2);
+    return z;
+}
+
+VectorXd gazebo::PongBotQ_plugin::GetEulerKalman(MatrixXd A, VectorXd z)
+{
+    VectorXd EulerKalman(3);
+    VectorXd xp(4), x_new(4);
+    MatrixXd Pp(4, 4), P_new(4, 4);
+    MatrixXd tmp(4, 4), K(4, 4);
+
+    double phi, theta, psi;
+
+    if (g_firstRun == 0) {
+        //g_Q = 0.00001 * MatrixXd::Identity(4, 4);
+        //g_R = 100 * MatrixXd::Identity(4, 4);      
+        //g_Q = 0.00001 * MatrixXd::Identity(4, 4);
+        //g_R = 10 * MatrixXd::Identity(4, 4);  
+
+        g_Q = 0.00001 * MatrixXd::Identity(4, 4);
+        g_R = 100 * MatrixXd::Identity(4, 4);
+        //        g_Q = MatrixXd::Zero(4, 4);
+        //        g_R = MatrixXd::Zero(4, 4);
+
+        g_H = MatrixXd::Identity(4, 4);
+        g_P = MatrixXd::Identity(4, 4);
+        g_x << 1, 0, 0, 0;
+        g_firstRun = 1;
+
+    }
+    else {
+        xp = A * g_x;
+        Pp = A * g_P * A.transpose() + g_Q;
+        tmp = g_H * Pp * g_H.transpose() + g_R;
+        K = Pp * g_H.transpose() * tmp.inverse();
+        x_new = xp + K * (z - g_H * xp);
+        P_new = Pp - K * g_H*Pp;
+        g_x = x_new;
+        g_P = P_new;
+
+        phi = atan2(2 * (x_new(2) * x_new(3) + x_new(0) * x_new(1)), (1 - 2 * (x_new(1) * x_new(1) + x_new(2) * x_new(2))));
+        theta = -asin(2 * (x_new(1) * x_new(3) - x_new(0) * x_new(2)));
+        psi = atan2(2 * (x_new(1) * x_new(2) + x_new(0) * x_new(3)), (1 - 2 * (x_new(2) * x_new(2) + x_new(3) * x_new(3))));
+
+        EulerKalman(0) = phi * 180 / PI;
+        EulerKalman(1) = theta * 180 / PI;
+        EulerKalman(2) = psi * 180 / PI;
+        return EulerKalman;
     }
 }
