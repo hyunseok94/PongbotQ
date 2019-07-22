@@ -31,6 +31,10 @@ using namespace std;
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
+
+
+//enum ControlMode CONTROL_MODE;
+
 typedef struct Base //coordinate of Base
 {
     //* Current information
@@ -128,17 +132,51 @@ public:
     void getRobotState(VectorNd BasePosOri, VectorNd BaseVel, VectorNd jointAngle, VectorNd jointVel);
     void ComputeTorqueControl();
     void FTsensorTransformation();
+    VectorNd FK1(VectorNd jointAngle);
+    VectorNd IK1(VectorNd EP);
+    void Init_Pos_Traj(void);
+    void Home_Pos_Traj(void);
+    
+    enum{
+        IDLE = 0,
+        INITIALIZE,
+        HOME_POS,
+        POS_INIT,
+        TROT,
+        FORWARD,
+        TURN_RIGHT,
+        TURN_LEFT,
+        JUMPING
+    };
+    
+    enum Phase {
+        INIT_Fc = 0,
+        STOP,
+        STANCE_RLFR,
+        STANCE_RRFL,
+        STANCE_FOUR_LEGS_AFTER_RLFR,
+        STANCE_FOUR_LEGS_AFTER_RRFL,
+        JUMP_Fc
+    //    REAR_L
+    };
+    
+    enum Phase TROT_PHASE;
 
     //Variables
     BASE base; //* coordinate of Body
     JOINT* joint; //* joints of the robot
     ENDPOINT FR, FL, RR, RL, front_body;
     int nDOF; //* number of DOFs of a robot
+    
+//    enum ControlMode CONTROL_MODE;
+//    CONTROL_MODE CTR_MODE;
+    int ControlMode;
+
 
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
     RigidBodyDynamics::Math::VectorNd RobotState;
     RigidBodyDynamics::Math::VectorNd RobotStatedot;
-     RigidBodyDynamics::Math::VectorNd RobotState2dot;
+    RigidBodyDynamics::Math::VectorNd RobotState2dot;
     RigidBodyDynamics::Math::VectorNd BasePosOri;
     RigidBodyDynamics::Math::VectorNd BaseVel;
     RigidBodyDynamics::Math::VectorNd JointAngle;
@@ -168,7 +206,22 @@ public:
     VectorNd actual_EP = VectorNd::Zero(12);
     VectorNd actual_EP_vel = VectorNd::Zero(12);
     VectorNd actual_EP_acc = VectorNd::Zero(12);
+    
+    VectorNd actual_pos = VectorNd::Zero(13);
+    VectorNd actual_vel = VectorNd::Zero(13);
+    VectorNd actual_acc = VectorNd::Zero(13);
+    
+    VectorNd pre_actual_pos = VectorNd::Zero(13);
+    VectorNd init_pos = VectorNd::Zero(13);
 
+    VectorNd target_pos = VectorNd::Zero(13);
+    VectorNd target_vel = VectorNd::Zero(13);
+    VectorNd target_acc = VectorNd::Zero(13);
+    VectorNd pre_target_pos = VectorNd::Zero(13);
+    VectorNd pre_target_vel = VectorNd::Zero(13);
+
+    VectorNd target_tor = VectorNd::Zero(13);
+    
     MatrixNd J_RL = MatrixNd::Zero(3,19);
     MatrixNd J_RR = MatrixNd::Zero(3,19);
     MatrixNd J_FL = MatrixNd::Zero(3,19);
@@ -202,7 +255,26 @@ public:
 //    VectorNd init_goal_EP = VectorNd::Zero(12);
     VectorNd trot_goal_EP = VectorNd::Zero(12);
     double Fc_RL = 0, Fc_RR = 0, Fc_FL = 0, Fc_FR = 0;
-
+    
+    VectorNd angle_err = VectorNd::Zero(13);
+    
+    VectorNd init_target_pos = VectorNd::Zero(13);
+    
+    bool home_init_flag = true;
+    
+    unsigned int ctc_cnt = 0, ctc_cnt2 = 0;
+    double home_pos_time, init_pos_time;
+    double dt = 0.001;
+    
+    VectorNd Kp_q = VectorNd::Zero(13);
+    VectorNd Kd_q = VectorNd::Zero(13);
+    
+    
+    
+    
+    
+    
+    
     Quaternion QQ;
 private:
 };
