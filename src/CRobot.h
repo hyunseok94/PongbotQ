@@ -136,6 +136,14 @@ public:
     VectorNd IK1(VectorNd EP);
     void Init_Pos_Traj(void);
     void Home_Pos_Traj(void);
+    void TROT_Traj(void);
+    void Forward_Traj(void);
+    void Traj_gen(void);
+    void coefficient_5thPoly(double *init_x, double *final_x, double tf, double *output);
+    void Cal_Fc(void);
+    void Flying_Trot_Traj(void);
+    void ballistics(double flight_time, double landing_height, double take_off_speed);
+    
     
     enum{
         IDLE = 0,
@@ -146,7 +154,8 @@ public:
         FORWARD,
         TURN_RIGHT,
         TURN_LEFT,
-        JUMPING
+        JUMPING,
+        FLYING_TROT
     };
     
     enum Phase {
@@ -160,15 +169,37 @@ public:
     //    REAR_L
     };
     
+    enum Forward_Phase {
+        INIT_FORWARD = 0,
+        INIT_STANCE_RRFL,
+        INIT_STANCE_FOUR_AFTER_RRFL,
+        TROT_STANCE_RLFR,
+        TROT_STANCE_RRFL,
+        TROT_STANCE_FOUR_AFTER_RLFR,
+        TROT_STANCE_FOUR_AFTER_RRFL,
+        FINAL_STANCE_FOUR,
+        FINAL_STANCE_RLFR,
+        FINAL_STANCE_RRFL
+    };
+    
+//    enum ControlMode
+//        {
+//            INIT_POS,
+//            HOME_POS,
+//            POS_INIT,
+//            TROT
+//        };
+//        
     enum Phase TROT_PHASE;
-
+    enum Forward_Phase FORWARD_PHASE;
+    
     //Variables
     BASE base; //* coordinate of Body
     JOINT* joint; //* joints of the robot
     ENDPOINT FR, FL, RR, RL, front_body;
     int nDOF; //* number of DOFs of a robot
     
-//    enum ControlMode CONTROL_MODE;
+ //enum ControlMode CONTROL_MODE;
 //    CONTROL_MODE CTR_MODE;
     int ControlMode;
 
@@ -252,7 +283,7 @@ public:
     VectorNd target_EP_acc = VectorNd::Zero(12);
     VectorNd goal_EP = VectorNd::Zero(12);//(0,0.218,-0.45,0,-0.218,-0.45,0.7,0.218,-0.45,0.7,-0.218,-0.45);
     VectorNd init_EP = VectorNd::Zero(12);
-//    VectorNd init_goal_EP = VectorNd::Zero(12);
+    VectorNd init_goal_EP = VectorNd::Zero(12);
     VectorNd trot_goal_EP = VectorNd::Zero(12);
     double Fc_RL = 0, Fc_RR = 0, Fc_FL = 0, Fc_FR = 0;
     
@@ -261,6 +292,9 @@ public:
     VectorNd init_target_pos = VectorNd::Zero(13);
     
     bool home_init_flag = true;
+    bool trot_init_flag = true;
+    bool forward_init_flag = true;
+    bool flying_trot_init_flag = true;
     
     unsigned int ctc_cnt = 0, ctc_cnt2 = 0;
     double home_pos_time, init_pos_time;
@@ -268,12 +302,30 @@ public:
     
     VectorNd Kp_q = VectorNd::Zero(13);
     VectorNd Kd_q = VectorNd::Zero(13);
+    VectorNd init_Kp_q = VectorNd::Zero(13);
+    VectorNd init_Kd_q = VectorNd::Zero(13);
+    VectorNd goal_Kp_q = VectorNd::Zero(13);
+    VectorNd goal_Kd_q = VectorNd::Zero(13);
     
+    int tmp_cnt = 0, tmp_cnt2 = 0;
     
+    double dsp_time = 0.30, fsp_time = 0.1;
+    double step_time = dsp_time + fsp_time;
+    unsigned int step_cnt = 0;
+    unsigned int step_num = 0;
+    double tmp_time = 0, tmp_time2 = 0;
+
+    double z_f1[6], z_f2[6], z_f3[6], z_s1[6], z_s2[6], z_s3[6], z_final1[6];
+    double x_init1[6], x_init2[6], x_final1[6], x_final2[6], x_trot_dsp1[6], x_trot_dsp2[6], x_trot_fsp1[6], x_trot_fsp2[6];
+    double temp_t1 = 0, temp_t2 = 0;
+    double to_height = 0;
+    double ts, tf;
+
+//    MatrixNd R = (6,1), A(6,6), P(6,1);
     
-    
-    
-    
+    VectorNd R = VectorNd::Zero(6);
+    VectorNd P = VectorNd::Zero(6);
+    MatrixNd A = MatrixNd::Zero(6,6);
     
     Quaternion QQ;
 private:
