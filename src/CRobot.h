@@ -138,6 +138,10 @@ public:
     void Home_Pos_Traj(void);
     void TROT_Traj(void);
     void Forward_Traj(void);
+    void Up_Down_Traj(void); //Up Down trajectory added by HSKIM
+    void Raise_Leg_Traj(void); //Raise leg trajectory added by HSKIM
+    void Jump_Traj(void); //Jump trajectory added by HSKIM
+    void TEST_Traj(void); //Test trajectory added by HSKIM
     void Traj_gen(void);
     void coefficient_5thPoly(double *init_x, double *final_x, double tf, double *output);
     void Cal_Fc(void);
@@ -155,7 +159,11 @@ public:
         TURN_RIGHT,
         TURN_LEFT,
         JUMPING,
-        FLYING_TROT
+        FLYING_TROT,
+        UP_DOWN, //Up down mode added by HSKIM
+        RAISE_LEG, //Raise leg mode added by HSKIM
+        JUMP,       //Jump mode added by HSKIM
+        TEST        //Test mode added by HSKIM
     };
     
     enum Phase {
@@ -165,7 +173,14 @@ public:
         STANCE_RRFL,
         STANCE_FOUR_LEGS_AFTER_RLFR,
         STANCE_FOUR_LEGS_AFTER_RRFL,
-        JUMP_Fc
+        JUMP_Fc,
+        UP,       //Phase of Up Down mode added by HSKIM
+        DOWN,     //Phase of Up Down mode added by HSKIM
+        COM_MOVE, //Phase of Raise Leg mode added by HSKIM
+        LEG_UP,   //Phase of Raise Leg mode added by HSKIM
+        JUMP_READY, //Phase of Jump mode added by HSKIM
+        JUMPPING,     //Phase of Jump mode added by HSKIM
+        TEST_JUMPPING
     //    REAR_L
     };
     
@@ -192,6 +207,10 @@ public:
 //        
     enum Phase TROT_PHASE;
     enum Forward_Phase FORWARD_PHASE;
+    enum Phase UP_DOWN_PHASE;    //UP DOWN mode's Phase added by HSKIM
+    enum Phase RAISE_LEG_PHASE;  //RAISE LEG mode's Phase added by HSKIM
+    enum Phase JUMP_PHASE;  //Jump mode's Phase added by HSKIM
+    enum Phase TEST_PHASE;  //TEST mode's Phase added by HSKIM
     
     //Variables
     BASE base; //* coordinate of Body
@@ -202,7 +221,6 @@ public:
  //enum ControlMode CONTROL_MODE;
 //    CONTROL_MODE CTR_MODE;
     int ControlMode;
-
 
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
     RigidBodyDynamics::Math::VectorNd RobotState;
@@ -285,9 +303,13 @@ public:
     VectorNd init_EP = VectorNd::Zero(12);
     VectorNd init_goal_EP = VectorNd::Zero(12);
     VectorNd trot_goal_EP = VectorNd::Zero(12);
-    double Fc_RL = 0, Fc_RR = 0, Fc_FL = 0, Fc_FR = 0;
+    double Fc_RL_z = 0, Fc_RR_z = 0, Fc_FL_z = 0, Fc_FR_z = 0;
+    double Fc_RL_x = 0, Fc_RR_x = 0, Fc_FL_x = 0, Fc_FR_x = 0;
+    double Fc_RL_y = 0, Fc_RR_y = 0, Fc_FL_y = 0, Fc_FR_y = 0;
     
     VectorNd angle_err = VectorNd::Zero(13);
+    VectorNd EP_err=VectorNd::Zero(12);
+    VectorNd EP_vel_err=VectorNd::Zero(12);
     
     VectorNd init_target_pos = VectorNd::Zero(13);
     
@@ -295,8 +317,12 @@ public:
     bool trot_init_flag = true;
     bool forward_init_flag = true;
     bool flying_trot_init_flag = true;
+    bool up_down_init_flag=true;   //up down flag added by HSKIM
+    bool raise_leg_init_flag=true;   //raise leg flag added by HSKIM
+    bool jump_init_flag=true;   //jump flag added by HSKIM
+    bool target_init_flag=true;
     
-    unsigned int ctc_cnt = 0, ctc_cnt2 = 0;
+    unsigned int ctc_cnt = 0, ctc_cnt2 = 0, ctc_cnt3=0, ctc_cnt4=0, ctc_cnt5=0; //Counts added by HSKIM
     double home_pos_time, init_pos_time;
     double dt = 0.001;
     
@@ -306,6 +332,8 @@ public:
     VectorNd init_Kd_q = VectorNd::Zero(13);
     VectorNd goal_Kp_q = VectorNd::Zero(13);
     VectorNd goal_Kd_q = VectorNd::Zero(13);
+    VectorNd Kp_f = VectorNd::Zero(12);
+    VectorNd Kd_f = VectorNd::Zero(12);
     
     int tmp_cnt = 0, tmp_cnt2 = 0;
     
