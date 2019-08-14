@@ -32,7 +32,115 @@ using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
 
+typedef enum {
+    CTRLMODE_NONE,
+    CTRLMODE_INITIALIZE,
+    CTRLMODE_HOME_POS,
+    CTRLMODE_WALK_READY,
+    CTRLMODE_TROT
+} _CONTROL_MODE;
 
+typedef enum {
+    NO_ACT,
+    EXIT_PROGRAM,
+    SET_MOTOR_GAIN,
+    SET_CURRENT_GAIN,
+    LOAD_PARAMETER,
+    SAVE_PARAMETER,
+    SET_JOINT_PARAMETER,
+    GET_JOINT_PARAMETER,
+    SET_BOARD_PARAMETER,
+    GET_BOARD_PARAMETER,
+    PRINT_JOINT_PARAMETER,
+    CHECK_DEVICE,
+    GAIN_SETTING,
+    ENABLE_FET,
+    ENABLE_FET_EACH,
+    DISABLE_FET,
+    DISABLE_FET_EACH,
+    RUN_CMD,
+    RUN_CMD_EACH,
+    STOP_CMD,
+    STOP_CMD_EACH,
+    GOTO_LIMIT_POS,
+    GOTO_LIMIT_POS_UPPER_ALL,
+    GOTO_LIMIT_POS_LOWER_ALL,
+    GOTO_LIMIT_POS_ALL,
+    ENCODER_ZERO,
+    ENCODER_ZERO_EACH,
+    SAVE_ZMP_INIT_POS,
+    SET_ENCODER_RESOLUTION,
+    SET_DEADZONE,
+    SET_JAMPWM_FAULT,
+    SET_MAX_VEL_ACC,
+    SET_CONTROL_MODE,
+    SET_HOME_SEARCH_PARAMETER,
+    SET_HOME_MAX_VEL_ACC,
+    SET_POSITION_LIMIT,
+    SET_ERROR_BOUND,
+    REQUEST_PARAMETER,
+    POSITION_LIMIT_ONOFF,
+    BEEP,
+    JOINT_REF_SET_RELATIVE,
+    JOINT_REF_SET_ABS,
+    SET_FT_PARAMETER,
+    GET_FT_PARAMETER,
+    NULL_FT_SENSOR,
+    NULL_WRIST_FT_SENSOR,
+    NULL_FOOT_ANGLE_SENSOR,
+    NULL_IMU_SENSOR,
+    SET_IMU_OFFSET,
+    PRINT_FT_PARAMETER,
+    SET_IMU_PARAMETER,
+    GET_IMU_PARAMETER,
+    PRINT_IMU_PARAMETER,
+    SET_DAMPING_GAIN,
+    SET_DSP_GAIN,
+    GOTO_WALK_READY_POS,
+    GOTO_HOME_POS,
+    START_ZMP_INITIALIZATION,
+    STOP_ZMP_INITIALIZATION,
+    GOTO_FORWARD,
+    STOP_WALKING,
+    SET_MOCAP,
+    C_CONTROL_MODE,
+    P_CONTROL_MODE,
+    GRIP_ON,
+    GRIP_OFF,
+    GRIP_STOP,
+    DEMO_FLAG,
+    TEST_FUNCTION,
+    DEMO_GRASP, // jungho77
+    SET_PREDEF_WALK, // jungho77
+    INIT_WB_MOCAP, // by Inhyeok
+    DEMO_CONTROL_OFF_POS,
+    DEMO_CONTROL_ON_POS,
+    RBT_ON_MODE, //CDI
+    RBT_OFF_MODE, //CDI
+    CCTM_ON,
+    CCTM_OFF,
+    JUMP_ONESTEP, // BKCho
+    WALKING
+
+} _COMMAND_FLAG;
+
+//    enum{
+//        IDLE = 0,
+//        INITIALIZE,
+//        HOME_POS,
+//        POS_INIT,
+//        TROT,
+//        FORWARD,
+//        TURN_RIGHT,
+//        TURN_LEFT,
+//        JUMPING,
+//        FLYING_TROT,
+//        UP_DOWN, //Up down mode added by HSKIM
+//        RAISE_LEG, //Raise leg mode added by HSKIM
+//        JUMP,       //Jump mode added by HSKIM
+//        TEST        //Test mode added by HSKIM
+//    };
+    
 //enum ControlMode CONTROL_MODE;
 
 typedef struct Base //coordinate of Base
@@ -220,7 +328,11 @@ public:
     
  //enum ControlMode CONTROL_MODE;
 //    CONTROL_MODE CTR_MODE;
-    int ControlMode;
+    
+//    int ControlMode;
+    
+    unsigned int ControlMode;
+    unsigned int CommandFlag;
 
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
     RigidBodyDynamics::Math::VectorNd RobotState;

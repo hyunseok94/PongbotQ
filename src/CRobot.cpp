@@ -77,7 +77,7 @@ void CRobot::setRobotModel(Model* getModel)
     // Kd_q << 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000;
 
 
-    init_pos_time = 1;
+    init_pos_time = 10;
     home_pos_time = 5;
 
     ts = 0.20;
@@ -149,69 +149,69 @@ void CRobot::ComputeTorqueControl()
 
     actual_EP = FK1(actual_pos);
 
-    if (ControlMode == INITIALIZE) {
-        ctc_cnt = 0;
-        ctc_cnt2 = 0;
-        ctc_cnt3 = 0; //up_down count initialization added by HSKIM 
-        ctc_cnt4 = 0; //raise leg count initialization added by HSKIM 
-        ctc_cnt5 = 0; //jump count initialization added by HSKIM 
-        step_cnt = 0; //step count initialization added by HSKIM
-        home_init_flag = true;
-        trot_init_flag = true;
-        forward_init_flag = true;
-        flying_trot_init_flag = true;
-        up_down_init_flag = true; //up_down flag added by HSKIM
-        raise_leg_init_flag = true; //raise leg flag added by HSKIM
-        jump_init_flag = true; //jump flag added by HSKIM
-    }
-    else if (ControlMode == HOME_POS) {
-        if (home_init_flag == true) {
-            ctc_cnt = 0;
-            home_init_flag = false;
-        }
-        Home_Pos_Traj();
-    }
-    else if (ControlMode == POS_INIT) {
-
-    }
-    else if (ControlMode == TROT) {
-        //        if (trot_init_flag == true) {
-        //            ctc_cnt2 = 0;
-        //            step_cnt = 0;
-        //        }
-        TROT_Traj();
-
-        //Forward_Traj();
-    }
-    else if (ControlMode == FORWARD) {
-        //        if(forward_init_flag == true){
-        //            ctc_cnt = 0;
-        //            ctc_cnt2 = 0;
-        //            step_cnt = 0;
-        //        }
-        //        Forward_Traj();
-    }
-    else if (ControlMode == FLYING_TROT) {
-        if (flying_trot_init_flag == true) {
-            ctc_cnt2 = 0;
-            step_cnt = 0;
-        }
-        Flying_Trot_Traj();
-    }
-    else if (ControlMode == UP_DOWN) { //Up Down Mode added by HSKIM
-        Up_Down_Traj(); //added by HSKIM
-    }
-
-    else if (ControlMode == RAISE_LEG) { //Raise Leg MODEadded by HSKIM
-        Raise_Leg_Traj(); //added by HSKIM
-    }
-
-    else if (ControlMode == JUMP) { //added by HSKIM
-        Jump_Traj(); //added by HSKIM
-    }
-    else if (ControlMode == TEST) { //added by HSKIM
-        TEST_Traj(); //added by HSKIM
-    }
+//    if (ControlMode == INITIALIZE) {
+//        ctc_cnt = 0;
+//        ctc_cnt2 = 0;
+//        ctc_cnt3 = 0; //up_down count initialization added by HSKIM 
+//        ctc_cnt4 = 0; //raise leg count initialization added by HSKIM 
+//        ctc_cnt5 = 0; //jump count initialization added by HSKIM 
+//        step_cnt = 0; //step count initialization added by HSKIM
+//        home_init_flag = true;
+//        trot_init_flag = true;
+//        forward_init_flag = true;
+//        flying_trot_init_flag = true;
+//        up_down_init_flag = true; //up_down flag added by HSKIM
+//        raise_leg_init_flag = true; //raise leg flag added by HSKIM
+//        jump_init_flag = true; //jump flag added by HSKIM
+//    }
+//    else if (ControlMode == HOME_POS) {
+//        if (home_init_flag == true) {
+//            ctc_cnt = 0;
+//            home_init_flag = false;
+//        }
+//        Home_Pos_Traj();
+//    }
+//    else if (ControlMode == POS_INIT) {
+//
+//    }
+//    else if (ControlMode == TROT) {
+//        //        if (trot_init_flag == true) {
+//        //            ctc_cnt2 = 0;
+//        //            step_cnt = 0;
+//        //        }
+//        TROT_Traj();
+//
+//        //Forward_Traj();
+//    }
+//    else if (ControlMode == FORWARD) {
+//        //        if(forward_init_flag == true){
+//        //            ctc_cnt = 0;
+//        //            ctc_cnt2 = 0;
+//        //            step_cnt = 0;
+//        //        }
+//        //        Forward_Traj();
+//    }
+//    else if (ControlMode == FLYING_TROT) {
+//        if (flying_trot_init_flag == true) {
+//            ctc_cnt2 = 0;
+//            step_cnt = 0;
+//        }
+//        Flying_Trot_Traj();
+//    }
+//    else if (ControlMode == UP_DOWN) { //Up Down Mode added by HSKIM
+//        Up_Down_Traj(); //added by HSKIM
+//    }
+//
+//    else if (ControlMode == RAISE_LEG) { //Raise Leg MODEadded by HSKIM
+//        Raise_Leg_Traj(); //added by HSKIM
+//    }
+//
+//    else if (ControlMode == JUMP) { //added by HSKIM
+//        Jump_Traj(); //added by HSKIM
+//    }
+//    else if (ControlMode == TEST) { //added by HSKIM
+//        TEST_Traj(); //added by HSKIM
+//    }
 
 
     target_pos = IK1(target_EP);
@@ -643,9 +643,10 @@ void CRobot::TROT_Traj(void)
         if (step_cnt < step_num - 1) {
             ctc_cnt2 = 1;
         }
-        else {
-            ControlMode = INITIALIZE;
-        }
+//        else {
+//            ctc_cnt2 = 0;
+////            ControlMode = INITIALIZE;
+//        }
         step_cnt++;
     }
 
