@@ -120,28 +120,11 @@ typedef enum {
     CCTM_ON,
     CCTM_OFF,
     JUMP_ONESTEP, // BKCho
-    WALKING
+    NOMAL_TROT_WALKING,
+    TORQUE_OFF,
+    NO_ACT_WITH_CTC
 
 } _COMMAND_FLAG;
-
-//    enum{
-//        IDLE = 0,
-//        INITIALIZE,
-//        HOME_POS,
-//        POS_INIT,
-//        TROT,
-//        FORWARD,
-//        TURN_RIGHT,
-//        TURN_LEFT,
-//        JUMPING,
-//        FLYING_TROT,
-//        UP_DOWN, //Up down mode added by HSKIM
-//        RAISE_LEG, //Raise leg mode added by HSKIM
-//        JUMP,       //Jump mode added by HSKIM
-//        TEST        //Test mode added by HSKIM
-//    };
-    
-//enum ControlMode CONTROL_MODE;
 
 typedef struct Base //coordinate of Base
 {
@@ -240,7 +223,7 @@ public:
     void getRobotState(VectorNd BasePosOri, VectorNd BaseVel, VectorNd jointAngle, VectorNd jointVel);
     void ComputeTorqueControl();
     void FTsensorTransformation();
-    VectorNd FK1(VectorNd jointAngle);
+    VectorNd FK1(VectorNd q);
     VectorNd IK1(VectorNd EP);
     void Init_Pos_Traj(void);
     void Home_Pos_Traj(void);
@@ -255,84 +238,48 @@ public:
     void Cal_Fc(void);
     void Flying_Trot_Traj(void);
     void ballistics(double flight_time, double landing_height, double take_off_speed);
+    void Torque_off(void);
+    void Vertical_Traj_Gen(double *z1, double *z2);
+    void Hori_X_Traj_Gen(double *xl1,double *xl2,double *xl3,double *xl4,double *xr1,double *xr2,double *xr3,double *xr4);
+    void Hori_X_Final_Traj_Gen(double *xl_f, double *xr_f);
+    void Cal_CP(void);
     
     
-    enum{
-        IDLE = 0,
-        INITIALIZE,
-        HOME_POS,
-        POS_INIT,
-        TROT,
-        FORWARD,
-        TURN_RIGHT,
-        TURN_LEFT,
-        JUMPING,
-        FLYING_TROT,
-        UP_DOWN, //Up down mode added by HSKIM
-        RAISE_LEG, //Raise leg mode added by HSKIM
-        JUMP,       //Jump mode added by HSKIM
-        TEST        //Test mode added by HSKIM
-    };
-    
-    enum Phase {
-        INIT_Fc = 0,
+    enum Fc_Phase {
+    	INIT_Fc = 0,
         STOP,
         STANCE_RLFR,
         STANCE_RRFL,
-        STANCE_FOUR_LEGS_AFTER_RLFR,
-        STANCE_FOUR_LEGS_AFTER_RRFL,
-        JUMP_Fc,
-        UP,       //Phase of Up Down mode added by HSKIM
-        DOWN,     //Phase of Up Down mode added by HSKIM
-        COM_MOVE, //Phase of Raise Leg mode added by HSKIM
-        LEG_UP,   //Phase of Raise Leg mode added by HSKIM
-        JUMP_READY, //Phase of Jump mode added by HSKIM
-        JUMPPING,     //Phase of Jump mode added by HSKIM
-        TEST_JUMPPING
-    //    REAR_L
+        JUMP_Fc
     };
     
-    enum Forward_Phase {
-        INIT_FORWARD = 0,
-        INIT_STANCE_RRFL,
-        INIT_STANCE_FOUR_AFTER_RRFL,
-        TROT_STANCE_RLFR,
-        TROT_STANCE_RRFL,
-        TROT_STANCE_FOUR_AFTER_RLFR,
-        TROT_STANCE_FOUR_AFTER_RRFL,
-        FINAL_STANCE_FOUR,
-        FINAL_STANCE_RLFR,
-        FINAL_STANCE_RRFL
+    enum Trot_Phase {
+    	INIT_FORWARD = 0,               // 0
+        INIT_STANCE_RRFL,               // 1
+        INIT_STANCE_FOUR_AFTER_RRFL,    // 2
+        TROT_STANCE_RLFR,               // 3
+        TROT_STANCE_RLFR2,              // 4
+    	TROT_STANCE_RRFL,               // 5
+        TROT_STANCE_FOUR_AFTER_RLFR,    // 6
+        TROT_STANCE_FOUR_AFTER_RLFR2,   // 7
+        TROT_STANCE_FOUR_AFTER_RRFL,    // 8
+    	FINAL_STANCE_FOUR,              // 9
+    	FINAL_STANCE_RLFR,              // 10
+    	FINAL_STANCE_RRFL               // 11
     };
-    
-//    enum ControlMode
-//        {
-//            INIT_POS,
-//            HOME_POS,
-//            POS_INIT,
-//            TROT
-//        };
-//        
-    enum Phase TROT_PHASE;
-    enum Forward_Phase FORWARD_PHASE;
-    enum Phase UP_DOWN_PHASE;    //UP DOWN mode's Phase added by HSKIM
-    enum Phase RAISE_LEG_PHASE;  //RAISE LEG mode's Phase added by HSKIM
-    enum Phase JUMP_PHASE;  //Jump mode's Phase added by HSKIM
-    enum Phase TEST_PHASE;  //TEST mode's Phase added by HSKIM
-    
+
+    enum Fc_Phase FC_PHASE;
+    enum Trot_Phase TROT_PHASE;
+
     //Variables
     BASE base; //* coordinate of Body
     JOINT* joint; //* joints of the robot
     ENDPOINT FR, FL, RR, RL, front_body;
     int nDOF; //* number of DOFs of a robot
     
- //enum ControlMode CONTROL_MODE;
-//    CONTROL_MODE CTR_MODE;
-    
-//    int ControlMode;
-    
-    unsigned int ControlMode;
-    unsigned int CommandFlag;
+    int ControlMode;
+    int CommandFlag;
+    int sub_ctrl_flag;
 
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
     RigidBodyDynamics::Math::VectorNd RobotState;
@@ -368,6 +315,8 @@ public:
     VectorNd actual_EP_vel = VectorNd::Zero(12);
     VectorNd actual_EP_acc = VectorNd::Zero(12);
     
+    VectorNd abs_pos = VectorNd::Zero(13);
+    VectorNd inc_pos = VectorNd::Zero(13);
     VectorNd actual_pos = VectorNd::Zero(13);
     VectorNd actual_vel = VectorNd::Zero(13);
     VectorNd actual_acc = VectorNd::Zero(13);
@@ -449,17 +398,33 @@ public:
     
     int tmp_cnt = 0, tmp_cnt2 = 0;
     
-    double dsp_time = 0.30, fsp_time = 0.1;
-    double step_time = dsp_time + fsp_time;
-    unsigned int step_cnt = 0;
-    unsigned int step_num = 0;
-    double tmp_time = 0, tmp_time2 = 0;
 
+    // =============== Time ================ //
+    double dsp_time = 0.25, fsp_time = 0.1;
+    double step_time = dsp_time + fsp_time;
+    int dsp_cnt = 250, fsp_cnt = 100;
+    int step_cnt = dsp_cnt + fsp_cnt;
+
+    // =============== Trajectory ================ //
+    double tmp_time = 0, tmp_time2 = 0;
     double z_f1[6], z_f2[6], z_f3[6], z_s1[6], z_s2[6], z_s3[6], z_final1[6];
     double x_init1[6], x_init2[6], x_final1[6], x_final2[6], x_trot_dsp1[6], x_trot_dsp2[6], x_trot_fsp1[6], x_trot_fsp2[6];
     double temp_t1 = 0, temp_t2 = 0;
     double to_height = 0;
     double ts, tf;
+    double c_xl1[6], c_xl2[6], c_xl3[6], c_xl4[6], c_xr1[6], c_xr2[6], c_xr3[6], c_xr4[6], c_xl_f[6], c_xr_f[6];
+    double xl_f[7], xr_f[7], xl1[7], xl2[7], xl3[7], xl4[7], xr1[7], xr2[7], xr3[7], xr4[7];
+    double c_z1[6], c_z2[6];
+    double init_x[3] = {0,0,0};
+    double final_x[3] = {0,0,0};
+    double _t = 0;
+    double _out[6] = {0,0,0,0,0,0};
+
+    double moving_speed = 0.0; // [m/s]
+    double x_step = 0;//step_time*moving_speed/2.0;
+    double x_fsp = 0;//fsp_time*moving_speed/2.0;
+    double pre_foot_l[3];// = [ -x_step - x_fsp,-moving_speed,0];
+    double pre_foot_r[3];// = [  x_step - x_fsp,-moving_speed,0];
 
 //    MatrixNd R = (6,1), A(6,6), P(6,1);
     
@@ -467,7 +432,27 @@ public:
     VectorNd P = VectorNd::Zero(6);
     MatrixNd A = MatrixNd::Zero(6,6);
     
+    VectorNd tmp_data = VectorNd::Zero(30);
+    VectorNd computed_tor = VectorNd::Zero(13);
+    VectorNd Fc_vsd = VectorNd::Zero(12);
+    VectorNd Kp_vsd = VectorNd::Zero(12);
+    VectorNd Kd_vsd = VectorNd::Zero(12);
+
     Quaternion QQ;
+
+
+    // =============== IMU ================ //
+    double IMURoll,IMUPitch,IMUYaw;
+    double IMURoll_dot,IMUPitch_dot,IMUYaw_dot;
+
+    // =============== CP ================ //
+	double COM_Height, COM_y, COM_y_dot, lpf_COM_y, lpf_COM_y_dot;
+	double natural_freq;
+    double CP_y;
+    double F_fd_y, F_fd_r, F_fd_l;
+
+
+
 private:
 };
 

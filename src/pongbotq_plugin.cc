@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <std_msgs/UInt16.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <functional>
@@ -278,10 +279,14 @@ namespace gazebo
         
         common::Time current_time;
 
-        ros::Subscriber S_mode;
+//        ros::Subscriber S_mode;
 
         //ROS Rqt
-        ros::Subscriber S_ROSMODE;
+//        ros::Subscriber S_ROSMODE;
+        
+        ros::Subscriber server_sub1;
+        ros::Subscriber server_sub2;
+        ros::Subscriber server_sub3;
         
         //ROS MODE
         int ROSMode_Flag = 0;
@@ -293,7 +298,12 @@ namespace gazebo
         //For model load
         void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
         void UpdateAlgorithm();
-        void Callback(const std_msgs::UInt16 &msg);
+        
+        // Callback function
+        void PongBot_Q_ROSmode(const std_msgs::Int32Ptr &msg);
+        void Callback(const std_msgs::Int32Ptr &msg);
+        void Callback2(const std_msgs::Float64Ptr &msg);
+        void Callback3(const std_msgs::Int32Ptr &msg);
         void Print(void); //Print function added by HSKIM
         
         void RBDLSetting();
@@ -302,7 +312,7 @@ namespace gazebo
         void InitROSPubSetting();
         void InitRvizSetting();
         void SensorSetting();
-        void PongBot_Q_ROSmode(const std_msgs::UInt16 &msg);
+        
         
         void IMUSensorRead();
         void FTSensorRead();
@@ -354,32 +364,52 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     
     //* ControlMode
     switch (PongBotQ.ControlMode) {
-        case CTRLMODE_INITIALIZE:
-            cout << "============= [CTRLMODE_INITIALIZE] ==========" << endl;
-            PongBotQ.CommandFlag = NO_ACT;
-            PongBotQ.ControlMode = CTRLMODE_NONE;
+        case CTRLMODE_NONE:
+//          cout << "============= [CTRLMODE_NONE] ==========" << endl;
+//          PongBotQ.CommandFlag = TORQUE_OFF;
+//          PongBotQ.CommandFlag = NO_ACT;
             break;
             
+        case CTRLMODE_INITIALIZE:
+            cout << "============= [CTRLMODE_INITIALIZE] ==========" << endl;
+
+            PongBotQ.ctc_cnt = 0;
+            PongBotQ.ctc_cnt2 = 0;
+
+            PongBotQ.CommandFlag = NO_ACT_WITH_CTC;
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+            break;
+
         case CTRLMODE_HOME_POS:
             cout << "============= [CTRLMODE_HOME_POS] ==========" << endl;
             PongBotQ.CommandFlag = GOTO_HOME_POS;
             PongBotQ.ControlMode = CTRLMODE_NONE;
-            break;   
-            
+            break;
+
         case CTRLMODE_WALK_READY:
             cout << "============= [CTRLMODE_WALK_READY] ==========" << endl;
+
             PongBotQ.ctc_cnt = 0;
+
             for (unsigned int i = 0; i < 13; ++i) {
-                PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
+                    PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
             }
+            
+            PongBotQ.actual_EP = PongBotQ.FK1(PongBotQ.actual_pos);
+            for (unsigned int i = 0; i < 12; ++i) {
+                    PongBotQ.target_EP[i] = PongBotQ.actual_EP[i];
+            }
+
             PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
             PongBotQ.ControlMode = CTRLMODE_NONE;
             break;
-            
+
         case CTRLMODE_TROT:
             cout << "============= [CTRLMODE_TROT] ==========" << endl;
+
             PongBotQ.ctc_cnt2 = 0;
-            PongBotQ.CommandFlag = WALKING;
+
+            PongBotQ.CommandFlag = NOMAL_TROT_WALKING;
             PongBotQ.ControlMode = CTRLMODE_NONE;
             break;
 
@@ -387,104 +417,56 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     
     
     switch (PongBotQ.CommandFlag) {
-         case GOTO_HOME_POS:
-             PongBotQ.Init_Pos_Traj();
-             break;
-             
+         case NO_ACT:
+            // No action
+            break;
+
+        case NO_ACT_WITH_CTC:
+            PongBotQ.ComputeTorqueControl();
+            break;
+            
+        case TORQUE_OFF:
+            PongBotQ.Torque_off();
+            break;
+
+        case GOTO_HOME_POS:
+            PongBotQ.Torque_off(); // Temp
+            PongBotQ.Init_Pos_Traj(); // Only simulation
+            break;
+
         case GOTO_WALK_READY_POS:
-             PongBotQ.Home_Pos_Traj();
-             PongBotQ.ComputeTorqueControl();
-             break;
-             
-        case WALKING:
-             PongBotQ.TROT_Traj();
-             PongBotQ.ComputeTorqueControl();
-             break;
+            PongBotQ.Home_Pos_Traj();
+            PongBotQ.ComputeTorqueControl();
+            break;
+
+        case NOMAL_TROT_WALKING:
+//            PongBotQ.moving_speed = rqt_moving_speed;
+            PongBotQ.TROT_Traj();
+            PongBotQ.ComputeTorqueControl();
+            break;
              
     }
-//    if(PongBotQ.CommandFlag == GOTO_HOME_POS){
-//        PongBotQ.Init_Pos_Traj();
-//    }
-//    else if(){
-//    }
-    
-//    // ******************* DH : Trajectory Generation ****************** //
-//
-//    static unsigned int ctrl_cnt = 0;
-//
-//    // next time, I will get this value(CONTROL_MODE) from rqt.
-//    if (ctrl_cnt <= PongBotQ.init_pos_time / PongBotQ.dt) {
-//
-//        PongBotQ.ControlMode = PongBotQ.IDLE;
-//
-//        PongBotQ.Init_Pos_Traj();
-//
-//        if (ctrl_cnt == PongBotQ.init_pos_time / PongBotQ.dt) {
-//            for (unsigned int i = 0; i < 13; ++i) {
-//                PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
-//            }
-//            cout << "PongBotQ.pre_target_pos = " << PongBotQ.pre_target_pos.transpose() << endl;
-//            PongBotQ.target_init_flag=true;
-//        }
-//    }
-//
-//    ctrl_cnt++;
-//
-//    if (PongBotQ.ControlMode == PongBotQ.IDLE) {
-//        PongBotQ.Init_Pos_Traj();
-//    }
-//
-//    if (PongBotQ.ControlMode != PongBotQ.IDLE) {
-//        PongBotQ.ComputeTorqueControl();
-//    }
-    
-    Print();
+ 
+//    Print();
     
     jointController();
     
     ROSMsgPublish();
 }
 
-void gazebo::PongBotQ_plugin::Callback(const std_msgs::UInt16 &msg)
-{
-//    if (msg.data == 0) {
-//        PongBotQ.ControlMode = PongBotQ.IDLE;
-//        std::cout << "[0]" << std::endl;
-//    }
-//    else if (msg.data == 1) {
-//        PongBotQ.ControlMode = PongBotQ.INITIALIZE;
-//        std::cout << "[1] : Initialize" << std::endl;
-//    }
-//    else if (msg.data == 2) {
-//        PongBotQ.ControlMode = PongBotQ.HOME_POS;
-//        std::cout << "[2] : Home Mode" << std::endl;
-//    }
-//    else if (msg.data == 3) {
-//        PongBotQ.ControlMode = PongBotQ.TROT;
-//        std::cout << "[3] : Trot Mode" << std::endl;
-//    }
-//    else if (msg.data == 4) {
-//        PongBotQ.ControlMode = PongBotQ.FLYING_TROT;
-//        //PongBotQ.ControlMode = PongBotQ.TROT;
-//        std::cout << "[4] : Flying Trot Mode" << std::endl;
-//    }
-//    else if (msg.data == 5) {
-//        PongBotQ.ControlMode = PongBotQ.UP_DOWN; //Up Down Mode added by HSKIM
-//        std::cout << "[5] : Up Down Mode" << std::endl; 
-//    }
-//    else if (msg.data==6){
-//         PongBotQ.ControlMode = PongBotQ.RAISE_LEG; //Raise Leg Mode added by HSKIM
-//         std::cout << "[6] : Raise Leg Mode" << std::endl; 
-//    }
-//     else if (msg.data==7){
-//         PongBotQ.ControlMode = PongBotQ.JUMP; //Jump Mode added by HSKIM
-//         std::cout << "[7] : Jump Mode" << std::endl; 
-//    }
-//    else if (msg.data==8){
-//         PongBotQ.ControlMode = PongBotQ.TEST; //Jump Mode added by HSKIM
-//         std::cout << "[8] : Test Mode" << std::endl; 
-//    }
+void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg){
+    PongBotQ.ControlMode = msg->data;
 }
+
+void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg) {
+    PongBotQ.moving_speed = msg->data;
+}
+
+void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg) {
+  PongBotQ.sub_ctrl_flag = (int)(msg->data);
+}
+
+
 
 void gazebo::PongBotQ_plugin::Print(void)     //Print function added by HSKIM
 {
@@ -629,9 +611,12 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting() {
     m_FL_force.header.frame_id = "FL_TIP";
     m_FR_force.header.frame_id = "FR_TIP";
     //ros::Rate loop_rate(1000);
-    S_mode = n.subscribe("mode_msg", 1, &gazebo::PongBotQ_plugin::Callback, this);    
+    server_sub1 = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback, this);    
     
-    S_ROSMODE = n.subscribe("rosmode", 1, &gazebo::PongBotQ_plugin::PongBot_Q_ROSmode, this);
+//    S_ROSMODE = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::PongBot_Q_ROSmode, this);
+    
+    server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
+    server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
     
 }
 
@@ -674,11 +659,6 @@ void gazebo::PongBotQ_plugin::RBDLSetting(){
     //Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
     PongBotQ.setRobotModel(pongbot_q_model);
     
-}
-
-void gazebo::PongBotQ_plugin::PongBot_Q_ROSmode(const std_msgs::UInt16 &msg){
-//    ROSMode_Flag = msg.data;
-    PongBotQ.ControlMode = msg.data;
 }
 
 void gazebo::PongBotQ_plugin::IMUSensorRead() {
@@ -804,23 +784,24 @@ void gazebo::PongBotQ_plugin::jointController() {
     //***************************Set Torque********************************//
 
     //* Applying torques
-    this->RL_HIP_JOINT->SetForce(1, PongBotQ.target_tor[0]);
-    this->RL_THIGH_JOINT->SetForce(1, PongBotQ.target_tor[1]);
-    this->RL_CALF_JOINT->SetForce(1, PongBotQ.target_tor[2]);
+    
+    this->RL_HIP_JOINT->SetForce(1, PongBotQ.joint[0].torque);//PongBotQ.target_tor[0]);
+    this->RL_THIGH_JOINT->SetForce(1, PongBotQ.joint[1].torque);//PongBotQ.target_tor[1]);
+    this->RL_CALF_JOINT->SetForce(1, PongBotQ.joint[2].torque);//PongBotQ.target_tor[2]);
 
-    this->RR_HIP_JOINT->SetForce(1, PongBotQ.target_tor[3]);
-    this->RR_THIGH_JOINT->SetForce(1, PongBotQ.target_tor[4]);
-    this->RR_CALF_JOINT->SetForce(1, PongBotQ.target_tor[5]);
+    this->RR_HIP_JOINT->SetForce(1, PongBotQ.joint[3].torque);//PongBotQ.target_tor[3]);
+    this->RR_THIGH_JOINT->SetForce(1, PongBotQ.joint[4].torque);//PongBotQ.target_tor[4]);
+    this->RR_CALF_JOINT->SetForce(1, PongBotQ.joint[5].torque);//PongBotQ.target_tor[5]);
 
-    this->WAIST_JOINT->SetForce(1, PongBotQ.target_tor[6]);
+    this->WAIST_JOINT->SetForce(1, PongBotQ.joint[6].torque);//PongBotQ.target_tor[6]);
 
-    this->FL_HIP_JOINT->SetForce(1, PongBotQ.target_tor[7]);
-    this->FL_THIGH_JOINT->SetForce(1, PongBotQ.target_tor[8]);
-    this->FL_CALF_JOINT->SetForce(1, PongBotQ.target_tor[9]);
+    this->FL_HIP_JOINT->SetForce(1, PongBotQ.joint[7].torque);//PongBotQ.target_tor[7]);
+    this->FL_THIGH_JOINT->SetForce(1, PongBotQ.joint[8].torque);//PongBotQ.target_tor[8]);
+    this->FL_CALF_JOINT->SetForce(1, PongBotQ.joint[9].torque);//PongBotQ.target_tor[9]);
 
-    this->FR_HIP_JOINT->SetForce(1, PongBotQ.target_tor[10]);
-    this->FR_THIGH_JOINT->SetForce(1, PongBotQ.target_tor[11]);
-    this->FR_CALF_JOINT->SetForce(1, PongBotQ.target_tor[12]);
+    this->FR_HIP_JOINT->SetForce(1, PongBotQ.joint[10].torque);//PongBotQ.target_tor[10]);
+    this->FR_THIGH_JOINT->SetForce(1, PongBotQ.joint[11].torque);//PongBotQ.target_tor[11]);
+    this->FR_CALF_JOINT->SetForce(1, PongBotQ.joint[12].torque);//PongBotQ.target_tor[12]);
 
 }
 
@@ -847,7 +828,7 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish() {
     TmpData[14] = PongBotQ.target_EP_vel[8];
     TmpData[15] = PongBotQ.target_EP_vel[11];
 
-    TmpData[16] = PongBotQ.FORWARD_PHASE * (-0.1);
+    TmpData[16] = 0;//PongBotQ.FORWARD_PHASE * (-0.1);
 
     //setting for getting dt
     this->last_update_time = current_time;
