@@ -31,7 +31,6 @@ using namespace std;
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
-
 typedef enum {
     CTRLMODE_NONE,
     CTRLMODE_INITIALIZE,
@@ -212,7 +211,6 @@ typedef struct EndPoint {
 } ENDPOINT;
 
 class CRobot {
-
 public:
     //Functions
     CRobot();
@@ -240,32 +238,31 @@ public:
     void ballistics(double flight_time, double landing_height, double take_off_speed);
     void Torque_off(void);
     void Vertical_Traj_Gen(double *z1, double *z2);
-    void Hori_X_Traj_Gen(double *xl1,double *xl2,double *xl3,double *xl4,double *xr1,double *xr2,double *xr3,double *xr4);
+    void Hori_X_Traj_Gen(double *xl1, double *xl2, double *xl3, double *xl4, double *xr1, double *xr2, double *xr3, double *xr4);
     void Hori_X_Final_Traj_Gen(double *xl_f, double *xr_f);
     void Cal_CP(void);
-    
-    
+
     enum Fc_Phase {
-    	INIT_Fc = 0,
+        INIT_Fc = 0,
         STOP,
         STANCE_RLFR,
         STANCE_RRFL,
         JUMP_Fc
     };
-    
+
     enum Trot_Phase {
-    	INIT_FORWARD = 0,               // 0
-        INIT_STANCE_RRFL,               // 1
-        INIT_STANCE_FOUR_AFTER_RRFL,    // 2
-        TROT_STANCE_RLFR,               // 3
-        TROT_STANCE_RLFR2,              // 4
-    	TROT_STANCE_RRFL,               // 5
-        TROT_STANCE_FOUR_AFTER_RLFR,    // 6
-        TROT_STANCE_FOUR_AFTER_RLFR2,   // 7
-        TROT_STANCE_FOUR_AFTER_RRFL,    // 8
-    	FINAL_STANCE_FOUR,              // 9
-    	FINAL_STANCE_RLFR,              // 10
-    	FINAL_STANCE_RRFL               // 11
+        INIT_FORWARD = 0, // 0
+        INIT_STANCE_RRFL, // 1
+        INIT_STANCE_FOUR_AFTER_RRFL, // 2
+        TROT_STANCE_RLFR, // 3
+        TROT_STANCE_RLFR2, // 4
+        TROT_STANCE_RRFL, // 5
+        TROT_STANCE_FOUR_AFTER_RLFR, // 6
+        TROT_STANCE_FOUR_AFTER_RLFR2, // 7
+        TROT_STANCE_FOUR_AFTER_RRFL, // 8
+        FINAL_STANCE_FOUR, // 9
+        FINAL_STANCE_RLFR, // 10
+        FINAL_STANCE_RRFL // 11
     };
 
     enum Fc_Phase FC_PHASE;
@@ -276,7 +273,7 @@ public:
     JOINT* joint; //* joints of the robot
     ENDPOINT FR, FL, RR, RL, front_body;
     int nDOF; //* number of DOFs of a robot
-    
+
     int ControlMode;
     int CommandFlag;
     int sub_ctrl_flag;
@@ -296,17 +293,17 @@ public:
     VectorNd C_term = VectorNd::Zero(19);
     VectorNd CTC_Torque = VectorNd::Zero(19);
 
-    VectorNd EP_RL = Vector3d(0,0,0);
-    VectorNd EP_RR = Vector3d(0,0,0);
-    VectorNd EP_FL = Vector3d(0,0,0);
-    VectorNd EP_FR = Vector3d(0,0,0);
+    VectorNd EP_RL = Vector3d(0, 0, 0);
+    VectorNd EP_RR = Vector3d(0, 0, 0);
+    VectorNd EP_FL = Vector3d(0, 0, 0);
+    VectorNd EP_FR = Vector3d(0, 0, 0);
 
     double L3_x = 0.025516;
     double L3_y = 0.0;
     double L3_z = 0.304515;
 
-    VectorNd EP_OFFSET_RL = Vector3d( L3_x, L3_y, -L3_z);
-    VectorNd EP_OFFSET_RR = Vector3d( L3_x, L3_y, -L3_z);
+    VectorNd EP_OFFSET_RL = Vector3d(L3_x, L3_y, -L3_z);
+    VectorNd EP_OFFSET_RR = Vector3d(L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FL = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FR = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd Originbase = Vector3d(0, 0, 0);
@@ -314,13 +311,13 @@ public:
     VectorNd actual_EP = VectorNd::Zero(12);
     VectorNd actual_EP_vel = VectorNd::Zero(12);
     VectorNd actual_EP_acc = VectorNd::Zero(12);
-    
+
     VectorNd abs_pos = VectorNd::Zero(13);
     VectorNd inc_pos = VectorNd::Zero(13);
     VectorNd actual_pos = VectorNd::Zero(13);
     VectorNd actual_vel = VectorNd::Zero(13);
     VectorNd actual_acc = VectorNd::Zero(13);
-    
+
     VectorNd pre_actual_pos = VectorNd::Zero(13);
     VectorNd init_pos = VectorNd::Zero(13);
 
@@ -331,23 +328,23 @@ public:
     VectorNd pre_target_vel = VectorNd::Zero(13);
 
     VectorNd target_tor = VectorNd::Zero(13);
-    
-    MatrixNd J_RL = MatrixNd::Zero(3,19);
-    MatrixNd J_RR = MatrixNd::Zero(3,19);
-    MatrixNd J_FL = MatrixNd::Zero(3,19);
-    MatrixNd J_FR = MatrixNd::Zero(3,19);
-    MatrixNd J_FRONT_BODY = MatrixNd::Zero(6,19);
-    MatrixNd J_BASE = MatrixNd::Zero(6,19);
 
-    MatrixNd J_A = MatrixNd::Zero(19,19);
+    MatrixNd J_RL = MatrixNd::Zero(3, 19);
+    MatrixNd J_RR = MatrixNd::Zero(3, 19);
+    MatrixNd J_FL = MatrixNd::Zero(3, 19);
+    MatrixNd J_FR = MatrixNd::Zero(3, 19);
+    MatrixNd J_FRONT_BODY = MatrixNd::Zero(6, 19);
+    MatrixNd J_BASE = MatrixNd::Zero(6, 19);
+
+    MatrixNd J_A = MatrixNd::Zero(19, 19);
 
     VectorNd x_dot = VectorNd::Zero(19);
     VectorNd ddqZero = VectorNd::Zero(19);
 
-    VectorNd RL_dJdQ = Vector3d(0,0,0);
-    VectorNd RR_dJdQ = Vector3d(0,0,0);
-    VectorNd FL_dJdQ = Vector3d(0,0,0);
-    VectorNd FR_dJdQ = Vector3d(0,0,0);
+    VectorNd RL_dJdQ = Vector3d(0, 0, 0);
+    VectorNd RR_dJdQ = Vector3d(0, 0, 0);
+    VectorNd FL_dJdQ = Vector3d(0, 0, 0);
+    VectorNd FR_dJdQ = Vector3d(0, 0, 0);
     VectorNd FRONT_BODY_dJdQ = VectorNd::Zero(6);
     VectorNd base_dJdQ = VectorNd::Zero(6);
     VectorNd dJdQ = VectorNd::Zero(19);
@@ -355,38 +352,38 @@ public:
     VectorNd Fc = VectorNd::Zero(19);
     VectorNd x_2dot_cp = VectorNd::Zero(19);
 
-    VectorNd Kp_EP = VectorNd::Zero(12);//(100,100,100,100,100,100,100,100,100,100,100,100);
-    VectorNd Kd_EP = VectorNd::Zero(12);//(1,1,1,1,1,1,1,1,1,1,1,1);
+    VectorNd Kp_EP = VectorNd::Zero(12); //(100,100,100,100,100,100,100,100,100,100,100,100);
+    VectorNd Kd_EP = VectorNd::Zero(12); //(1,1,1,1,1,1,1,1,1,1,1,1);
     VectorNd target_EP = VectorNd::Zero(12);
     VectorNd target_EP_vel = VectorNd::Zero(12);
     VectorNd target_EP_acc = VectorNd::Zero(12);
-    VectorNd goal_EP = VectorNd::Zero(12);//(0,0.218,-0.45,0,-0.218,-0.45,0.7,0.218,-0.45,0.7,-0.218,-0.45);
+    VectorNd goal_EP = VectorNd::Zero(12); //(0,0.218,-0.45,0,-0.218,-0.45,0.7,0.218,-0.45,0.7,-0.218,-0.45);
     VectorNd init_EP = VectorNd::Zero(12);
     VectorNd init_goal_EP = VectorNd::Zero(12);
     VectorNd trot_goal_EP = VectorNd::Zero(12);
     double Fc_RL_z = 0, Fc_RR_z = 0, Fc_FL_z = 0, Fc_FR_z = 0;
     double Fc_RL_x = 0, Fc_RR_x = 0, Fc_FL_x = 0, Fc_FR_x = 0;
     double Fc_RL_y = 0, Fc_RR_y = 0, Fc_FL_y = 0, Fc_FR_y = 0;
-    
+
     VectorNd angle_err = VectorNd::Zero(13);
-    VectorNd EP_err=VectorNd::Zero(12);
-    VectorNd EP_vel_err=VectorNd::Zero(12);
-    
+    VectorNd EP_err = VectorNd::Zero(12);
+    VectorNd EP_vel_err = VectorNd::Zero(12);
+
     VectorNd init_target_pos = VectorNd::Zero(13);
-    
+
     bool home_init_flag = true;
     bool trot_init_flag = true;
     bool forward_init_flag = true;
     bool flying_trot_init_flag = true;
-    bool up_down_init_flag=true;   //up down flag added by HSKIM
-    bool raise_leg_init_flag=true;   //raise leg flag added by HSKIM
-    bool jump_init_flag=true;   //jump flag added by HSKIM
-    bool target_init_flag=true;
-    
-    unsigned int ctc_cnt = 0, ctc_cnt2 = 0, ctc_cnt3=0, ctc_cnt4=0, ctc_cnt5=0; //Counts added by HSKIM
+    bool up_down_init_flag = true; //up down flag added by HSKIM
+    bool raise_leg_init_flag = true; //raise leg flag added by HSKIM
+    bool jump_init_flag = true; //jump flag added by HSKIM
+    bool target_init_flag = true;
+
+    unsigned int ctc_cnt = 0, ctc_cnt2 = 0, ctc_cnt3 = 0, ctc_cnt4 = 0, ctc_cnt5 = 0; //Counts added by HSKIM
     double home_pos_time, init_pos_time;
     double dt = 0.001;
-    
+
     VectorNd Kp_q = VectorNd::Zero(13);
     VectorNd Kd_q = VectorNd::Zero(13);
     VectorNd init_Kp_q = VectorNd::Zero(13);
@@ -395,9 +392,9 @@ public:
     VectorNd goal_Kd_q = VectorNd::Zero(13);
     VectorNd Kp_f = VectorNd::Zero(12);
     VectorNd Kd_f = VectorNd::Zero(12);
-    
+
     int tmp_cnt = 0, tmp_cnt2 = 0;
-    
+
 
     // =============== Time ================ //
     double dsp_time = 0.25, fsp_time = 0.1;
@@ -415,23 +412,24 @@ public:
     double c_xl1[6], c_xl2[6], c_xl3[6], c_xl4[6], c_xr1[6], c_xr2[6], c_xr3[6], c_xr4[6], c_xl_f[6], c_xr_f[6];
     double xl_f[7], xr_f[7], xl1[7], xl2[7], xl3[7], xl4[7], xr1[7], xr2[7], xr3[7], xr4[7];
     double c_z1[6], c_z2[6];
-    double init_x[3] = {0,0,0};
-    double final_x[3] = {0,0,0};
+    double init_x[3] = {0, 0, 0};
+    double final_x[3] = {0, 0, 0};
     double _t = 0;
-    double _out[6] = {0,0,0,0,0,0};
+    double _out[6] = {0, 0, 0, 0, 0, 0};
 
     double moving_speed = 0.0; // [m/s]
-    double x_step = 0;//step_time*moving_speed/2.0;
-    double x_fsp = 0;//fsp_time*moving_speed/2.0;
-    double pre_foot_l[3];// = [ -x_step - x_fsp,-moving_speed,0];
-    double pre_foot_r[3];// = [  x_step - x_fsp,-moving_speed,0];
+    double tmp_moving_speed;
+    double x_step = 0; //step_time*moving_speed/2.0;
+    double x_fsp = 0; //fsp_time*moving_speed/2.0;
+    double pre_foot_l[3]; // = [ -x_step - x_fsp,-moving_speed,0];
+    double pre_foot_r[3]; // = [  x_step - x_fsp,-moving_speed,0];
 
-//    MatrixNd R = (6,1), A(6,6), P(6,1);
-    
+    //    MatrixNd R = (6,1), A(6,6), P(6,1);
+
     VectorNd R = VectorNd::Zero(6);
     VectorNd P = VectorNd::Zero(6);
-    MatrixNd A = MatrixNd::Zero(6,6);
-    
+    MatrixNd A = MatrixNd::Zero(6, 6);
+
     VectorNd tmp_data = VectorNd::Zero(30);
     VectorNd computed_tor = VectorNd::Zero(13);
     VectorNd Fc_vsd = VectorNd::Zero(12);
@@ -442,14 +440,16 @@ public:
 
 
     // =============== IMU ================ //
-    double IMURoll,IMUPitch,IMUYaw;
-    double IMURoll_dot,IMUPitch_dot,IMUYaw_dot;
+    double IMURoll, IMUPitch, IMUYaw;
+    double IMURoll_dot, IMUPitch_dot, IMUYaw_dot;
 
     // =============== CP ================ //
-	double COM_Height, COM_y, COM_y_dot, lpf_COM_y, lpf_COM_y_dot;
-	double natural_freq;
-    double CP_y;
-    double F_fd_y, F_fd_r, F_fd_l;
+    double COM_Height, natural_freq;
+    double CP_y, COM_y, COM_y_dot, lpf_COM_y, lpf_COM_y_dot;
+    double CP_x, COM_x, COM_x_dot, lpf_COM_x, lpf_COM_x_dot;
+    double F_fd_r, F_fd_l, F_fd_f, F_fd_b;
+
+    double w1, w2;
 
 
 
