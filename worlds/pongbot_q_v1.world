@@ -19,6 +19,10 @@
       <uri>model://ground_plane</uri>
     </include>
 
+ <!--   <include>
+      <uri>model://DH_Ground</uri>
+    </include> -->
+
     <include>
       <uri>model://sun</uri>
     </include>
@@ -26,7 +30,7 @@
 
    <include>
       <uri>model://PONGBOT_Q_V2</uri>
-     	<pose frame=''>0 0 1 0 0 0</pose>
+     	<pose frame=''>0 0 0.7 0 0 0</pose>
        <plugin name="plugin" filename="libpongbot_q_v1.so"/>
     </include>
 

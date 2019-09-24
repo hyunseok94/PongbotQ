@@ -17,6 +17,18 @@ CRobot::~CRobot()
 
 void CRobot::setRobotModel(Model* getModel)
 {
+    // ============== Controller OnOff ================ //
+    Foot_Height_Control_OnOff_Flag = false;//false;//true;
+    VSD_Contrl_OnOff_Flag = true;
+    // ============== Controller OnOff End ================ //
+    
+    foot_height = 0.08;
+    com_height = 0.45;
+    moving_speed = 0;
+    
+    init_foot_l_pos << 0, 0.105,0;
+    init_foot_r_pos << 0,-0.105,0;
+    
     m_pModel = getModel;
     m_pModel->gravity = Vector3d(0., 0., -9.81);
     nDOF = m_pModel->dof_count - 6; //* get Degree of freedom, Except x,y,z,roll,pitch,yaw of the robot
@@ -40,9 +52,11 @@ void CRobot::setRobotModel(Model* getModel)
     m_pModel->SetQuaternion(base.ID, QQ, RobotState);
 
     init_target_pos << 0, -45, 90, 0, -45, 90, 0, 0, 45, -90, 0, 45, -90;
-    goal_EP << 0.0, 0.15378-0.05, -0.45, 0.0, -0.15378-0.05, -0.45, 0.0, 0.15378-0.05, -0.45, 0.0, -0.15378-0.05, -0.45;
+    goal_EP << 0.0, 0.105, -0.45, 0.0, -0.105, -0.45, 0.0, 0.105, -0.45, 0.0, -0.105, -0.45;
+    
+    pre_target_EP = goal_EP;
 
-    // 2019.08.19
+    // 2019.08.19153
     //    Kp_q << 700, 900, 800, 700, 900, 800, 20000, 700, 900, 800, 700, 900, 800;
     //	Kd_q << 15,  15,  30, 15,  15,  30, 200, 15,  15,  30, 15,  15,  30;
 
@@ -67,15 +81,31 @@ void CRobot::setRobotModel(Model* getModel)
 //    Kp_vsd << 3000, 3000, 2000, 3000, 3000, 2000, 3000, 3000, 2000, 3000, 3000, 2000;
 //    Kd_vsd << 30, 30, 20, 30, 30, 20, 30, 30, 20, 30, 30, 20;
 
-    // gazebo
-    Kp_q << 2000, 3000, 3000, 2000, 3000, 3000, 2000, 2000, 3000, 3000, 2000, 3000, 3000; //100
-    Kd_q <<   20,   30,   30,   20,   30,   30,   20,   20,   30,   30,   20,   30,   30;
+    // gazebo                                   waist
+//    Kp_q << 1200, 1200, 1200, 1200, 1200, 1200, 1000, 1200, 1200, 1200, 1200, 1200, 1200; //100
+//    Kd_q <<   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,   10;
+    
+    // gazebo                                   waist
+//    Kp_q << 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000;
+//    Kd_q <<   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,   10;
 
-    Kp_vsd << 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000;
-    Kd_vsd << 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100;
+//    Kp_vsd << 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000;
+//    Kd_vsd <<   200,   200,   200,   200,   200,   200,   200,   200,   200,   200,   200,   200;
+    
+    
+    
+    
+    Kp_vsd << 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000;
+    Kd_vsd <<   50,   50,   50,   50,   50,   50,   50,   50,   50,   50,   50,   50;
+
+//    Kp_q << 1000, 1000, 1000, 1000, 1000, 1000, 3000, 1000, 1000, 1000, 1000, 1000, 1000; //100
+//    Kd_q <<   40,   40,   40,   40,   40,   40,   20,   40,   40,   40,   40,   40,   40;
     
 //    Kp_vsd << 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00;
 //    Kd_vsd << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    
+    Kp_q << 000, 000, 000, 000, 000, 000, 1000, 000, 000, 000, 000, 000, 000;
+    Kd_q <<   0,   0,   0,   0,   0,   0,   10,   0,   0,   0,   0,   0,   0;
     
     
     //    init_Kp_q << 50000, 50000, 50000, 50000, 50000, 50000, 10000, 50000, 50000, 50000, 50000, 50000, 50000; //2,3,10, 2,3,10, 2,3,10, 2,3,10;
@@ -94,7 +124,7 @@ void CRobot::setRobotModel(Model* getModel)
     // Kp_q << 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000; //2,3,10, 2,3,10, 2,3,10, 2,3,10;
     // Kd_q << 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000;
 
-    home_pos_time = 3;
+    home_pos_time = 1;
 
     ts = 0.20;
     tf = dsp_time - ts;
@@ -102,6 +132,13 @@ void CRobot::setRobotModel(Model* getModel)
     for (unsigned int i = 0; i < 13; ++i) {
         joint[i].torque = 0;
     }
+    
+    IMURoll = 0;
+    IMUPitch = 0;
+    IMUYaw = 0;
+    
+    
+    
 
     Traj_gen();
 }
@@ -202,10 +239,14 @@ void CRobot::ComputeTorqueControl()
     Cal_Fc();
 
     for (unsigned int i = 0; i < 6; ++i) {
-        RobotState2dot[i + 6] = 0;
+        RobotState2dot[i] = 0;
+        pd_con[i] = 0;
     }
     for (unsigned int i = 0; i < 13; ++i) {
-        RobotState2dot[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
+        RobotState2dot[i + 6] = target_acc[i];
+        pd_con[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
+//        RobotState2dot[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - lpf_actual_vel[i]);
+//        RobotState2dot[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(0 - actual_vel[i]);
     }
 
     CompositeRigidBodyAlgorithm(*m_pModel, RobotState, M_term, true);
@@ -214,8 +255,9 @@ void CRobot::ComputeTorqueControl()
 
     C_term = hatNonLinearEffects - G_term;
 
-    //    CTC_Torque = M_term * RobotState2dot + C_term + G_term + J_A.transpose() * Fc; // old
-    CTC_Torque = RobotState2dot + C_term + G_term + J_A.transpose() * Fc;
+//    CTC_Torque = M_term * RobotState2dot + C_term + G_term + J_A.transpose() * Fc; // old
+//    CTC_Torque = RobotState2dot + C_term + G_term + J_A.transpose() * Fc;
+    CTC_Torque = C_term + G_term + J_A.transpose() * Fc;//+ pd_con;
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
@@ -242,7 +284,7 @@ void CRobot::FTsensorTransformation()
 
 VectorNd CRobot::FK1(VectorNd q)
 {
-    const double L1 = 0.15378;
+    const double L1 = 0.105;
     const double L2 = 0.305;
     const double L3 = 0.305;
 
@@ -289,7 +331,7 @@ VectorNd CRobot::FK1(VectorNd q)
 
 VectorNd CRobot::IK1(VectorNd EP)
 {
-    const double L1 = 0.15378;
+    const double L1 = 0.105;
     const double L2 = 0.305;
     const double L3 = 0.305;
 
@@ -336,7 +378,7 @@ VectorNd CRobot::IK1(VectorNd EP)
 //VectorNd CRobot::FK1(VectorNd q)
 //{
 //
-//    const double L1 = 0.15378;
+//    const double L1 = 0.105;
 //    const double L2 = 0.305;
 //    const double L3 = 0.305;
 //
@@ -380,7 +422,7 @@ VectorNd CRobot::IK1(VectorNd EP)
 //
 //VectorNd CRobot::IK1(VectorNd EP)
 //{
-//    const double L1 = 0.15378;
+//    const double L1 = 0.105;
 //    const double L2 = 0.305;
 //    const double L3 = 0.305;
 //
@@ -425,21 +467,21 @@ VectorNd CRobot::IK1(VectorNd EP)
 
 void CRobot::Init_Pos_Traj(void)
 {
-    joint[0].torque = 1000 * (init_target_pos[0] * D2R - actual_pos[0]) + 10 * (0 - actual_vel[0]); //RL_HIP
-    joint[1].torque = 1000 * (init_target_pos[1] * D2R - actual_pos[1]) + 10 * (0 - actual_vel[1]); //RL_THIGH
-    joint[2].torque = 1000 * (init_target_pos[2] * D2R - actual_pos[2]) + 10 * (0 - actual_vel[2]); //RL_CALF
-    joint[3].torque = 1000 * (init_target_pos[3] * D2R - actual_pos[3]) + 10 * (0 - actual_vel[3]); //RR_HIP
-    joint[4].torque = 1000 * (init_target_pos[4] * D2R - actual_pos[4]) + 10 * (0 - actual_vel[4]); //RR_THIGH
-    joint[5].torque = 1000 * (init_target_pos[5] * D2R - actual_pos[5]) + 10 * (0 - actual_vel[5]); //RR_CALF
+    joint[0].torque = 500 * (init_target_pos[0] * D2R - actual_pos[0]) + 5 * (0 - actual_vel[0]); //RL_HIP
+    joint[1].torque = 500 * (init_target_pos[1] * D2R - actual_pos[1]) + 5 * (0 - actual_vel[1]); //RL_THIGH
+    joint[2].torque = 500 * (init_target_pos[2] * D2R - actual_pos[2]) + 5 * (0 - actual_vel[2]); //RL_CALF
+    joint[3].torque = 500 * (init_target_pos[3] * D2R - actual_pos[3]) + 5 * (0 - actual_vel[3]); //RR_HIP
+    joint[4].torque = 500 * (init_target_pos[4] * D2R - actual_pos[4]) + 5 * (0 - actual_vel[4]); //RR_THIGH
+    joint[5].torque = 500 * (init_target_pos[5] * D2R - actual_pos[5]) + 5 * (0 - actual_vel[5]); //RR_CALF
+    
+    joint[6].torque = 500 * (init_target_pos[6] * D2R - actual_pos[6]) + 5 * (0 - actual_vel[6]); //WAIST
 
-    joint[6].torque = 1000 * (init_target_pos[6] * D2R - actual_pos[6]) + 10 * (0 - actual_vel[6]); //WAIST
-
-    joint[7].torque = 1000 * (init_target_pos[7] * D2R - actual_pos[7]) + 10 * (0 - actual_vel[7]); //FL_HIP
-    joint[8].torque = 1000 * (init_target_pos[8] * D2R - actual_pos[8]) + 10 * (0 - actual_vel[8]); //FL_THIGH
-    joint[9].torque = 1000 * (init_target_pos[9] * D2R - actual_pos[9]) + 10 * (0 - actual_vel[9]); //FL_CALF
-    joint[10].torque = 1000 * (init_target_pos[10] * D2R - actual_pos[10]) + 10 * (0 - actual_vel[10]); //FR_HIP
-    joint[11].torque = 1000 * (init_target_pos[11] * D2R - actual_pos[11]) + 10 * (0 - actual_vel[11]); //FR_THIGH
-    joint[12].torque = 1000 * (init_target_pos[12] * D2R - actual_pos[12]) + 10 * (0 - actual_vel[12]); //FR_CALF
+    joint[7].torque = 500 * (init_target_pos[7] * D2R - actual_pos[7]) + 5 * (0 - actual_vel[7]); //FL_HIP
+    joint[8].torque = 500 * (init_target_pos[8] * D2R - actual_pos[8]) + 5 * (0 - actual_vel[8]); //FL_THIGH
+    joint[9].torque = 500 * (init_target_pos[9] * D2R - actual_pos[9]) + 5 * (0 - actual_vel[9]); //FL_CALF
+    joint[10].torque = 500 * (init_target_pos[10] * D2R - actual_pos[10]) + 5 * (0 - actual_vel[10]); //FR_HIP
+    joint[11].torque = 500 * (init_target_pos[11] * D2R - actual_pos[11]) + 5 * (0 - actual_vel[11]); //FR_THIGH
+    joint[12].torque = 500 * (init_target_pos[12] * D2R - actual_pos[12]) + 5 * (0 - actual_vel[12]); //FR_CALF
 }
 
 void CRobot::Home_Pos_Traj(void)
@@ -489,6 +531,558 @@ void CRobot::Home_Pos_Traj(void)
         // waist
         target_pos[6] = 0;
     }
+}
+
+void CRobot::TROT_Walking(void)
+{
+    moving_speed = 0.5;
+    
+//    printf("[1]\n");
+    if(ctc_cnt2 < step_cnt*4){
+    
+        Trot_Walking_Traj_First(ctc_cnt2);
+//        printf("[2]\n");
+    }
+    else if(ctc_cnt2 < step_cnt*8){
+        Trot_Walking_Traj(ctc_cnt2-step_cnt*4);    
+    }
+    else if(ctc_cnt2 < step_cnt*12){
+        moving_speed = 0;
+        Trot_Walking_Traj_Final(ctc_cnt2-step_cnt*8);    
+    }
+    
+    local_foot_l_pos = foot_l_pos - com_pos;
+    local_foot_r_pos = foot_r_pos - com_pos;
+    
+    for(unsigned int i=0;i<3;++i){
+                
+//        if(i == 1){
+//            target_EP[i] = -local_foot_l_pos[i];
+//        }
+//        else{
+//            target_EP[i] = local_foot_l_pos[i];
+//        }
+        
+        target_EP[i] = local_foot_l_pos[i];
+        target_EP_vel[i] = (target_EP[i] - pre_target_EP[i])/dt;
+        pre_target_EP[i] = target_EP[i];
+    }
+    for(unsigned int i=0;i<3;++i){
+        
+        target_EP[i+3] = local_foot_r_pos[i];
+        target_EP_vel[i+3] = (target_EP[i+3] - pre_target_EP[i+3])/dt;
+        pre_target_EP[i+3] = target_EP[i+3];
+    }
+    for(unsigned int i=0;i<3;++i){
+        if(i == 1){
+            target_EP[i+6] = -local_foot_r_pos[i];
+        }
+        else{
+            target_EP[i+6] = local_foot_r_pos[i];
+        }
+//        target_EP[i+6] = local_foot_r_pos[i];
+        target_EP_vel[i+6] = (target_EP[i+6] - pre_target_EP[i+6])/dt;
+        pre_target_EP[i+6] = target_EP[i+6];
+    }
+    for(unsigned int i=0;i<3;++i){
+        if(i == 1){
+            target_EP[i+9] = -local_foot_l_pos[i];
+        }
+        else{
+            target_EP[i+9] = local_foot_l_pos[i];
+        }
+                
+//        target_EP[i+9] = local_foot_l_pos[i];
+        target_EP_vel[i+9] = (target_EP[i+9] - pre_target_EP[i+9])/dt;
+        pre_target_EP[i+9] = target_EP[i+9];
+    }
+    
+    ctc_cnt2++;
+
+    target_pos[6] = 0; //goal_pos[6];
+
+}
+
+void CRobot::Trot_Walking_Traj_First(int i)
+{
+    if(i == 0){
+        
+        sum_e = 0;
+        stop_flag = false;
+        
+        init_foot_l_2d << 0, -0.105;
+        init_foot_r_2d << 0,  0.105;
+        
+        Foot_step_planner(init_foot_l_2d,init_foot_r_2d);
+        
+        final_foot_l_2d << foot_l_2d(4,0),foot_l_2d(4,1); 
+        final_foot_r_2d << foot_r_2d(4,0),foot_r_2d(4,1); 
+        
+        cout << "[1] foot_l_2d = " << foot_l_2d << endl;
+        cout << "[1] foot_r_2d = " << foot_r_2d << endl;
+        
+        pre_foot_l_2d = foot_l_2d;
+        pre_foot_r_2d = foot_r_2d;
+        
+        X_new << 0,0,0;
+        
+        COM_Hori_Traj_Gen();
+        
+        foot_l_pos(0) = init_foot_l_pos(0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = init_foot_r_pos(0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+ 
+    }
+    else{
+        foot_l_pos(0) = init_foot_l_pos(0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = init_foot_r_pos(0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+    }
+        
+    com_pos(0) = com_x_array(i,0);
+    com_pos(1) = 0;
+    com_pos(2) = com_height;
+    tmp_zmp_x_ref = zmp_x_array(i);
+     
+//    printf("i = %d, com_pos(x) = %f\n",i,com_pos(0));
+}
+
+void CRobot::Trot_Walking_Traj(int i)
+{
+    walk_time = i*dt;
+    
+    if(i == 0){
+        
+        stop_flag = true;
+       
+        Foot_step_planner(final_foot_l_2d,final_foot_r_2d);
+        
+        cout << "[2] foot_l_2d = " << foot_l_2d << endl;
+        cout << "[2] foot_r_2d = " << foot_r_2d << endl;
+        
+        final_foot_l_2d << foot_l_2d(4,0),foot_l_2d(4,1); 
+        final_foot_r_2d << foot_r_2d(4,0),foot_r_2d(4,1); 
+       
+        COM_Hori_Traj_Gen();
+        SF_Verti_Traj_Gen();
+        SF_Hori_Traj_Gen();
+        
+        foot_l_pos(0) = init_foot_l_pos(0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = init_foot_r_pos(0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+ 
+    }
+    else if(i < dsp_cnt){
+        t2 = walk_time;
+        foot_l_pos(0) = x1[5]*pow(t2,5) + x1[4]*pow(t2,4) + x1[3]*pow(t2,3) + x1[2]*pow(t2,2) + x1[1]*pow(t2,1) + x1[0];
+        foot_l_pos(1) = init_foot_l_pos(1);
+        
+        foot_r_pos(0) = init_foot_r_pos(0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+        
+        if(i < dsp_t1/dt){
+            t1 = t2;
+            foot_l_pos(2) = init_foot_l_pos(2) + z1[5]*pow(t1,5) + z1[4]*pow(t1,4) + z1[3]*pow(t1,3) + z1[2]*pow(t1,2) + z1[1]*pow(t1,1) + z1[0];
+        }
+        else{
+            t1 = t2 - dsp_t1;
+            foot_l_pos(2) = init_foot_l_pos(2) + z2[5]*pow(t1,5) + z2[4]*pow(t1,4) + z2[3]*pow(t1,3) + z2[2]*pow(t1,2) + z2[1]*pow(t1,1) + z2[0];
+        }
+    
+    }
+    else if(i < step_cnt){
+        
+        foot_l_pos(0) = pre_foot_l_2d(1,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = init_foot_r_pos(0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);    
+    }
+    else if(i < step_cnt + dsp_cnt){
+        t2 = walk_time - step_time;
+        
+        foot_l_pos(0) = pre_foot_l_2d(1,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = x2[5]*pow(t2,5) + x2[4]*pow(t2,4) + x2[3]*pow(t2,3) + x2[2]*pow(t2,2) + x2[1]*pow(t2,1) + x2[0];
+        foot_r_pos(1) = init_foot_r_pos(1);
+        
+        if(i < step_cnt + dsp_t1/dt){
+            t1 = t2;
+            foot_r_pos(2) = init_foot_r_pos(2) + z1[5]*pow(t1,5) + z1[4]*pow(t1,4) + z1[3]*pow(t1,3) + z1[2]*pow(t1,2) + z1[1]*pow(t1,1) + z1[0];
+        }
+        else{
+            t1 = t2 - dsp_t1;
+            foot_r_pos(2) = init_foot_r_pos(2) + z2[5]*pow(t1,5) + z2[4]*pow(t1,4) + z2[3]*pow(t1,3) + z2[2]*pow(t1,2) + z2[1]*pow(t1,1) + z2[0];
+        } 
+    }
+    
+    else if(i < step_cnt*2){
+        
+        foot_l_pos(0) = pre_foot_l_2d(2,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = pre_foot_r_2d(2,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);    
+    }
+    else if(i < step_cnt*2 + dsp_cnt){
+        t2 = walk_time - step_time*2;
+        
+        foot_l_pos(0) = x3[5]*pow(t2,5) + x3[4]*pow(t2,4) + x3[3]*pow(t2,3) + x3[2]*pow(t2,2) + x3[1]*pow(t2,1) + x3[0];
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = pre_foot_r_2d(2,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+        
+        if(i < step_cnt*2 + dsp_t1/dt){
+            t1 = t2;
+            foot_l_pos(2) = init_foot_l_pos(2) + z1[5]*pow(t1,5) + z1[4]*pow(t1,4) + z1[3]*pow(t1,3) + z1[2]*pow(t1,2) + z1[1]*pow(t1,1) + z1[0];
+        }
+        else{
+            t1 = t2 - dsp_t1;
+            foot_l_pos(2) = init_foot_l_pos(2) + z2[5]*pow(t1,5) + z2[4]*pow(t1,4) + z2[3]*pow(t1,3) + z2[2]*pow(t1,2) + z2[1]*pow(t1,1) + z2[0];
+        }
+    }
+    else if(i < step_cnt*3){
+        
+        foot_l_pos(0) = pre_foot_l_2d(3,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = pre_foot_r_2d(3,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);    
+    }
+    else if(i < step_cnt*3 + dsp_cnt){
+        t2 = walk_time - step_time*3;
+        
+        foot_l_pos(0) = pre_foot_l_2d(3,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = x4[5]*pow(t2,5) + x4[4]*pow(t2,4) + x4[3]*pow(t2,3) + x4[2]*pow(t2,2) + x4[1]*pow(t2,1) + x4[0];
+        foot_r_pos(1) = init_foot_r_pos(1);
+        
+        if(i < step_cnt*3 + dsp_t1/dt){
+            t1 = t2;
+            foot_r_pos(2) = init_foot_r_pos(2) + z1[5]*pow(t1,5) + z1[4]*pow(t1,4) + z1[3]*pow(t1,3) + z1[2]*pow(t1,2) + z1[1]*pow(t1,1) + z1[0];
+        }
+        else{
+            t1 = t2 - dsp_t1;
+            foot_r_pos(2) = init_foot_r_pos(2) + z2[5]*pow(t1,5) + z2[4]*pow(t1,4) + z2[3]*pow(t1,3) + z2[2]*pow(t1,2) + z2[1]*pow(t1,1) + z2[0];
+        } 
+    }
+    
+    
+    else{
+    
+        foot_l_pos(0) = pre_foot_l_2d(4,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = pre_foot_r_2d(4,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+        
+        if(i == step_cnt*4 - 1){
+            pre_foot_l_2d = foot_l_2d;
+            pre_foot_r_2d = foot_r_2d;
+            
+            cout << "[10] pre_foot_l_2d = " << pre_foot_l_2d << endl;
+            cout << "[10] pre_foot_r_2d = " << pre_foot_r_2d << endl;
+        }     
+    }
+        
+    com_pos(0) = com_x_array(i,0);
+    com_pos(1) = 0;
+    com_pos(2) = com_height;
+    tmp_zmp_x_ref = zmp_x_array(i);
+     
+//    printf("i = %d, com_pos(x) = %f\n",i,com_pos(0));
+}
+
+void CRobot::Trot_Walking_Traj_Final(int i)
+{
+    walk_time = i*dt;
+    
+    if(i == 0){
+        
+        stop_flag = true;
+       
+        Foot_step_planner(final_foot_l_2d,final_foot_r_2d);
+        
+        cout << "[3]foot_l_2d = " << foot_l_2d << endl;
+        cout << "[3]foot_r_2d = " << foot_r_2d << endl;
+            
+        COM_Hori_Traj_Gen();
+        SF_Hori_Traj_Gen_Final();
+        
+        foot_l_pos(0) = pre_foot_l_2d(0,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = pre_foot_r_2d(0,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+ 
+    }
+    else if(i < dsp_cnt){
+        t2 = walk_time;
+        foot_l_pos(0) = x5[5]*pow(t2,5) + x5[4]*pow(t2,4) + x5[3]*pow(t2,3) + x5[2]*pow(t2,2) + x5[1]*pow(t2,1) + x5[0];
+        foot_l_pos(1) = init_foot_l_pos(1);
+        
+        foot_r_pos(0) = pre_foot_r_2d(0,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+        
+        if(i < dsp_t1/dt){
+            t1 = t2;
+            foot_l_pos(2) = init_foot_l_pos(2) + z1[5]*pow(t1,5) + z1[4]*pow(t1,4) + z1[3]*pow(t1,3) + z1[2]*pow(t1,2) + z1[1]*pow(t1,1) + z1[0];
+        }
+        else{
+            t1 = t2 - dsp_t1;
+            foot_l_pos(2) = init_foot_l_pos(2) + z2[5]*pow(t1,5) + z2[4]*pow(t1,4) + z2[3]*pow(t1,3) + z2[2]*pow(t1,2) + z2[1]*pow(t1,1) + z2[0];
+        }
+    
+    }
+    
+    else{
+    
+        foot_l_pos(0) = pre_foot_l_2d(4,0);
+        foot_l_pos(1) = init_foot_l_pos(1);
+        foot_l_pos(2) = init_foot_l_pos(2);
+        
+        foot_r_pos(0) = pre_foot_r_2d(4,0);
+        foot_r_pos(1) = init_foot_r_pos(1);
+        foot_r_pos(2) = init_foot_r_pos(2);
+        
+        if(i == step_cnt*4){
+            pre_foot_l_2d = foot_l_2d;
+            pre_foot_r_2d = foot_r_2d;
+        }     
+    }
+        
+    com_pos(0) = com_x_array(i,0);
+    com_pos(1) = 0;
+    com_pos(2) = com_height;
+    tmp_zmp_x_ref = zmp_x_array(i);
+     
+//    printf("[f] i = %d, com_pos(x) = %f\n",i,com_pos(0));
+}
+
+void CRobot::SF_Hori_Traj_Gen_Final(void){
+
+    init_x[0] = pre_foot_l_2d(0,0);
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = pre_foot_l_2d(1,0);
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, dsp_time, x5);
+    
+}
+
+void CRobot::SF_Hori_Traj_Gen(void){
+
+    init_x[0] = pre_foot_l_2d(0,0);
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = pre_foot_l_2d(1,0);
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, dsp_time, x1);
+    
+    init_x[0] = pre_foot_r_2d(1,0);
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = pre_foot_r_2d(2,0);
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, dsp_time, x2);
+    
+    init_x[0] = pre_foot_l_2d(2,0);
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = pre_foot_l_2d(3,0);
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, dsp_time, x3);
+    
+    init_x[0] = pre_foot_r_2d(3,0);
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = pre_foot_r_2d(4,0);
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, dsp_time, x4);
+    
+}
+
+void CRobot::SF_Verti_Traj_Gen(void){
+    dsp_t1 = dsp_time/2.0f;
+    dsp_t2 = dsp_time - dsp_t1;
+    
+    init_x[0] = 0;
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = foot_height;
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, _t, z1);
+    
+    init_x[0] = foot_height;
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = 0;
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, _t, z2);
+}
+
+
+void CRobot::Foot_step_planner(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d){
+    double dist = moving_speed*step_time;
+    
+    if(stop_flag == false){
+       foot_l_2d << init_foot_l_2d[0],        init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist,   init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist,   init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist*3, init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist*3, init_foot_l_2d[1];
+
+       foot_r_2d << init_foot_r_2d[0],        init_foot_l_2d[1],
+                    init_foot_r_2d[0],        init_foot_l_2d[1],
+                    init_foot_r_2d[0]+dist*2, init_foot_l_2d[1],
+                    init_foot_r_2d[0]+dist*2, init_foot_l_2d[1],
+                    init_foot_r_2d[0]+dist*4, init_foot_l_2d[1];
+
+    }
+    else{
+       foot_l_2d << init_foot_l_2d[0],        init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist,   init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist,   init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist,   init_foot_l_2d[1],
+                    init_foot_l_2d[0]+dist,   init_foot_l_2d[1];
+
+       foot_r_2d << init_foot_r_2d[0],        init_foot_l_2d[1],
+                    init_foot_r_2d[0],        init_foot_l_2d[1],
+                    init_foot_r_2d[0],        init_foot_l_2d[1],
+                    init_foot_r_2d[0],        init_foot_l_2d[1],
+                    init_foot_r_2d[0],        init_foot_l_2d[1];
+
+    }
+}
+
+
+void CRobot::COM_Hori_Traj_Gen(void){
+    
+    static double tmp_zmp_ref = 0;
+    
+//    cout << "state_X = " << state_X << endl;
+//    cout << "CC = " << CC << endl;
+    
+//    X_new(0) = state_X(0);
+//    X_new(1) = state_X(1);
+//    X_new(2) = state_X(2);
+    
+//    cout << "X_new = " << X_new << endl;
+    
+    for(unsigned int i=0;i<preview_cnt;++i){
+        if(i <= dsp_cnt){
+            tmp_zmp_ref = foot_r_2d(0,0);
+        }
+        else if(i <= step_cnt){
+            tmp_zmp_ref = foot_l_2d(1,0);
+        }
+        else if(i <= step_cnt+dsp_cnt){
+            tmp_zmp_ref = foot_l_2d(1,0);
+        }
+        else if(i <= step_cnt*2){
+            tmp_zmp_ref = foot_r_2d(2,0);
+        }
+        else if(i <= step_cnt*2+dsp_cnt){
+            tmp_zmp_ref = foot_r_2d(2,0);
+        }
+        else if(i <= step_cnt*3){
+            tmp_zmp_ref = foot_l_2d(3,0);
+        }
+        else if(i <= step_cnt*3+dsp_cnt){
+            tmp_zmp_ref = foot_l_2d(3,0);
+        }
+        else{
+            tmp_zmp_ref = foot_r_2d(4,0);
+        }
+       
+        for(unsigned int j=0;j<=preview_cnt-2;++j){
+            zmp_ref_array(j) = zmp_ref_array(j+1);
+        }
+        zmp_ref_array(preview_cnt-1) = tmp_zmp_ref;  
+            
+        Preview_con();
+        
+        com_x_array(i,0) = X_new(0);
+        com_x_array(i,1) = X_new(1);
+        com_x_array(i,2) = X_new(2);
+        
+        zmp_x_array(i) = zmp_ref_array(0);
+     
+    }
+}
+
+void CRobot::Preview_con(void)
+{
+    static double err = 0;
+    static double sum_p = 0;
+    static double u = 0;
+    static double zmp_ref_old = 0;
+    
+    zmp_ref_old = CC.transpose()*X_new;
+    
+    err = zmp_ref_old - zmp_ref_array(0);
+    sum_e = sum_e + err;
+    sum_p = 0;
+    
+    for(unsigned int k=0;k<preview_cnt-1;++k){
+        sum_p = sum_p + Gp(k)*zmp_ref_array(k);
+    }
+    
+    u = -Gi*sum_e - Gx.transpose()*X_new - sum_p;
+    
+    X_new = AA*X_new + BB*u;
 }
 
 void CRobot::TROT_Traj(void)
@@ -1460,84 +2054,24 @@ void CRobot::TROT_Traj(void)
             x_step = step_time * moving_speed / 2.0;
             x_fsp = fsp_time * moving_speed / 2.0;
 
+            xl1[0] = pre_foot_l[0]; xl1[1] = pre_foot_l[1]; xl1[2] = pre_foot_l[2]; xl1[3] =  x_step + x_fsp; xl1[4] = -moving_speed; xl1[5] = 0; xl1[6] = dsp_time;
+            xl2[0] = x_step + x_fsp; xl2[1] = -moving_speed; xl2[2] = 0; xl2[3] =  x_step - x_fsp; xl2[4] = -moving_speed; xl2[5] = 0; xl2[6] = fsp_time;
+            xl3[0] = x_step - x_fsp; xl3[1] = -moving_speed; xl3[2] = 0; xl3[3] =  -x_step + x_fsp; xl3[4] = -moving_speed; xl3[5] = 0; xl3[6] = dsp_time;
+            xl4[0] = -x_step + x_fsp; xl4[1] = -moving_speed; xl4[2] = 0; xl4[3] =  -x_step - x_fsp; xl4[4] = -moving_speed; xl4[5] = 0; xl4[6] = fsp_time;
 
-            xl1[0] = pre_foot_l[0];
-            xl1[1] = pre_foot_l[1];
-            xl1[2] = pre_foot_l[2];
-            xl1[3] = x_step + x_fsp;
-            xl1[4] = -moving_speed;
-            xl1[5] = 0;
-            xl1[6] = dsp_time;
-            xl2[0] = x_step + x_fsp;
-            xl2[1] = -moving_speed;
-            xl2[2] = 0;
-            xl2[3] = x_step - x_fsp;
-            xl2[4] = -moving_speed;
-            xl2[5] = 0;
-            xl2[6] = fsp_time;
-            xl3[0] = x_step - x_fsp;
-            xl3[1] = -moving_speed;
-            xl3[2] = 0;
-            xl3[3] = -x_step + x_fsp;
-            xl3[4] = -moving_speed;
-            xl3[5] = 0;
-            xl3[6] = dsp_time;
-            xl4[0] = -x_step + x_fsp;
-            xl4[1] = -moving_speed;
-            xl4[2] = 0;
-            xl4[3] = -x_step - x_fsp;
-            xl4[4] = -moving_speed;
-            xl4[5] = 0;
-            xl4[6] = fsp_time;
-
-            xr1[0] = pre_foot_r[0];
-            xr1[1] = pre_foot_r[1];
-            xr1[2] = pre_foot_r[2];
-            xr1[3] = -x_step + x_fsp;
-            xr1[4] = -moving_speed;
-            xr1[5] = 0;
-            xr1[6] = dsp_time;
-            xr2[0] = -x_step + x_fsp;
-            xr2[1] = -moving_speed;
-            xr2[2] = 0;
-            xr2[3] = -x_step - x_fsp;
-            xr2[4] = -moving_speed;
-            xr2[5] = 0;
-            xr2[6] = fsp_time;
-            xr3[0] = -x_step - x_fsp;
-            xr3[1] = -moving_speed;
-            xr3[2] = 0;
-            xr3[3] = x_step + x_fsp;
-            xr3[4] = -moving_speed;
-            xr3[5] = 0;
-            xr3[6] = dsp_time;
-            xr4[0] = x_step + x_fsp;
-            xr4[1] = -moving_speed;
-            xr4[2] = 0;
-            xr4[3] = x_step - x_fsp;
-            xr4[4] = -moving_speed;
-            xr4[5] = 0;
-            xr4[6] = fsp_time;
+            xr1[0] = pre_foot_r[0]; xr1[1] = pre_foot_r[1]; xr1[2] = pre_foot_r[2]; xr1[3] =  -x_step + x_fsp; xr1[4] = -moving_speed; xr1[5] = 0; xr1[6] = dsp_time;
+            xr2[0] = -x_step + x_fsp; xr2[1] = -moving_speed; xr2[2] = 0; xr2[3] =  -x_step - x_fsp; xr2[4] = -moving_speed; xr2[5] = 0; xr2[6] = fsp_time;
+            xr3[0] = -x_step - x_fsp; xr3[1] = -moving_speed; xr3[2] = 0; xr3[3] =  x_step + x_fsp; xr3[4] = -moving_speed; xr3[5] = 0; xr3[6] = dsp_time;
+            xr4[0] = x_step + x_fsp; xr4[1] = -moving_speed; xr4[2] = 0; xr4[3] =  x_step - x_fsp; xr4[4] = -moving_speed; xr4[5] = 0; xr4[6] = fsp_time;
+            
 
             Hori_X_Traj_Gen(xl1, xl2, xl3, xl4, xr1, xr2, xr3, xr4);
 
             ctc_cnt2 = 0;
         }
         else {
-            xl_f[0] = -x_step - x_fsp;
-            xl_f[1] = -moving_speed;
-            xl_f[2] = 0;
-            xl_f[3] = 0;
-            xl_f[4] = 0;
-            xl_f[5] = 0;
-            xl_f[6] = dsp_time;
-            xr_f[0] = x_step - x_fsp;
-            xr_f[1] = -moving_speed;
-            xr_f[2] = 0;
-            xr_f[3] = 0;
-            xr_f[4] = 0;
-            xr_f[5] = 0;
-            xr_f[6] = dsp_time;
+            xl_f[0] = -x_step - x_fsp; xl_f[1] = -moving_speed; xl_f[2] = 0; xl_f[3] = 0; xl_f[4] = 0; xl_f[5] = 0; xl_f[6] = dsp_time;
+            xr_f[0] =  x_step - x_fsp; xr_f[1] = -moving_speed; xr_f[2] = 0; xr_f[3] = 0; xr_f[4] = 0; xr_f[5] = 0; xr_f[6] = dsp_time;
 
             Hori_X_Final_Traj_Gen(xl_f, xr_f);
 
@@ -1545,6 +2079,8 @@ void CRobot::TROT_Traj(void)
 
     }
     ctc_cnt2++;
+    
+//    printf("target_EP[0] = %f\n",target_EP[0]);
 
     target_pos[6] = 0; //goal_pos[6];
 
@@ -1553,7 +2089,7 @@ void CRobot::TROT_Traj(void)
 void CRobot::Traj_gen(void) // common trot
 {
     // ===================== Vertical Foot Trajectory Generation ==================== //
-    double foot_height = 0.05;
+    
     double dsp_t1 = dsp_time / 2;
     double dsp_t2 = dsp_time - dsp_t1;
 
@@ -1642,15 +2178,6 @@ void CRobot::Traj_gen(void) // common trot
     // ===================== Horizontal Foot Trajectory Generation End ==================== //
 }
 
-void CRobot::ballistics(double flight_time, double landing_height, double take_off_speed)
-{
-    double g = 9.81;
-    double time1 = (take_off_speed) / 9.81;
-    double time2 = flight_time - time1; //(flight_time - 0.01) - time1; //- 0.012
-    double top_height = landing_height + 0.5 * g * pow(time2, 2);
-    to_height = top_height + 0.5 * g * pow(time1, 2) - take_off_speed*time1;
-}
-
 void CRobot::coefficient_5thPoly(double *init_x, double *final_x, double tf, double *output)
 {
     //   MatrixXd R(6,1), A(6,6), P(6,1);
@@ -1686,7 +2213,7 @@ void CRobot::coefficient_5thPoly(double *init_x, double *final_x, double tf, dou
 
 void CRobot::Cal_Fc(void)
 {
-    static double tmp_Fc1 = 70; //50; // 50
+    static double tmp_Fc1 = 70; //70; // 50
     static double tmp_Fc2 = tmp_Fc1 * 2.0;
 
     static double k_fd_y = 1500; //2000;
@@ -1763,13 +2290,19 @@ void CRobot::Cal_Fc(void)
 
     }
 
-    w1 = 0;
-    w2 = 0;
+    if(Foot_Height_Control_OnOff_Flag == false){
+        w1 = 0;
+        w2 = 0;
+    }
 
     // ==================== VSD ======================= //
-    for (unsigned int i = 0; i < 12; ++i) {
-        Fc_vsd[i] = Kp_vsd[i] * EP_err[i] + Kd_vsd[i] * EP_vel_err[i];
+    
+    if(VSD_Contrl_OnOff_Flag == true){
+        for (unsigned int i = 0; i < 12; ++i) {
+          Fc_vsd[i] = Kp_vsd[i] * EP_err[i] + Kd_vsd[i] * EP_vel_err[i];
+        }
     }
+
     // ==================== VSD END ====================== //
 
     // ==================== Slop Compensation Control ==================== //
@@ -1793,6 +2326,8 @@ void CRobot::Cal_Fc(void)
 
     //		Fc   << 0, 0, 0, 0, 0, 0, 0 ,Fc_vsd[0], Fc_vsd[1] + F_fd_y, Fc_RL_z + Fc_vsd[2] ,Fc_vsd[3], Fc_vsd[4] + F_fd_y, Fc_RR_z + Fc_vsd[5],  Fc_vsd[6], Fc_vsd[7] + F_fd_y, Fc_FL_z + Fc_vsd[8],Fc_vsd[9], Fc_vsd[10] + F_fd_y, Fc_FR_z + Fc_vsd[11];
     Fc << 0, 0, 0, 0, 0, 0, 0, Fc_vsd[0], Fc_vsd[1], Fc_RL_z + Fc_vsd[2] + w2 * (F_fd_l + F_fd_b), Fc_vsd[3], Fc_vsd[4], Fc_RR_z + Fc_vsd[5] + w1 * (F_fd_r + F_fd_b), Fc_vsd[6], Fc_vsd[7], Fc_FL_z + Fc_vsd[8] + w1 * (F_fd_l + F_fd_f), Fc_vsd[9], Fc_vsd[10], Fc_FR_z + Fc_vsd[11] + w2 * (F_fd_r + F_fd_f);
+//Fc << 0, 0, 0, 0, 0, 0, 0, Fc_vsd[0], Fc_vsd[1], Fc_RL_z + Fc_vsd[2], 0, 0, Fc_RR_z + Fc_vsd[5], 0, 0, Fc_FL_z + Fc_vsd[8],0,0, Fc_FR_z + Fc_vsd[11];
+
 }
 
 void CRobot::Torque_off(void)
@@ -2093,4 +2628,63 @@ void CRobot::Cal_CP(void)
     CP_x = lpf_COM_x + 1 / natural_freq * lpf_COM_x_dot;
 
 
+}
+
+
+void CRobot::Get_gain(void)
+{  
+    double z_c = 0.45;
+    int nCount = 0;
+    double temp_Gp_gain,temp_Gx_gain,temp_Gi_gain;
+    
+    AA << 1, dt, dt*dt/2.0f ,
+          0, 1, dt,
+          0, 0, 1;
+    
+    cout << "AA = " << AA << endl;
+    
+    BB << dt*dt*dt/6.0f, dt*dt/2.0f, dt;
+    cout << "BB = " << BB << endl;
+    
+    CC << 1, 0, -z_c/GRAVITY;
+    cout << "CC = " << CC << endl;
+    
+    FILE *fp1;
+    FILE *fp2;
+    FILE *fp3;
+    
+    fp1 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/dh_Gp.txt","r");
+    if(fp1 == NULL)printf("CAN NOT OPEN Gp TEXT FILE \n");
+    while(fscanf(fp1,"%lf",&temp_Gp_gain)==1){pv_Gp[nCount] = temp_Gp_gain; nCount++;}
+    fclose(fp1);
+    nCount = 0;
+    
+    fp2 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/dh_Gx.txt","r");
+    if(fp2 == NULL)printf("CAN NOT OPEN Gx TEXT FILE \n");
+    while(fscanf(fp2,"%lf",&temp_Gx_gain)==1){pv_Gx[nCount] = temp_Gx_gain; nCount++;}
+    fclose(fp2);
+    nCount = 0;
+    
+    fp3 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/dh_Gi.txt","r");
+    if(fp3 == NULL)printf("CAN NOT OPEN Gi TEXT FILE \n");
+    while(fscanf(fp3,"%lf",&temp_Gi_gain)==1){pv_Gi[nCount] = temp_Gi_gain; nCount++;}
+    fclose(fp3);
+   
+    Gi = pv_Gi[0];
+//        cout << pv_Gi[0] << endl;
+    
+    Gx(0) = pv_Gx[0];
+    Gx(1) = pv_Gx[1];
+    Gx(2) = pv_Gx[2];
+    
+//    cout << pv_Gx[0] << endl << pv_Gx[1] << endl << pv_Gx[2] << endl;
+    
+    for(unsigned int i=0;i<preview_cnt-1;++i){
+      Gp(i) = pv_Gp[i];  
+    }
+    
+//    cout << pv_Gp[0] << endl << pv_Gp[1] << endl;
+    
+
+    
 }

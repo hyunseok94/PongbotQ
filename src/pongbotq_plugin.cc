@@ -313,14 +313,12 @@ namespace gazebo
         void InitRvizSetting();
         void SensorSetting();
 
-
         void IMUSensorRead();
         void FTSensorRead();
         void EncoderRead();
 
         void jointController();
         void ROSMsgPublish();
-
 
 
     };
@@ -413,7 +411,18 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         PongBotQ.CommandFlag = NOMAL_TROT_WALKING;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
+        
+    case CTRLMODE_TROT2:
+        cout << "============= [CTRLMODE_TROT2] ==========" << endl;
 
+        PongBotQ.ctc_cnt2 = 0;
+        
+        PongBotQ.Get_gain();
+      
+
+        PongBotQ.CommandFlag = NOMAL_TROT_WALKING2;
+        PongBotQ.ControlMode = CTRLMODE_NONE;
+        break;
     }
 
 
@@ -443,6 +452,14 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case NOMAL_TROT_WALKING:
         //            PongBotQ.moving_speed = rqt_moving_speed;
         PongBotQ.TROT_Traj();
+        PongBotQ.ComputeTorqueControl();
+        break;
+        
+    case NOMAL_TROT_WALKING2:
+        //            PongBotQ.moving_speed = rqt_moving_speed;
+        
+//        printf("===========================================\n");
+        PongBotQ.TROT_Walking();
         PongBotQ.ComputeTorqueControl();
         break;
 
@@ -666,7 +683,16 @@ void gazebo::PongBotQ_plugin::RBDLSetting()
 
 void gazebo::PongBotQ_plugin::IMUSensorRead()
 {
-
+    PongBotQ.IMURoll_dot = this->IMU->AngularVelocity(false)[0] * R2D;
+    PongBotQ.IMUPitch_dot = this->IMU->AngularVelocity(false)[1] * R2D;
+    PongBotQ.IMUYaw_dot = this->IMU->AngularVelocity(false)[2] * R2D;
+    
+    PongBotQ.IMURoll = pose.rot.GetRoll() * R2D;//PongBotQ.IMURoll + PongBotQ.IMURoll_dot*dt;
+    PongBotQ.IMUPitch = pose.rot.GetPitch() * R2D;//PongBotQ.IMUPitch + PongBotQ.IMUPitch_dot*dt;
+    PongBotQ.IMUYaw = pose.rot.GetYaw() * R2D;//PongBotQ.IMUYaw + PongBotQ.IMUYaw_dot*dt;
+    
+    
+//    printf("angular_vel_x = %f [rad/s]\n",angular_vel_x);
 }
 
 void gazebo::PongBotQ_plugin::FTSensorRead()
@@ -778,9 +804,18 @@ void gazebo::PongBotQ_plugin::EncoderRead()
 
     //* calculating errors
     // Angle & Angular velocity of leg
+    
+    static double act_vel_alpha = 0.04;//0.04;
+    
     for (int i = 0; i < 13; i++) {
         PongBotQ.actual_vel[i] = (PongBotQ.actual_pos[i] - PongBotQ.pre_actual_pos[i]) / PongBotQ.dt;
         PongBotQ.pre_actual_pos[i] = PongBotQ.actual_pos[i];
+        
+        // filter
+         PongBotQ.lpf_actual_vel[i] = (1 - act_vel_alpha) * PongBotQ.lpf_actual_vel[i] + act_vel_alpha*PongBotQ.actual_vel[i];
+        
+        
+        
     }
 }
 
@@ -789,7 +824,7 @@ void gazebo::PongBotQ_plugin::jointController()
 
     //***************************Set Torque********************************//
 
-    PongBotQ.joint[6].torque = PongBotQ.Kp_q[6]*(PongBotQ.target_pos[6] - PongBotQ.actual_pos[6]) + PongBotQ.Kd_q[6]*(0 - PongBotQ.actual_vel[6]);
+    PongBotQ.joint[6].torque = PongBotQ.Kp_q[6]*(PongBotQ.target_pos[6] - PongBotQ.actual_pos[6]) + PongBotQ.Kd_q[6]*(0 - PongBotQ.lpf_actual_vel[6]);
     
     
     //* Torque Limit
@@ -834,15 +869,23 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
         TmpData[i] = PongBotQ.tmp_data[i];
     }
 
-    TmpData[12] = PongBotQ.target_EP_vel[2];
-    TmpData[13] = PongBotQ.target_EP_vel[5];
-    TmpData[14] = PongBotQ.target_EP_vel[8];
-    TmpData[15] = PongBotQ.target_EP_vel[11];
-
-    TmpData[16] = 0; //PongBotQ.FORWARD_PHASE * (-0.1);
-
-    TmpData[27] = PongBotQ.w1;
-    TmpData[28] = PongBotQ.w2;
+    TmpData[12] = PongBotQ.com_pos(0);//PongBotQ.target_EP_vel[0];
+    TmpData[13] = PongBotQ.com_pos(1);//PongBotQ.target_EP_vel[3];
+    TmpData[14] = PongBotQ.com_pos(2);//PongBotQ.target_EP_acc[0];
+    TmpData[15] = PongBotQ.foot_l_pos(0);//PongBotQ.target_EP_acc[3];
+    TmpData[16] = PongBotQ.foot_l_pos(1);//PongBotQ.target_EP[0];
+    TmpData[17] = PongBotQ.foot_l_pos(2);//PongBotQ.target_EP[3];
+    TmpData[18] = PongBotQ.foot_r_pos(0);//PongBotQ.target_EP[6];
+    TmpData[19] = PongBotQ.foot_r_pos(1);//PongBotQ.target_EP[9];
+    TmpData[20] = PongBotQ.foot_r_pos(2);//PongBotQ.CP_x;
+    TmpData[21] = PongBotQ.tmp_zmp_x_ref;//PongBotQ.CP_y;
+    TmpData[22] = PongBotQ.target_EP[0];//IMURoll;
+    TmpData[23] = PongBotQ.target_EP[1];//IMUPitch;
+    TmpData[24] = PongBotQ.target_EP[2];//IMURoll_dot;
+    TmpData[25] = PongBotQ.IMUPitch_dot;
+    
+    TmpData[27] = PongBotQ.actual_vel[2];//PongBotQ.w1;
+    TmpData[28] = PongBotQ.lpf_actual_vel[2];//PongBotQ.w2;
 
     //setting for getting dt
     this->last_update_time = current_time;

@@ -36,7 +36,8 @@ typedef enum {
     CTRLMODE_INITIALIZE,
     CTRLMODE_HOME_POS,
     CTRLMODE_WALK_READY,
-    CTRLMODE_TROT
+    CTRLMODE_TROT,
+    CTRLMODE_TROT2
 } _CONTROL_MODE;
 
 typedef enum {
@@ -120,6 +121,7 @@ typedef enum {
     CCTM_OFF,
     JUMP_ONESTEP, // BKCho
     NOMAL_TROT_WALKING,
+    NOMAL_TROT_WALKING2, // DH
     TORQUE_OFF,
     NO_ACT_WITH_CTC
 
@@ -235,12 +237,26 @@ public:
     void coefficient_5thPoly(double *init_x, double *final_x, double tf, double *output);
     void Cal_Fc(void);
     void Flying_Trot_Traj(void);
-    void ballistics(double flight_time, double landing_height, double take_off_speed);
+//    void ballistics(double flight_time, double landing_height, double take_off_speed);
     void Torque_off(void);
     void Vertical_Traj_Gen(double *z1, double *z2);
     void Hori_X_Traj_Gen(double *xl1, double *xl2, double *xl3, double *xl4, double *xr1, double *xr2, double *xr3, double *xr4);
     void Hori_X_Final_Traj_Gen(double *xl_f, double *xr_f);
     void Cal_CP(void);
+    void TROT_Walking(void);
+    void Get_gain(void);
+    void Trot_Walking_Traj_First(int i);
+    void Trot_Walking_Traj(int i);
+    void Trot_Walking_Traj_Final(int i);
+    void Foot_step_planner(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
+    void COM_Hori_Traj_Gen(void);
+    void Preview_con(void);
+    void SF_Verti_Traj_Gen(void);
+    void SF_Hori_Traj_Gen(void);
+    void SF_Hori_Traj_Gen_Final(void);
+    
+
+    
 
     enum Fc_Phase {
         INIT_Fc = 0,
@@ -286,6 +302,8 @@ public:
     RigidBodyDynamics::Math::VectorNd BaseVel;
     RigidBodyDynamics::Math::VectorNd JointAngle;
     RigidBodyDynamics::Math::VectorNd JointVel;
+    
+    VectorNd pd_con = VectorNd::Zero(19);
 
     MatrixNd M_term = MatrixNd::Zero(19, 19);
     VectorNd hatNonLinearEffects = VectorNd::Zero(19);
@@ -302,8 +320,8 @@ public:
     double L3_y = 0.0;
     double L3_z = 0.304515;
 
-    VectorNd EP_OFFSET_RL = Vector3d(L3_x, L3_y, -L3_z);
-    VectorNd EP_OFFSET_RR = Vector3d(L3_x, L3_y, -L3_z);
+    VectorNd EP_OFFSET_RL = Vector3d( L3_x, L3_y, -L3_z);
+    VectorNd EP_OFFSET_RR = Vector3d( L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FL = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FR = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd Originbase = Vector3d(0, 0, 0);
@@ -316,6 +334,7 @@ public:
     VectorNd inc_pos = VectorNd::Zero(13);
     VectorNd actual_pos = VectorNd::Zero(13);
     VectorNd actual_vel = VectorNd::Zero(13);
+    VectorNd lpf_actual_vel = VectorNd::Zero(13);
     VectorNd actual_acc = VectorNd::Zero(13);
 
     VectorNd pre_actual_pos = VectorNd::Zero(13);
@@ -355,6 +374,7 @@ public:
     VectorNd Kp_EP = VectorNd::Zero(12); //(100,100,100,100,100,100,100,100,100,100,100,100);
     VectorNd Kd_EP = VectorNd::Zero(12); //(1,1,1,1,1,1,1,1,1,1,1,1);
     VectorNd target_EP = VectorNd::Zero(12);
+    VectorNd pre_target_EP = VectorNd::Zero(12);
     VectorNd target_EP_vel = VectorNd::Zero(12);
     VectorNd target_EP_acc = VectorNd::Zero(12);
     VectorNd goal_EP = VectorNd::Zero(12); //(0,0.218,-0.45,0,-0.218,-0.45,0.7,0.218,-0.45,0.7,-0.218,-0.45);
@@ -397,11 +417,18 @@ public:
 
 
     // =============== Time ================ //
-    double dsp_time = 0.25, fsp_time = 0.1;
-    double step_time = dsp_time + fsp_time;
-    int dsp_cnt = 250, fsp_cnt = 100;
-    int step_cnt = dsp_cnt + fsp_cnt;
+    // 3Hz
+//    double dsp_time = 0.25, fsp_time = 0.1;
+//    double step_time = dsp_time + fsp_time;
+//    int dsp_cnt = 250, fsp_cnt = 100;
+//    int step_cnt = dsp_cnt + fsp_cnt;
 
+    // 4Hz
+    double dsp_time = 0.15, fsp_time = 0.1;
+    double step_time = dsp_time + fsp_time;
+    int dsp_cnt = 150, fsp_cnt = 100;
+    int step_cnt = dsp_cnt + fsp_cnt;
+    
     // =============== Trajectory ================ //
     double tmp_time = 0, tmp_time2 = 0;
     double z_f1[6], z_f2[6], z_f3[6], z_s1[6], z_s2[6], z_s3[6], z_final1[6];
@@ -417,7 +444,7 @@ public:
     double _t = 0;
     double _out[6] = {0, 0, 0, 0, 0, 0};
 
-    double moving_speed = 0.0; // [m/s]
+    double moving_speed; // [m/s]
     double tmp_moving_speed;
     double x_step = 0; //step_time*moving_speed/2.0;
     double x_fsp = 0; //fsp_time*moving_speed/2.0;
@@ -451,8 +478,60 @@ public:
 
     double w1, w2;
 
+    bool Foot_Height_Control_OnOff_Flag;
+    bool VSD_Contrl_OnOff_Flag;
+    
+    double foot_height;
+    double com_height;
+    double z1[6], z2[6];
+    double x1[6], x2[6], x3[6], x4[6], x5[6];
+    double walk_time, t1, t2, dsp_t1, dsp_t2;
+    
+    // ============== Preview ============= //
+    int preview_cnt = 1000;
+    
+    double Gi = 0;
+    VectorNd Gx = VectorNd::Zero(3);   
+    VectorNd Gp = VectorNd::Zero(1000);
+    
+    MatrixNd AA = MatrixNd::Zero(3, 3);
+    VectorNd BB = VectorNd::Zero(3);
+    VectorNd CC = VectorNd::Zero(3);
+    
+    double pv_Gp[1000],pv_Gx[3],pv_Gi[1];
+    
+    VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
+    VectorNd com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd foot_l = VectorNd::Zero(3);  // x,y,z
+    VectorNd foot_r = VectorNd::Zero(3);  // x,y,z
+    VectorNd local_foot_l_pos = VectorNd::Zero(3);
+    VectorNd local_foot_r_pos = VectorNd::Zero(3);
+    VectorNd init_foot_l_2d = VectorNd::Zero(2);
+    VectorNd init_foot_r_2d = VectorNd::Zero(2);
+    MatrixNd foot_l_2d = MatrixNd::Zero(5,2);
+    MatrixNd foot_r_2d = MatrixNd::Zero(5,2);
+    MatrixNd pre_foot_l_2d = MatrixNd::Zero(5,2);
+    MatrixNd pre_foot_r_2d = MatrixNd::Zero(5,2);
+    VectorNd final_foot_l_2d = VectorNd::Zero(2);
+    VectorNd final_foot_r_2d = VectorNd::Zero(2);
+    VectorNd zmp_ref_array = VectorNd::Zero(preview_cnt);
+    VectorNd XX = VectorNd::Zero(3);
+    VectorNd X_new = VectorNd::Zero(3);
+    
+    MatrixNd com_x_array = MatrixNd::Zero(preview_cnt,3);
+    VectorNd zmp_x_array = VectorNd::Zero(preview_cnt);
+    double tmp_zmp_x_ref;
+    
+    double sum_e;
 
-
+    VectorNd init_foot_l_pos = VectorNd::Zero(3);
+    VectorNd init_foot_r_pos = VectorNd::Zero(3);
+    VectorNd foot_l_pos = VectorNd::Zero(3);
+    VectorNd foot_r_pos = VectorNd::Zero(3);
+    
+    bool stop_flag = false;
+    
+    
 private:
 };
 
