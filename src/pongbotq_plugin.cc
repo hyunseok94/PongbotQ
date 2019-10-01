@@ -373,6 +373,12 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
         PongBotQ.ctc_cnt = 0;
         PongBotQ.ctc_cnt2 = 0;
+        
+        PongBotQ.X_new << 0,0,0;
+        PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
+        PongBotQ.step_num = 0;
+        PongBotQ.traj_stop_flag = true;
+        
 
         PongBotQ.CommandFlag = NO_ACT_WITH_CTC;
         PongBotQ.ControlMode = CTRLMODE_NONE;
@@ -394,11 +400,6 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
             PongBotQ.pre_target_pos[i] = PongBotQ.actual_pos[i];
         }
 
-        //            PongBotQ.actual_EP = PongBotQ.FK1(PongBotQ.actual_pos);
-        //            for (unsigned int i = 0; i < 12; ++i) {
-        //                    PongBotQ.target_EP[i] = PongBotQ.actual_EP[i];
-        //            }
-
         PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
@@ -416,9 +417,9 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         cout << "============= [CTRLMODE_TROT2] ==========" << endl;
 
         PongBotQ.ctc_cnt2 = 0;
+        PongBotQ.traj_stop_flag = true;
         
-        PongBotQ.Get_gain();
-      
+        PongBotQ.Get_gain(); // for preview control
 
         PongBotQ.CommandFlag = NOMAL_TROT_WALKING2;
         PongBotQ.ControlMode = CTRLMODE_NONE;
@@ -445,20 +446,21 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         break;
 
     case GOTO_WALK_READY_POS:
+        PongBotQ.get_zmp();
         PongBotQ.Home_Pos_Traj();
         PongBotQ.ComputeTorqueControl();
         break;
 
     case NOMAL_TROT_WALKING:
-        //            PongBotQ.moving_speed = rqt_moving_speed;
-        PongBotQ.TROT_Traj();
+//        PongBotQ.get_zmp();
+//        PongBotQ.TROT_Traj();
         PongBotQ.ComputeTorqueControl();
         break;
         
     case NOMAL_TROT_WALKING2:
-        //            PongBotQ.moving_speed = rqt_moving_speed;
         
 //        printf("===========================================\n");
+        PongBotQ.get_zmp();
         PongBotQ.TROT_Walking();
         PongBotQ.ComputeTorqueControl();
         break;
@@ -488,17 +490,9 @@ void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg)
 }
 
 void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
-{
-    for (unsigned int i = 0; i < 12; ++i) {
-        Err_EP[i] = PongBotQ.target_EP[i] - PongBotQ.actual_EP[i];
-    }
-    for (unsigned int i = 0; i < 13; ++i) {
-        Err_pos[i] = PongBotQ.target_pos[i] - PongBotQ.actual_pos[i];
-    }
+{    
     //int CNT = CNT + 1;
     //if (CNT % 50 == 0) {
-
-
 
     //    std::cout << "Now_EP:" << "RL=" << "(" << PongBotQ.actual_EP(0) << "," << PongBotQ.actual_EP(1) << "," << PongBotQ.actual_EP(2) << ")" << "RR=" << "(" << PongBotQ.actual_EP(3) << "," << PongBotQ.actual_EP(4) << "," << PongBotQ.actual_EP(5) << ")" << "FL=" << "(" << PongBotQ.actual_EP(6) << "," << PongBotQ.actual_EP(7) << "," << PongBotQ.actual_EP(8) << ")" << "FR=" << "(" << PongBotQ.actual_EP(9) << "," << PongBotQ.actual_EP(10) << "," << PongBotQ.actual_EP(11) << ")" << std::endl;
     //    std::cout << "Now_q:" << "RL=" << "(" << PongBotQ.actual_pos(0)*R2D << "," << PongBotQ.actual_pos(1)*R2D << "," << PongBotQ.actual_pos(2)*R2D << ")" << "RR=" << "(" << PongBotQ.actual_pos(3)*R2D << "," << PongBotQ.actual_pos(4)*R2D << "," << PongBotQ.actual_pos(5)*R2D << ")" << "FL=" << "(" << PongBotQ.actual_pos(7)*R2D << "," << PongBotQ.actual_pos(8)*R2D << "," << PongBotQ.actual_pos(9)*R2D << ")" << "FR=" << "(" << PongBotQ.actual_pos(10)*R2D << "," << PongBotQ.actual_pos(11)*R2D << "," << PongBotQ.actual_pos(12)*R2D << ")" << std::endl;
@@ -514,8 +508,6 @@ void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
     //    std::cout << "EP_vel_err : " << "RL=" << "(" << PongBotQ.EP_vel_err[0] << "," << PongBotQ.EP_vel_err[1] << "," << PongBotQ.EP_vel_err[2] << ")" << "RR=" << "(" << PongBotQ.EP_vel_err[3] << "," << PongBotQ.EP_vel_err[4] << "," << PongBotQ.EP_vel_err[5] << ")" << "FL=" << "(" << PongBotQ.EP_vel_err[6] << "," << PongBotQ.EP_vel_err[7] << "," << PongBotQ.EP_vel_err[8] << ")" << "FR=" << "(" << PongBotQ.EP_vel_err[9] << "," << PongBotQ.EP_vel_err[10] << "," << PongBotQ.EP_vel_err[11] << ")" << std::endl;
     //    std::cout << "EP_err : " << "RL=" << "(" << PongBotQ.EP_err[0] << "," << PongBotQ.EP_err[1] << "," << PongBotQ.EP_err[2] << ")" << "RR=" << "(" << PongBotQ.EP_err[3] << "," << PongBotQ.EP_err[4] << "," << PongBotQ.EP_err[5] << ")" << "FL=" << "(" << PongBotQ.EP_err[6] << "," << PongBotQ.EP_err[7] << "," << PongBotQ.EP_err[8] << ")" << "FR=" << "(" << PongBotQ.EP_err[9] << "," << PongBotQ.EP_err[10] << "," << PongBotQ.EP_err[11] << ")" << std::endl;
     //    std::cout << "_______________________________________________________________________________________________________________" << std::endl;
-
-
 
     //}
 }
@@ -577,7 +569,6 @@ void gazebo::PongBotQ_plugin::GetJoints()
 
 void gazebo::PongBotQ_plugin::InitROSPubSetting()
 {
-
     //************************ROS Msg Setting*********************************//
     P_Times = n.advertise<std_msgs::Float64>("times", 1);
     P_angular_vel_x = n.advertise<std_msgs::Float64>("angular_vel_x", 1);
@@ -698,87 +689,69 @@ void gazebo::PongBotQ_plugin::IMUSensorRead()
 void gazebo::PongBotQ_plugin::FTSensorRead()
 {
     PongBotQ.FTsensorTransformation();
-
-    ///getting Force and Torque of Rear Left Leg
+    
     wrench = this->RL_TIP_JOINT->GetForceTorque(0);
-#if GAZEBO_MAJOR_VERSION >= 8
-    force = wrench.body2Force;
-    torque = wrench.body2Torque;
-#else
+
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
-#endif
+    
     RL_Force_E[0] = force.X();
     RL_Force_E[1] = force.Y();
     RL_Force_E[2] = force.Z();
-    RL_Torque_E[0] = torque.X();
-    RL_Torque_E[1] = torque.Y();
-    RL_Torque_E[2] = torque.Z();
-    RL_C_EI = ROT_REAR_TIP.transpose() * PongBotQ.RL.T_matrix;
-    RL_C_IE = RL_C_EI.transpose();
-    RL_Force_I = RL_C_IE*RL_Force_E;
-    RL_Torque_I = RL_C_IE*RL_Torque_E;
+      
+    RL_Force_I = PongBotQ.RL.T_matrix*RL_Force_E;
+    
+    PongBotQ.RL.ftSensor.Fx = RL_Force_I[0];
+    PongBotQ.RL.ftSensor.Fy = RL_Force_I[1];//force.Y();
+    PongBotQ.RL.ftSensor.Fz = RL_Force_I[2];//force.Z();
 
-    ///getting Force and Torque of Rear Right Leg
     wrench = this->RR_TIP_JOINT->GetForceTorque(0);
-#if GAZEBO_MAJOR_VERSION >= 8
-    force = wrench.body2Force;
-    torque = wrench.body2Torque;
-#else
+
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
-#endif
+
     RR_Force_E[0] = force.X();
     RR_Force_E[1] = force.Y();
     RR_Force_E[2] = force.Z();
-    RR_Torque_E[0] = torque.X();
-    RR_Torque_E[1] = torque.Y();
-    RR_Torque_E[2] = torque.Z();
-    RR_C_EI = ROT_REAR_TIP.transpose() * PongBotQ.RR.T_matrix;
-    RR_C_IE = RR_C_EI.transpose();
-    RR_Force_I = RR_C_IE*RR_Force_E;
-    RR_Torque_I = RR_C_IE*RR_Torque_E;
+    
+    RR_Force_I = PongBotQ.RR.T_matrix*RR_Force_E;
+    
+    PongBotQ.RR.ftSensor.Fx = RR_Force_I[0];
+    PongBotQ.RR.ftSensor.Fy = RR_Force_I[1];
+    PongBotQ.RR.ftSensor.Fz = RR_Force_I[2];
 
-    ///getting Force and Torque of Front Left Leg
     wrench = this->FL_TIP_JOINT->GetForceTorque(0);
-#if GAZEBO_MAJOR_VERSION >= 8
-    force = wrench.body2Force;
-    torque = wrench.body2Torque;
-#else
+
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
-#endif
+
     FL_Force_E[0] = force.X();
     FL_Force_E[1] = force.Y();
     FL_Force_E[2] = force.Z();
-    FL_Torque_E[0] = torque.X();
-    FL_Torque_E[1] = torque.Y();
-    FL_Torque_E[2] = torque.Z();
-    FL_C_EI = ROT_FORWARD_TIP.transpose() * PongBotQ.FL.T_matrix;
-    FL_C_IE = FL_C_EI.transpose();
-    FL_Force_I = FL_C_IE*FL_Force_E;
-    FL_Torque_I = FL_C_IE*FL_Torque_E;
+    
+    FL_Force_I = PongBotQ.FL.T_matrix*FL_Force_E;
+    
+    PongBotQ.FL.ftSensor.Fx = FL_Force_I[0];
+    PongBotQ.FL.ftSensor.Fy = FL_Force_I[1];
+    PongBotQ.FL.ftSensor.Fz = FL_Force_I[2];
 
-    ///getting Force and Torque of Front Right Leg
     wrench = this->FR_TIP_JOINT->GetForceTorque(0);
-#if GAZEBO_MAJOR_VERSION >= 8
-    force = wrench.body2Force;
-    torque = wrench.body2Torque;
-#else
+
     force = wrench.body2Force.Ign();
     torque = wrench.body2Torque.Ign();
-#endif
 
     FR_Force_E[0] = force.X();
     FR_Force_E[1] = force.Y();
     FR_Force_E[2] = force.Z();
-    FR_Torque_E[0] = torque.X();
-    FR_Torque_E[1] = torque.Y();
-    FR_Torque_E[2] = torque.Z();
-    FR_C_EI = ROT_FORWARD_TIP.transpose() * PongBotQ.FR.T_matrix;
-    FR_C_IE = FR_C_EI.transpose();
-    FR_Force_I = FR_C_IE*FR_Force_E;
-    FR_Torque_I = FR_C_IE*FR_Torque_E;
+    
+    FR_Force_I = PongBotQ.FR.T_matrix*FR_Force_E;
+    
+    PongBotQ.FR.ftSensor.Fx = FR_Force_I[0];
+    PongBotQ.FR.ftSensor.Fy = FR_Force_I[1];
+    PongBotQ.FR.ftSensor.Fz = FR_Force_I[2];
+    
+//    cout << "RLz = " << RL_Force_E[2] << "RRz = " << RR_Force_E[2] << "FLz = " << FL_Force_E[2] << "FRz = " << FR_Force_E[2] << endl;
+    
 }
 
 void gazebo::PongBotQ_plugin::EncoderRead()
@@ -840,21 +813,21 @@ void gazebo::PongBotQ_plugin::jointController()
 
 
     //* Applying torques
-    this->RL_HIP_JOINT->SetForce(1, PongBotQ.joint[0].torque); //PongBotQ.target_tor[0]);
+    this->RL_HIP_JOINT->SetForce(0, PongBotQ.joint[0].torque); //PongBotQ.target_tor[0]);
     this->RL_THIGH_JOINT->SetForce(1, PongBotQ.joint[1].torque); //PongBotQ.target_tor[1]);
     this->RL_CALF_JOINT->SetForce(1, PongBotQ.joint[2].torque); //PongBotQ.target_tor[2]);
 
-    this->RR_HIP_JOINT->SetForce(1, PongBotQ.joint[3].torque); //PongBotQ.target_tor[3]);
+    this->RR_HIP_JOINT->SetForce(0, PongBotQ.joint[3].torque); //PongBotQ.target_tor[3]);
     this->RR_THIGH_JOINT->SetForce(1, PongBotQ.joint[4].torque); //PongBotQ.target_tor[4]);
     this->RR_CALF_JOINT->SetForce(1, PongBotQ.joint[5].torque); //PongBotQ.target_tor[5]);
 
-    this->WAIST_JOINT->SetForce(1, PongBotQ.joint[6].torque); //PongBotQ.target_tor[6]);
+    this->WAIST_JOINT->SetForce(2, PongBotQ.joint[6].torque); //PongBotQ.target_tor[6]);
 
-    this->FL_HIP_JOINT->SetForce(1, PongBotQ.joint[7].torque); //PongBotQ.target_tor[7]);
+    this->FL_HIP_JOINT->SetForce(0, PongBotQ.joint[7].torque); //PongBotQ.target_tor[7]);
     this->FL_THIGH_JOINT->SetForce(1, PongBotQ.joint[8].torque); //PongBotQ.target_tor[8]);
     this->FL_CALF_JOINT->SetForce(1, PongBotQ.joint[9].torque); //PongBotQ.target_tor[9]);
 
-    this->FR_HIP_JOINT->SetForce(1, PongBotQ.joint[10].torque); //PongBotQ.target_tor[10]);
+    this->FR_HIP_JOINT->SetForce(0, PongBotQ.joint[10].torque); //PongBotQ.target_tor[10]);
     this->FR_THIGH_JOINT->SetForce(1, PongBotQ.joint[11].torque); //PongBotQ.target_tor[11]);
     this->FR_CALF_JOINT->SetForce(1, PongBotQ.joint[12].torque); //PongBotQ.target_tor[12]);
 
@@ -882,10 +855,13 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
     TmpData[22] = PongBotQ.target_EP[0];//IMURoll;
     TmpData[23] = PongBotQ.target_EP[1];//IMUPitch;
     TmpData[24] = PongBotQ.target_EP[2];//IMURoll_dot;
-    TmpData[25] = PongBotQ.IMUPitch_dot;
+    TmpData[25] = PongBotQ.lpf_zmp_x;//zmp_x;//PongBotQ.IMUPitch_dot;
     
-    TmpData[27] = PongBotQ.actual_vel[2];//PongBotQ.w1;
-    TmpData[28] = PongBotQ.lpf_actual_vel[2];//PongBotQ.w2;
+    TmpData[26] = PongBotQ.target_EP[3];//PongBotQ.X_new(1);
+    TmpData[27] = PongBotQ.target_EP[4];//PongBotQ.X_new(2);
+    TmpData[28] = PongBotQ.target_EP[5];//PongBotQ.X_new(2);
+    
+
 
     //setting for getting dt
     this->last_update_time = current_time;
@@ -1054,12 +1030,4 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
     }
 
     ros_pub2.publish(ros_msg2);
-
-    //    ZmpDataPublish();
-    //    SimtimePublish();
-    //    RvizJointStatesPublish();
-    //    FTSensorPublish();
-    //    IMUAngularDataPublish();
-    //    ObserverDataPublish();
-    //    JointAngleErrPublish();
 }

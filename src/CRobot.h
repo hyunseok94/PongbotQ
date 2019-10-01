@@ -227,21 +227,11 @@ public:
     VectorNd IK1(VectorNd EP);
     void Init_Pos_Traj(void);
     void Home_Pos_Traj(void);
-    void TROT_Traj(void);
-    void Forward_Traj(void);
-    void Up_Down_Traj(void); //Up Down trajectory added by HSKIM
-    void Raise_Leg_Traj(void); //Raise leg trajectory added by HSKIM
-    void Jump_Traj(void); //Jump trajectory added by HSKIM
-    void TEST_Traj(void); //Test trajectory added by HSKIM
-    void Traj_gen(void);
     void coefficient_5thPoly(double *init_x, double *final_x, double tf, double *output);
     void Cal_Fc(void);
     void Flying_Trot_Traj(void);
 //    void ballistics(double flight_time, double landing_height, double take_off_speed);
     void Torque_off(void);
-    void Vertical_Traj_Gen(double *z1, double *z2);
-    void Hori_X_Traj_Gen(double *xl1, double *xl2, double *xl3, double *xl4, double *xr1, double *xr2, double *xr3, double *xr4);
-    void Hori_X_Final_Traj_Gen(double *xl_f, double *xr_f);
     void Cal_CP(void);
     void TROT_Walking(void);
     void Get_gain(void);
@@ -249,13 +239,13 @@ public:
     void Trot_Walking_Traj(int i);
     void Trot_Walking_Traj_Final(int i);
     void Foot_step_planner(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
-    void COM_Hori_Traj_Gen(void);
+    void Foot_step_planner_first(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
+    void COM_Hori_Traj_Gen(unsigned int i);
     void Preview_con(void);
     void SF_Verti_Traj_Gen(void);
     void SF_Hori_Traj_Gen(void);
     void SF_Hori_Traj_Gen_Final(void);
-    
-
+    void get_zmp(void);
     
 
     enum Fc_Phase {
@@ -424,9 +414,9 @@ public:
 //    int step_cnt = dsp_cnt + fsp_cnt;
 
     // 4Hz
-    double dsp_time = 0.15, fsp_time = 0.1;
+    double dsp_time = 0.20, fsp_time = 0.05;
     double step_time = dsp_time + fsp_time;
-    int dsp_cnt = 150, fsp_cnt = 100;
+    int dsp_cnt = 200, fsp_cnt = 50;
     int step_cnt = dsp_cnt + fsp_cnt;
     
     // =============== Trajectory ================ //
@@ -488,7 +478,7 @@ public:
     double walk_time, t1, t2, dsp_t1, dsp_t2;
     
     // ============== Preview ============= //
-    int preview_cnt = 1000;
+    unsigned int preview_cnt = 1000;
     
     double Gi = 0;
     VectorNd Gx = VectorNd::Zero(3);   
@@ -520,7 +510,8 @@ public:
     
     MatrixNd com_x_array = MatrixNd::Zero(preview_cnt,3);
     VectorNd zmp_x_array = VectorNd::Zero(preview_cnt);
-    double tmp_zmp_x_ref;
+    double zmp_x_ref, tmp_zmp_x_ref;
+    double zmp_x, zmp_y, lpf_zmp_x, old_lpf_zmp_x;
     
     double sum_e;
 
@@ -530,6 +521,36 @@ public:
     VectorNd foot_r_pos = VectorNd::Zero(3);
     
     bool stop_flag = false;
+    bool traj_stop_flag = true;
+    int step_num = 0;
+    
+    
+    // ============================ //
+    
+    MatrixNd C_I_roll=MatrixNd::Zero(3,3);
+    MatrixNd C_I_pitch=MatrixNd::Zero(3,3);
+    
+    MatrixNd RL_C_I_HP=MatrixNd::Zero(3,3);
+    MatrixNd RL_C_HP_HR=MatrixNd::Zero(3,3);
+    MatrixNd RL_C_HR_KN=MatrixNd::Zero(3,3);
+    MatrixNd RL_C_KN_TIP=MatrixNd::Zero(3,3);
+    
+    MatrixNd RR_C_I_HP=MatrixNd::Zero(3,3);
+    MatrixNd RR_C_HP_HR=MatrixNd::Zero(3,3);
+    MatrixNd RR_C_HR_KN=MatrixNd::Zero(3,3);
+    MatrixNd RR_C_KN_TIP=MatrixNd::Zero(3,3);
+    
+    MatrixNd FL_C_I_HP=MatrixNd::Zero(3,3);
+    MatrixNd FL_C_HP_HR=MatrixNd::Zero(3,3);
+    MatrixNd FL_C_HR_KN=MatrixNd::Zero(3,3);
+    MatrixNd FL_C_KN_TIP=MatrixNd::Zero(3,3);
+    
+    MatrixNd FR_C_I_HP=MatrixNd::Zero(3,3);
+    MatrixNd FR_C_HP_HR=MatrixNd::Zero(3,3);
+    MatrixNd FR_C_HR_KN=MatrixNd::Zero(3,3);
+    MatrixNd FR_C_KN_TIP=MatrixNd::Zero(3,3);
+    
+    
     
     
 private:
