@@ -403,25 +403,28 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
-
+        
     case CTRLMODE_TROT:
         cout << "============= [CTRLMODE_TROT] ==========" << endl;
 
         PongBotQ.ctc_cnt2 = 0;
+        PongBotQ.traj_stop_flag = true;
+        
+//        PongBotQ.Get_gain(); // for preview control
 
         PongBotQ.CommandFlag = NOMAL_TROT_WALKING;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
         
-    case CTRLMODE_TROT2:
-        cout << "============= [CTRLMODE_TROT2] ==========" << endl;
+        
+    case CTRLMODE_FLYING_TROT:
+        cout << "============= [CTRLMODE_FLYING_TROT] ==========" << endl;
 
         PongBotQ.ctc_cnt2 = 0;
         PongBotQ.traj_stop_flag = true;
-        
-        PongBotQ.Get_gain(); // for preview control
+        PongBotQ.init_flag = true;
 
-        PongBotQ.CommandFlag = NOMAL_TROT_WALKING2;
+        PongBotQ.CommandFlag = FLYING_TROT_RUNNING;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
     }
@@ -450,20 +453,22 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         PongBotQ.Home_Pos_Traj();
         PongBotQ.ComputeTorqueControl();
         break;
-
+        
     case NOMAL_TROT_WALKING:
-//        PongBotQ.get_zmp();
-//        PongBotQ.TROT_Traj();
-        PongBotQ.ComputeTorqueControl();
-        break;
-        
-    case NOMAL_TROT_WALKING2:
-        
 //        printf("===========================================\n");
         PongBotQ.get_zmp();
-        PongBotQ.TROT_Walking();
+        PongBotQ.Trot_Walking();
         PongBotQ.ComputeTorqueControl();
         break;
+        
+    case FLYING_TROT_RUNNING:
+//        printf("===========================================\n");
+//        PongBotQ.get_zmp();
+        PongBotQ.Flying_Trot_Running();
+        PongBotQ.ComputeTorqueControl();
+        break;  
+        
+        
 
     }
 

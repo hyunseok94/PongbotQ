@@ -37,7 +37,7 @@ typedef enum {
     CTRLMODE_HOME_POS,
     CTRLMODE_WALK_READY,
     CTRLMODE_TROT,
-    CTRLMODE_TROT2
+    CTRLMODE_FLYING_TROT
 } _CONTROL_MODE;
 
 typedef enum {
@@ -121,7 +121,7 @@ typedef enum {
     CCTM_OFF,
     JUMP_ONESTEP, // BKCho
     NOMAL_TROT_WALKING,
-    NOMAL_TROT_WALKING2, // DH
+    FLYING_TROT_RUNNING,
     TORQUE_OFF,
     NO_ACT_WITH_CTC
 
@@ -233,19 +233,25 @@ public:
 //    void ballistics(double flight_time, double landing_height, double take_off_speed);
     void Torque_off(void);
     void Cal_CP(void);
-    void TROT_Walking(void);
+    void Trot_Walking(void);
     void Get_gain(void);
-    void Trot_Walking_Traj_First(int i);
-    void Trot_Walking_Traj(int i);
-    void Trot_Walking_Traj_Final(int i);
+    void Trot_Walking_Traj_First(unsigned int i);
+    void Trot_Walking_Traj(unsigned int i);
+    void Trot_Walking_Traj_Final(unsigned int i);
     void Foot_step_planner(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
     void Foot_step_planner_first(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
-    void COM_Hori_Traj_Gen(unsigned int i);
+    void COM_X_Traj_Gen(unsigned int i);
     void Preview_con(void);
-    void SF_Verti_Traj_Gen(void);
-    void SF_Hori_Traj_Gen(void);
-    void SF_Hori_Traj_Gen_Final(void);
+    void SF_Z_Traj_Gen(void);
+    void SF_X_Traj_Gen(void);
+    void SF_X_Traj_Gen_Final(void);
     void get_zmp(void);
+    void Flying_Trot_Running(void);
+    void Flying_Trot_Running_Traj(unsigned int i);
+    void Flying_Trot_Running_Traj_Final(unsigned int i);
+    void SF_Flying_Trot_Z_Traj_Gen(void);
+    void COM_Flying_Trot_Z_Traj_Gen(void);
+    
     
 
     enum Fc_Phase {
@@ -253,7 +259,8 @@ public:
         STOP,
         STANCE_RLFR,
         STANCE_RRFL,
-        JUMP_Fc
+        JUMP_Fc,
+        ZERO
     };
 
     enum Trot_Phase {
@@ -425,7 +432,6 @@ public:
     double x_init1[6], x_init2[6], x_final1[6], x_final2[6], x_trot_dsp1[6], x_trot_dsp2[6], x_trot_fsp1[6], x_trot_fsp2[6];
     double temp_t1 = 0, temp_t2 = 0;
     double to_height = 0;
-    double ts, tf;
     double c_xl1[6], c_xl2[6], c_xl3[6], c_xl4[6], c_xr1[6], c_xr2[6], c_xr3[6], c_xr4[6], c_xl_f[6], c_xr_f[6];
     double xl_f[7], xr_f[7], xl1[7], xl2[7], xl3[7], xl4[7], xr1[7], xr2[7], xr3[7], xr4[7];
     double c_z1[6], c_z2[6];
@@ -519,10 +525,21 @@ public:
     VectorNd init_foot_r_pos = VectorNd::Zero(3);
     VectorNd foot_l_pos = VectorNd::Zero(3);
     VectorNd foot_r_pos = VectorNd::Zero(3);
+    VectorNd init_com_pos = VectorNd::Zero(3);
     
     bool stop_flag = false;
     bool traj_stop_flag = true;
     int step_num = 0;
+    
+    
+    // =============== flying trot parameters ================= //
+    double ts, tf;
+    int ts_cnt, tf_cnt;
+    double h_0, h_1, h_2, h_3, v_0, v_1, v_2, v_3, a_0, a_1, a_2, a_3;
+    bool init_flag;
+    double swing_foot_height;
+    double c_com_z1[6], c_com_z2[6], c_com_z3[6], c_com_z4[6];
+    double c_sf_z1[6], c_sf_z2[6], c_sf_z3[6], c_sf_z4[6];
     
     
     // ============================ //
