@@ -26,8 +26,10 @@ void CRobot::setRobotModel(Model* getModel)
     com_height = 0.40; // 0.45
     moving_speed = 0;
     
-    init_foot_l_pos << 0,  0.095,    0;
-    init_foot_r_pos << 0, -0.095,    0;
+//    init_foot_l_pos << 0,  0.095,    0;
+//    init_foot_r_pos << 0, -0.095,    0;
+    init_foot_l_pos << 0,  0.10,    0;
+    init_foot_r_pos << 0, -0.10,    0;
     init_com_pos    << 0,      0, com_height;
 
 //    foot_z_offset << 0.02,0,0,0;
@@ -73,8 +75,8 @@ void CRobot::setRobotModel(Model* getModel)
     
     // simulation
 
-    Kp_q << 400, 400, 400, 400, 400, 400, 1000, 400, 400, 400, 400, 400, 400; 
-    Kd_q <<  10,  10,  10,  10,  10,  10,   10,  10,  10,  10,  10,  10,  10;
+    Kp_q << 400, 400, 400, 400, 400, 400, 20000, 400, 400, 400, 400, 400, 400; 
+    Kd_q <<  10,  10,  10,  10,  10,  10,   200,  10,  10,  10,  10,  10,  10;
     // actual robot
  
 
@@ -117,8 +119,7 @@ void CRobot::setRobotModel(Model* getModel)
     
     h_1 = 0.5*GRAVITY*tf*tf - v_1*tf + h_2;
     
-//    init_flag = true;
-    swing_foot_height = 0.1;
+    swing_foot_height = 0.03;
     
 
     COM_Flying_Trot_Z_Traj_Gen();
@@ -274,25 +275,25 @@ void CRobot::FTsensorTransformation()
     RL_C_I_HP<<1,0,0,0,cos(actual_pos[0]),-sin(actual_pos[0]),0,sin(actual_pos[0]),cos(actual_pos[0]);
     RL_C_HP_HR<<cos(actual_pos[1]),0,sin(actual_pos[1]),0,1,0,-sin(actual_pos[1]),0,cos(actual_pos[1]);
     RL_C_HR_KN<<cos(actual_pos[2]),0,sin(actual_pos[2]),0,1,0,-sin(actual_pos[2]),0,cos(actual_pos[2]);
-    RL_C_KN_TIP << cos(-PI / 4), 0, sin(-PI / 4), 0, 1, 0, -sin(-PI / 4), 0, cos(-PI / 4);
+    RL_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
     RL.T_matrix=C_I_roll*C_I_pitch*RL_C_I_HP * RL_C_HP_HR * RL_C_HR_KN * RL_C_KN_TIP;
     
     RR_C_I_HP<<1,0,0,0,cos(actual_pos[3]),-sin(actual_pos[3]),0,sin(actual_pos[3]),cos(actual_pos[3]);
     RR_C_HP_HR<<cos(actual_pos[4]),0,sin(actual_pos[4]),0,1,0,-sin(actual_pos[4]),0,cos(actual_pos[4]);
     RR_C_HR_KN<<cos(actual_pos[5]),0,sin(actual_pos[5]),0,1,0,-sin(actual_pos[5]),0,cos(actual_pos[5]);
-    RR_C_KN_TIP << cos(-PI / 4), 0, sin(-PI / 4), 0, 1, 0, -sin(-PI / 4), 0, cos(-PI / 4);
+    RR_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
     RR.T_matrix=C_I_roll*C_I_pitch*RR_C_I_HP * RR_C_HP_HR * RR_C_HR_KN * RR_C_KN_TIP;
     
     FL_C_I_HP<<1,0,0,0,cos(actual_pos[7]),-sin(actual_pos[7]),0,sin(actual_pos[7]),cos(actual_pos[7]);
     FL_C_HP_HR<<cos(actual_pos[8]),0,sin(actual_pos[8]),0,1,0,-sin(actual_pos[8]),0,cos(actual_pos[8]);
     FL_C_HR_KN<<cos(actual_pos[9]),0,sin(actual_pos[9]),0,1,0,-sin(actual_pos[9]),0,cos(actual_pos[9]);
-    FL_C_KN_TIP << cos(PI / 4), 0, sin(PI / 4), 0, 1, 0, -sin(PI / 4), 0, cos(PI / 4);
+    FL_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
     FL.T_matrix=C_I_roll*C_I_pitch*FL_C_I_HP * FL_C_HP_HR * FL_C_HR_KN * FL_C_KN_TIP;
     
     FR_C_I_HP<<1,0,0,0,cos(actual_pos[10]),-sin(actual_pos[10]),0,sin(actual_pos[10]),cos(actual_pos[10]);
     FR_C_HP_HR<<cos(actual_pos[11]),0,sin(actual_pos[11]),0,1,0,-sin(actual_pos[11]),0,cos(actual_pos[11]);
     FR_C_HR_KN<<cos(actual_pos[12]),0,sin(actual_pos[12]),0,1,0,-sin(actual_pos[12]),0,cos(actual_pos[12]);
-    FR_C_KN_TIP << cos(PI / 4), 0, sin(PI / 4), 0, 1, 0, -sin(PI / 4), 0, cos(PI / 4);
+    FR_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
     FR.T_matrix=C_I_roll*C_I_pitch*FR_C_I_HP * FR_C_HP_HR * FR_C_HR_KN * FR_C_KN_TIP;
     
 }
@@ -443,6 +444,14 @@ void CRobot::Home_Pos_Traj(void)
         target_pos[6] = init_pos[6] + (0 - init_pos[6]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
 
         ctc_cnt++;
+        
+        if(ctc_cnt == (unsigned int) (home_pos_time / dt)){
+            walk_ready_moving_done_flag = true;
+            CP_moving_flag = false;
+            CP_init_flag = true;
+            CP_moving_start_flag = true;
+            cout << "!! moving done !!" << endl;
+        }
     }
 
     else {
@@ -456,6 +465,194 @@ void CRobot::Home_Pos_Traj(void)
         target_pos[6] = 0;
     }
 }
+
+void CRobot::CP_Con(void)
+{
+    if(walk_ready_moving_done_flag == true){
+    
+        if(CP_init_flag == true){
+        
+            cout << "CP init!!" << endl;
+
+            for (unsigned int i = 0; i < 12; ++i) {
+                init_EP[i] = target_EP[i];
+            }
+
+            CP_init_flag = false;
+        }
+            
+//        cout << "CP_y = " << CP_y << endl;
+        
+        if((CP_y > 0.05 || CP_y < -0.05) && CP_moving_start_flag == true){
+            cout << "CP_y = " << CP_y << endl;
+                    
+            CP_moving_flag = true;
+            CP_moving_start_flag = false;
+        }
+        
+        if(CP_moving_flag == true){
+            CP_foot_traj_gen();
+        }
+        
+        
+
+        target_EP[0]  = init_EP[0] + cp_foot_l_3d[0];
+        target_EP[1]  = init_EP[1] + cp_foot_l_3d[1];
+        target_EP[2]  = init_EP[2] + cp_foot_l_3d[2];
+        target_EP[3]  = init_EP[3] + cp_foot_r_3d[0];
+        target_EP[4]  = init_EP[4] + cp_foot_r_3d[1];
+        target_EP[5]  = init_EP[5] + cp_foot_r_3d[2];
+        target_EP[6]  = init_EP[6] + cp_foot_r_3d[0];
+        target_EP[7]  = init_EP[7] + cp_foot_r_3d[1];
+        target_EP[8]  = init_EP[8] + cp_foot_r_3d[2];
+        target_EP[9]  = init_EP[9] + cp_foot_l_3d[0];
+        target_EP[10] = init_EP[10] + cp_foot_l_3d[1];
+        target_EP[11] = init_EP[11] + cp_foot_l_3d[2];
+   
+        
+        
+    }
+}
+
+void CRobot::CP_foot_traj_gen(void){
+
+    static unsigned int cp_cnt = 0;
+    static double cp_foot_height = 0.08;
+    static double cp_foot_pos_y = 0;
+    static double cp_limit_y = 0.10;
+    
+    if(cp_cnt == 0){
+                
+        init_cp_foot_l_3d << 0,0,0;
+        init_cp_foot_r_3d << 0,0,0;
+        
+        cp_foot_l_3d = init_cp_foot_l_3d;
+        cp_foot_r_3d = init_cp_foot_r_3d;
+
+        if(CP_y > cp_limit_y){
+            cp_foot_pos_y = cp_limit_y;
+        }
+        else if(CP_y < -cp_limit_y){
+            cp_foot_pos_y = -cp_limit_y;
+        }
+        else{
+            cp_foot_pos_y = CP_y;
+        }
+        cp_foot_pos_y = cp_foot_pos_y*1.0;
+        
+        cout << "<<<<<<<<<<<< cp_foot_pos_y = " << cp_foot_pos_y << endl;
+        
+        cp_cnt++;
+    }
+    else if(cp_cnt <= dsp_cnt){
+
+        cp_foot_l_3d[0] = init_cp_foot_l_3d[0];
+        cp_foot_l_3d[1] = init_cp_foot_l_3d[1] + (cp_foot_pos_y)/2.0*(1-cos(PI2 / (dsp_time * 2)*(double) (cp_cnt) * dt));
+        cp_foot_l_3d[2] = init_cp_foot_l_3d[2] + (cp_foot_height)/2.0*(1-cos(PI2 / (dsp_time)*(double) (cp_cnt) * dt));
+
+        cp_foot_r_3d[0] = init_cp_foot_r_3d[0];
+        cp_foot_r_3d[1] = init_cp_foot_r_3d[1] - (cp_foot_pos_y)/2.0*(1-cos(PI2 / (dsp_time * 2)*(double) (cp_cnt) * dt));
+        cp_foot_r_3d[2] = init_cp_foot_r_3d[2]; //init_foot_r_pos[2];
+
+        cp_cnt++;
+    }
+    else if(cp_cnt <= step_cnt){
+
+        cp_foot_l_3d[0] = init_cp_foot_l_3d[0];
+        cp_foot_l_3d[1] = init_cp_foot_l_3d[1] + cp_foot_pos_y;
+        cp_foot_l_3d[2] = init_cp_foot_l_3d[2];
+
+        cp_foot_r_3d[0] = init_cp_foot_r_3d[0];
+        cp_foot_r_3d[1] = init_cp_foot_r_3d[1] - cp_foot_pos_y;
+        cp_foot_r_3d[2] = init_cp_foot_r_3d[2];
+        
+        cp_cnt++;
+    }
+    else if(cp_cnt <= step_cnt + dsp_cnt){
+
+        cp_foot_l_3d[0] = init_cp_foot_l_3d[0];
+        cp_foot_l_3d[1] = init_cp_foot_l_3d[1] + cp_foot_pos_y - (cp_foot_pos_y)/2.0*(1-cos(PI2 / (dsp_time * 2)*(double) (cp_cnt - step_cnt) * dt));
+        cp_foot_l_3d[2] = init_cp_foot_l_3d[2];
+
+        cp_foot_r_3d[0] = init_cp_foot_r_3d[0];
+        cp_foot_r_3d[1] = init_cp_foot_r_3d[1] - cp_foot_pos_y + (cp_foot_pos_y)/2.0*(1-cos(PI2 / (dsp_time * 2)*(double) (cp_cnt - step_cnt) * dt));
+        cp_foot_r_3d[2] = init_cp_foot_r_3d[2] + (cp_foot_height)/2.0*(1-cos(PI2 / (dsp_time)*(double) (cp_cnt - step_cnt) * dt));
+
+        cp_cnt++;
+    }
+    else if(cp_cnt <= step_cnt*2){
+
+        cp_foot_l_3d[0] = init_cp_foot_l_3d[0];
+        cp_foot_l_3d[1] = init_cp_foot_l_3d[1];
+        cp_foot_l_3d[2] = init_cp_foot_l_3d[2];
+
+        cp_foot_r_3d[0] = init_cp_foot_r_3d[0];
+        cp_foot_r_3d[1] = init_cp_foot_r_3d[1];
+        cp_foot_r_3d[2] = init_cp_foot_r_3d[2];
+        
+        cp_cnt++;
+    }
+    
+    else if(cp_cnt <= step_cnt*4){
+
+        cp_foot_l_3d[0] = init_cp_foot_l_3d[0];
+        cp_foot_l_3d[1] = init_cp_foot_l_3d[1];
+        cp_foot_l_3d[2] = init_cp_foot_l_3d[2];
+
+        cp_foot_r_3d[0] = init_cp_foot_r_3d[0];
+        cp_foot_r_3d[1] = init_cp_foot_r_3d[1];
+        cp_foot_r_3d[2] = init_cp_foot_r_3d[2];
+        
+        cp_cnt++;
+    }
+    else{
+//        CP_moving_flag = false;
+        cp_foot_l_3d[0] = init_cp_foot_l_3d[0];
+        cp_foot_l_3d[1] = init_cp_foot_l_3d[1];
+        cp_foot_l_3d[2] = init_cp_foot_l_3d[2];
+
+        cp_foot_r_3d[0] = init_cp_foot_r_3d[0];
+        cp_foot_r_3d[1] = init_cp_foot_r_3d[1];
+        cp_foot_r_3d[2] = init_cp_foot_r_3d[2];
+        
+        cp_cnt = 0;
+//        CP_moving_start_flag = true;
+        
+        if(CP_y < 0.05 && CP_y > -0.05){
+            CP_moving_flag = false;
+            CP_moving_start_flag = true;
+            cout << "CP CON DONE!~~~~~~~~~~~~~~" << endl;
+        }
+        
+
+    }
+    
+//    cout << "cp_cnt = " << cp_cnt << "cp_foot_l_3d[1] = " << cp_foot_l_3d[1] << "cp_foot_r_3d[1] = " << cp_foot_r_3d[1] << endl;
+    
+}
+
+//void CRobot::CP_foot_step_planner(VectorNd init_foot_l_3d, VectorNd init_foot_r_3d){
+////    double dist = CP_y;
+//    double dist = 0;
+//    
+//    if(CP_y > 0.05){
+//        dist = 0.05;
+//    }
+//    else if(CP_y < -0.05){
+//        dist = -0.05;
+//    }
+//    
+//       cp_foot_l_2d << init_foot_l_3d[0],        init_foot_l_3d[1],
+//                       init_foot_l_3d[0],        init_foot_l_3d[1]+dist,
+//                       init_foot_l_3d[0],        init_foot_l_3d[1]+dist;
+//
+//
+//       cp_foot_r_2d << init_foot_r_3d[0],        init_foot_r_3d[1],
+//                       init_foot_r_3d[0],        init_foot_r_3d[1],
+//                       init_foot_r_3d[0],        init_foot_r_3d[1]+dist;
+//
+//}
+
 
 // ====================== flying trot trajectory generation ===================== //
 void CRobot::Flying_Trot_Running(void)
@@ -494,9 +691,6 @@ void CRobot::Flying_Trot_Running(void)
         Flying_Trot_Running_Traj_Final(ctc_cnt2-step_cnt*8);    
     }
     
-    
-    
-    
     // ============================ target_EP ========================== //
     local_foot_l_pos = foot_l_pos - com_pos; // foot position from global to local
     local_foot_r_pos = foot_r_pos - com_pos;
@@ -515,43 +709,6 @@ void CRobot::Flying_Trot_Running(void)
     target_EP[10] = -local_foot_l_pos[1];
     target_EP[11] =  local_foot_l_pos[2] + foot_z_offset(3);
 
-
-//    for(unsigned int i=0;i<3;++i){
-//        target_EP[i] = local_foot_l_pos[i];
-//        target_EP_vel[i] = (target_EP[i] - pre_target_EP[i])/dt;
-//        pre_target_EP[i] = target_EP[i];
-//    }
-//    for(unsigned int i=0;i<3;++i){
-//        target_EP[i+3] = local_foot_r_pos[i];
-//        target_EP_vel[i+3] = (target_EP[i+3] - pre_target_EP[i+3])/dt;
-//        pre_target_EP[i+3] = target_EP[i+3];
-//    }
-//    for(unsigned int i=0;i<3;++i){
-//        if(i == 1){
-//            target_EP[i+6] = -local_foot_r_pos[i];
-//        }
-//        else{
-//            target_EP[i+6] = local_foot_r_pos[i];
-//        }
-//        target_EP_vel[i+6] = (target_EP[i+6] - pre_target_EP[i+6])/dt;
-//        pre_target_EP[i+6] = target_EP[i+6];
-//    }
-//    for(unsigned int i=0;i<3;++i){
-//        if(i == 1){
-//            target_EP[i+9] = -local_foot_l_pos[i];
-//        }
-//        else{
-//            target_EP[i+9] = local_foot_l_pos[i];
-//        }
-//        target_EP_vel[i+9] = (target_EP[i+9] - pre_target_EP[i+9])/dt;
-//        pre_target_EP[i+9] = target_EP[i+9];
-//    }
-//
-//    for(unsigned int i=0;i<12;++i){
-//    	target_EP_vel[i] = (target_EP[i] - pre_target_EP[i])/dt;
-//		pre_target_EP[i] = target_EP[i];
-//    }
-//
     ctc_cnt2++;
 
     target_pos[6] = 0; //goal_pos[6];
@@ -1780,23 +1937,24 @@ void CRobot::Cal_CP(void)
     static double CP_x_alpha = 0.05, CP_x_dot_alpha = 0.003;
     static double CP_y_alpha = 0.05, CP_y_dot_alpha = 0.003;
 
-    COM_Height = 0.45;
-    natural_freq = sqrt(COM_Height / GRAVITY);
+    natural_freq = sqrt(com_height / GRAVITY);
 
     // roll
-    COM_y = -COM_Height * IMURoll * PI / 180;
-    COM_y_dot = -COM_Height * IMURoll_dot * PI / 180;
+    COM_y = -com_height * IMURoll * PI / 180;
+    COM_y_dot = -com_height * IMURoll_dot * PI / 180;
 
     lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha*COM_y;
     lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha*COM_y_dot;
 
     CP_y = lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot;
 
-    //	printf("IMURoll=%f\n",IMURoll);
+//    printf("IMURoll=%f\n",IMURoll);
+    
+    
 
     // pitch
-    COM_x = COM_Height * IMUPitch * PI / 180;
-    COM_x_dot = COM_Height * IMUPitch_dot * PI / 180;
+    COM_x = com_height * IMUPitch * PI / 180;
+    COM_x_dot = com_height * IMUPitch_dot * PI / 180;
 
     lpf_COM_x = (1 - CP_x_alpha) * lpf_COM_x + CP_x_alpha*COM_x;
     lpf_COM_x_dot = (1 - CP_x_dot_alpha) * lpf_COM_x_dot + CP_x_dot_alpha*COM_x_dot;

@@ -399,6 +399,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         }
 
         PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
+        PongBotQ.walk_ready_moving_done_flag = false;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
         
@@ -455,14 +456,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         break;
 
     case GOTO_WALK_READY_POS:
-        PongBotQ.get_zmp();
+//        PongBotQ.get_zmp();
         PongBotQ.Home_Pos_Traj();
+        
+        PongBotQ.CP_Con();
+        
         PongBotQ.ComputeTorqueControl();
         break;
         
     case NOMAL_TROT_WALKING:
 //        printf("===========================================\n");
-        PongBotQ.get_zmp();
+//        PongBotQ.get_zmp();
         PongBotQ.Trot_Walking();
         PongBotQ.ComputeTorqueControl();
         break;
@@ -642,11 +646,11 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
 void gazebo::PongBotQ_plugin::InitRvizSetting()
 {
     //**************************rviz inital setting*************************************//
-    P_joint_states = n.advertise<sensor_msgs::JointState>("joint_states", 1);
-    m_joint_states.name.resize(13);
-    m_joint_states.position.resize(13);
-    odom_trans.header.frame_id = "odom";
-    odom_trans.child_frame_id = "REAR_BODY";
+//    P_joint_states = n.advertise<sensor_msgs::JointState>("joint_states", 1);
+//    m_joint_states.name.resize(13);
+//    m_joint_states.position.resize(13);
+//    odom_trans.header.frame_id = "odom";
+//    odom_trans.child_frame_id = "REAR_BODY";
 
 }
 
@@ -866,21 +870,20 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
     TmpData[13] = PongBotQ.Fc_FL_z;//PongBotQ.target_EP_acc[0];
     TmpData[14] = PongBotQ.Fc_FR_z;
     
-    TmpData[15] = PongBotQ.target_EP[0];//IMURoll;
-    TmpData[16] = PongBotQ.target_EP[1];//IMUPitch;
-    TmpData[17] = PongBotQ.target_EP[2];//IMURoll_dot;
+    TmpData[15] = PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
+    TmpData[16] = PongBotQ.IMUPitch;//PongBotQ.target_EP[1];//IMUPitch;
+    TmpData[17] = PongBotQ.CP_x;//PongBotQ.target_EP[2];//IMURoll_dot;
+    TmpData[18] = PongBotQ.CP_y;//PongBotQ.target_EP[3];//IMURoll;
     
-    TmpData[18] = PongBotQ.target_EP[3];//IMURoll;
-    TmpData[19] = PongBotQ.target_EP[4];//IMUPitch;
-    TmpData[20] = PongBotQ.target_EP[5];//IMURoll_dot;
+    TmpData[19] = PongBotQ.target_EP[0];//IMUPitch;
+    TmpData[20] = PongBotQ.target_EP[1];//IMURoll_dot;
+    TmpData[21] = PongBotQ.target_EP[2];//IMURoll;
     
-    TmpData[22] = PongBotQ.target_EP[6];//IMURoll;
-    TmpData[23] = PongBotQ.target_EP[7];//IMUPitch;
-    TmpData[24] = PongBotQ.target_EP[8];//IMURoll_dot;
-    
-    TmpData[25] = PongBotQ.target_EP[9];//PongBotQ.X_new(1);
-    TmpData[26] = PongBotQ.target_EP[10];//PongBotQ.X_new(2);
-    TmpData[27] = PongBotQ.target_EP[11];//PongBotQ.X_new(2);
+    TmpData[22] = PongBotQ.target_EP[3];//IMUPitch;
+    TmpData[23] = PongBotQ.target_EP[4];//IMURoll_dot;
+    TmpData[24] = PongBotQ.target_EP[5];//PongBotQ.X_new(1);
+    TmpData[25] = 0;//PongBotQ.target_EP[10];//PongBotQ.X_new(2);
+    TmpData[26] = 0;//PongBotQ.target_EP[11];//PongBotQ.X_new(2);
 
     for (unsigned int i = 0; i < 30; ++i) {
         ros_msg2.data[i] = TmpData[i];

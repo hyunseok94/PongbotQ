@@ -251,7 +251,9 @@ public:
     void Flying_Trot_Running_Traj_Final(unsigned int i);
     void SF_Flying_Trot_Z_Traj_Gen(void);
     void COM_Flying_Trot_Z_Traj_Gen(void);
-    
+    void CP_Con(void);
+//    void CP_foot_step_planner(VectorNd init_foot_l_3d, VectorNd init_foot_r_3d);
+    void CP_foot_traj_gen();
     
 
     enum Fc_Phase {
@@ -388,6 +390,7 @@ public:
 
     VectorNd init_target_pos = VectorNd::Zero(13);
 
+    // =============== Flag Define ================ //
     bool home_init_flag = true;
     bool trot_init_flag = true;
     bool forward_init_flag = true;
@@ -398,6 +401,10 @@ public:
     bool target_init_flag = true;
     bool flying_trot_final_flag;
     bool flying_trot_init_flag;
+    bool walk_ready_moving_done_flag;
+    bool CP_moving_flag;
+    bool CP_init_flag;
+    bool CP_moving_start_flag;
 
     unsigned int ctc_cnt = 0, ctc_cnt2 = 0, ctc_cnt3 = 0, ctc_cnt4 = 0, ctc_cnt5 = 0; //Counts added by HSKIM
     double home_pos_time, init_pos_time;
@@ -515,6 +522,22 @@ public:
     VectorNd zmp_ref_array = VectorNd::Zero(preview_cnt);
     VectorNd XX = VectorNd::Zero(3);
     VectorNd X_new = VectorNd::Zero(3);
+    
+    MatrixNd cp_foot_l_2d = MatrixNd::Zero(3,2);
+    MatrixNd cp_foot_r_2d = MatrixNd::Zero(3,2);
+//    MatrixNd cp_com_2d = MatrixNd::Zero(3,2);
+    
+    
+    VectorNd cp_foot_l_3d = VectorNd::Zero(3);
+    VectorNd cp_foot_r_3d = VectorNd::Zero(3);
+    VectorNd init_cp_foot_l_3d = VectorNd::Zero(3);
+    VectorNd init_cp_foot_r_3d = VectorNd::Zero(3);
+    
+    
+//    VectorNd cp_com_3d = VectorNd::Zero(3);
+//    VectorNd cp_local_foot_l_3d = VectorNd::Zero(3);
+//    VectorNd cp_local_foot_r_3d = VectorNd::Zero(3);
+
     
     MatrixNd com_x_array = MatrixNd::Zero(preview_cnt,3);
     VectorNd zmp_x_array = VectorNd::Zero(preview_cnt);
