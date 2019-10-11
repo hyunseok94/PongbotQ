@@ -317,8 +317,8 @@ public:
     double L3_y = 0.0;
     double L3_z = 0.304515;
 
-    VectorNd EP_OFFSET_RL = Vector3d( L3_x, L3_y, -L3_z);
-    VectorNd EP_OFFSET_RR = Vector3d( L3_x, L3_y, -L3_z);
+    VectorNd EP_OFFSET_RL = Vector3d(-L3_x, L3_y, -L3_z);
+    VectorNd EP_OFFSET_RR = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FL = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_FR = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd Originbase = Vector3d(0, 0, 0);
@@ -391,11 +391,13 @@ public:
     bool home_init_flag = true;
     bool trot_init_flag = true;
     bool forward_init_flag = true;
-    bool flying_trot_init_flag = true;
+//    bool flying_trot_init_flag = true;
     bool up_down_init_flag = true; //up down flag added by HSKIM
     bool raise_leg_init_flag = true; //raise leg flag added by HSKIM
     bool jump_init_flag = true; //jump flag added by HSKIM
     bool target_init_flag = true;
+    bool flying_trot_final_flag;
+    bool flying_trot_init_flag;
 
     unsigned int ctc_cnt = 0, ctc_cnt2 = 0, ctc_cnt3 = 0, ctc_cnt4 = 0, ctc_cnt5 = 0; //Counts added by HSKIM
     double home_pos_time, init_pos_time;
@@ -526,6 +528,7 @@ public:
     VectorNd foot_l_pos = VectorNd::Zero(3);
     VectorNd foot_r_pos = VectorNd::Zero(3);
     VectorNd init_com_pos = VectorNd::Zero(3);
+    VectorNd foot_z_offset = VectorNd::Zero(4);
     
     bool stop_flag = false;
     bool traj_stop_flag = true;
@@ -536,7 +539,6 @@ public:
     double ts, tf;
     int ts_cnt, tf_cnt;
     double h_0, h_1, h_2, h_3, v_0, v_1, v_2, v_3, a_0, a_1, a_2, a_3;
-    bool init_flag;
     double swing_foot_height;
     double c_com_z1[6], c_com_z2[6], c_com_z3[6], c_com_z4[6];
     double c_sf_z1[6], c_sf_z2[6], c_sf_z3[6], c_sf_z4[6];
