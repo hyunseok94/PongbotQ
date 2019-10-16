@@ -285,6 +285,7 @@ namespace gazebo
         ros::Subscriber server_sub1;
         ros::Subscriber server_sub2;
         ros::Subscriber server_sub3;
+        ros::Subscriber server_sub4;
 
         //ROS MODE
         int ROSMode_Flag = 0;
@@ -302,6 +303,7 @@ namespace gazebo
         void Callback(const std_msgs::Int32Ptr &msg);
         void Callback2(const std_msgs::Float64Ptr &msg);
         void Callback3(const std_msgs::Int32Ptr &msg);
+        void Callback4(const std_msgs::Int32Ptr &msg);
         void Print(void); //Print function added by HSKIM
 
         void RBDLSetting();
@@ -408,7 +410,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
         PongBotQ.ctc_cnt2 = 0;
         PongBotQ.traj_stop_flag = true;
-        
+       
         PongBotQ.X_new << 0,0,0;
         PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
         PongBotQ.step_num = 0;
@@ -459,7 +461,10 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 //        PongBotQ.get_zmp();
         PongBotQ.Home_Pos_Traj();
         
-        PongBotQ.CP_Con();
+        if(PongBotQ.CP_con_onoff_flag == 1){
+            PongBotQ.CP_Con();
+        }
+        
         
         PongBotQ.ComputeTorqueControl();
         break;
@@ -502,6 +507,11 @@ void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg)
 void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg)
 {
     PongBotQ.sub_ctrl_flag = (int) (msg->data);
+}
+
+void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Int32Ptr &msg)
+{
+    PongBotQ.CP_con_onoff_flag = (int) (msg->data);
 }
 
 void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
@@ -640,6 +650,7 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
 
     server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
     server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
+    server_sub4 = n.subscribe("cp_con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback4, this);
 
 }
 
@@ -870,7 +881,7 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
     TmpData[13] = PongBotQ.Fc_FL_z;//PongBotQ.target_EP_acc[0];
     TmpData[14] = PongBotQ.Fc_FR_z;
     
-    TmpData[15] = PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
+    TmpData[15] = PongBotQ.target_cp_foot_pos_y;//PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
     TmpData[16] = PongBotQ.IMUPitch;//PongBotQ.target_EP[1];//IMUPitch;
     TmpData[17] = PongBotQ.CP_x;//PongBotQ.target_EP[2];//IMURoll_dot;
     TmpData[18] = PongBotQ.CP_y;//PongBotQ.target_EP[3];//IMURoll;

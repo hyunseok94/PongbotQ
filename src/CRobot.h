@@ -254,6 +254,7 @@ public:
     void CP_Con(void);
 //    void CP_foot_step_planner(VectorNd init_foot_l_3d, VectorNd init_foot_r_3d);
     void CP_foot_traj_gen();
+    void check_CP(void);
     
 
     enum Fc_Phase {
@@ -394,7 +395,6 @@ public:
     bool home_init_flag = true;
     bool trot_init_flag = true;
     bool forward_init_flag = true;
-//    bool flying_trot_init_flag = true;
     bool up_down_init_flag = true; //up down flag added by HSKIM
     bool raise_leg_init_flag = true; //raise leg flag added by HSKIM
     bool jump_init_flag = true; //jump flag added by HSKIM
@@ -405,6 +405,14 @@ public:
     bool CP_moving_flag;
     bool CP_init_flag;
     bool CP_moving_start_flag;
+    int CP_con_onoff_flag;
+    bool get_CP_flag, CP_check_flag;
+    bool get_cp_done_flag;
+    bool CP_move_done_flag;
+    
+//    bool normal_trot_init_flag;
+//    bool normal_trot_final_flag;
+    
 
     unsigned int ctc_cnt = 0, ctc_cnt2 = 0, ctc_cnt3 = 0, ctc_cnt4 = 0, ctc_cnt5 = 0; //Counts added by HSKIM
     double home_pos_time, init_pos_time;
@@ -434,6 +442,8 @@ public:
     double step_time = dsp_time + fsp_time;
     int dsp_cnt = 200, fsp_cnt = 50;
     int step_cnt = dsp_cnt + fsp_cnt;
+    
+    int stride_cnt = step_cnt*2;
     
     // =============== Trajectory ================ //
     double tmp_time = 0, tmp_time2 = 0;
@@ -507,6 +517,7 @@ public:
     
     VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd foot_l = VectorNd::Zero(3);  // x,y,z
     VectorNd foot_r = VectorNd::Zero(3);  // x,y,z
     VectorNd local_foot_l_pos = VectorNd::Zero(3);
@@ -557,6 +568,7 @@ public:
     bool traj_stop_flag = true;
     int step_num = 0;
     
+    double tmp_cp_foot_pos_y, target_cp_foot_pos_y;
     
     // =============== flying trot parameters ================= //
     double ts, tf;
@@ -593,7 +605,9 @@ public:
     MatrixNd FR_C_KN_TIP=MatrixNd::Zero(3,3);
     
     
-    
+    int CP_PHASE;
+    double tmp_t;
+    int CP_move_step;
     
 private:
 };
