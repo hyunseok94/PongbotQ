@@ -286,6 +286,7 @@ namespace gazebo
         ros::Subscriber server_sub2;
         ros::Subscriber server_sub3;
         ros::Subscriber server_sub4;
+        ros::Subscriber server_sub5;
 
         //ROS MODE
         int ROSMode_Flag = 0;
@@ -304,6 +305,7 @@ namespace gazebo
         void Callback2(const std_msgs::Float64Ptr &msg);
         void Callback3(const std_msgs::Int32Ptr &msg);
         void Callback4(const std_msgs::Int32Ptr &msg);
+        void Callback5(const std_msgs::Int32Ptr &msg);
         void Print(void); //Print function added by HSKIM
 
         void RBDLSetting();
@@ -337,12 +339,13 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     InitROSPubSetting();
     InitRvizSetting();
     SensorSetting();
-
+    
     PongBotQ.ControlMode = CTRLMODE_HOME_POS;
 
     //************************Time Setting*********************************//
     this->last_update_time = this->model->GetWorld()->GetSimTime();
     this->update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&PongBotQ_plugin::UpdateAlgorithm, this));
+    
 }
 
 void gazebo::PongBotQ_plugin::UpdateAlgorithm()
@@ -436,6 +439,20 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         PongBotQ.CommandFlag = FLYING_TROT_RUNNING;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
+        
+    case CTRLMODE_ONE_STEP_STANDING_JUMP:
+        cout << "============= [CTRLMODE_STANDING_JUMP] ==========" << endl;
+
+        PongBotQ.moving_cnt = 0;
+        PongBotQ.JUMP_PHASE = 0;
+        
+//        PongBotQ.X_new << 0,0,0;
+//        PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
+//        PongBotQ.step_num = 0;
+
+        PongBotQ.CommandFlag = ONE_STEP_STANDING_JUMP;
+        PongBotQ.ControlMode = CTRLMODE_NONE;
+        break;
     }
 
 
@@ -458,6 +475,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         break;
 
     case GOTO_WALK_READY_POS:
+
 //        PongBotQ.get_zmp();
         PongBotQ.Home_Pos_Traj();
         
@@ -479,7 +497,15 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case FLYING_TROT_RUNNING:
 //        printf("===========================================\n");
 //        PongBotQ.get_zmp();
+        
         PongBotQ.Flying_Trot_Running();
+        PongBotQ.ComputeTorqueControl();
+        break;  
+        
+    case ONE_STEP_STANDING_JUMP:
+//        printf("===========================================\n");
+//        PongBotQ.get_zmp();
+        PongBotQ.One_Step_Standing_Jump();
         PongBotQ.ComputeTorqueControl();
         break;  
         
@@ -513,6 +539,13 @@ void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Int32Ptr &msg)
 {
     PongBotQ.CP_con_onoff_flag = (int) (msg->data);
 }
+
+void gazebo::PongBotQ_plugin::Callback5(const std_msgs::Int32Ptr &msg)
+{
+    PongBotQ.Body_Ori_Con_onoff_flag = (int) (msg->data);
+}
+
+
 
 void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
 {    
@@ -651,6 +684,7 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
     server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
     server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
     server_sub4 = n.subscribe("cp_con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback4, this);
+    server_sub5 = n.subscribe("Body_Ori_Con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback5, this);
 
 }
 
@@ -882,18 +916,18 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
     TmpData[14] = PongBotQ.Fc_FR_z;
     
     TmpData[15] = PongBotQ.target_cp_foot_pos_y;//PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
-    TmpData[16] = PongBotQ.IMUPitch;//PongBotQ.target_EP[1];//IMUPitch;
-    TmpData[17] = PongBotQ.CP_x;//PongBotQ.target_EP[2];//IMURoll_dot;
+    TmpData[16] = PongBotQ.IMURoll;//PongBotQ.target_EP[1];//IMUPitch;
+    TmpData[17] = PongBotQ.com_pos[2];//PongBotQ.target_EP[2];//IMURoll_dot;
     TmpData[18] = PongBotQ.CP_y;//PongBotQ.target_EP[3];//IMURoll;
     
-    TmpData[19] = PongBotQ.target_EP[0];//IMUPitch;
-    TmpData[20] = PongBotQ.target_EP[1];//IMURoll_dot;
-    TmpData[21] = PongBotQ.target_EP[2];//IMURoll;
+    TmpData[19] = PongBotQ.tmp_target_EP[0];//IMUPitch;
+    TmpData[20] = PongBotQ.tmp_target_EP[3];//IMURoll_dot;
+    TmpData[21] = PongBotQ.tmp_target_EP[6];//IMURoll;
     
-    TmpData[22] = PongBotQ.target_EP[3];//IMUPitch;
-    TmpData[23] = PongBotQ.target_EP[4];//IMURoll_dot;
-    TmpData[24] = PongBotQ.target_EP[5];//PongBotQ.X_new(1);
-    TmpData[25] = 0;//PongBotQ.target_EP[10];//PongBotQ.X_new(2);
+    TmpData[22] = PongBotQ.tmp_target_EP[9];//IMUPitch;
+    TmpData[23] = PongBotQ.actual_com_pos[1];//tmp_target_EP[4];//IMURoll_dot;
+    TmpData[24] = PongBotQ.actual_com_vel[1];//tmp_target_EP[5];//PongBotQ.X_new(1);
+    TmpData[25] = PongBotQ.IMURoll_dot; //0;//PongBotQ.target_EP[10];//PongBotQ.X_new(2);
     TmpData[26] = 0;//PongBotQ.target_EP[11];//PongBotQ.X_new(2);
 
     for (unsigned int i = 0; i < 30; ++i) {

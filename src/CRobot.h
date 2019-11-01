@@ -32,12 +32,18 @@ using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
 typedef enum {
+    MODE_SIMULATION,
+    MODE_ACTUAL_ROBOT
+} _MODE;
+
+typedef enum {
     CTRLMODE_NONE,
     CTRLMODE_INITIALIZE,
     CTRLMODE_HOME_POS,
     CTRLMODE_WALK_READY,
     CTRLMODE_TROT,
-    CTRLMODE_FLYING_TROT
+    CTRLMODE_FLYING_TROT,
+    CTRLMODE_ONE_STEP_STANDING_JUMP
 } _CONTROL_MODE;
 
 typedef enum {
@@ -123,6 +129,7 @@ typedef enum {
     NOMAL_TROT_WALKING,
     FLYING_TROT_RUNNING,
     TORQUE_OFF,
+    ONE_STEP_STANDING_JUMP,
     NO_ACT_WITH_CTC
 
 } _COMMAND_FLAG;
@@ -233,6 +240,7 @@ public:
 //    void ballistics(double flight_time, double landing_height, double take_off_speed);
     void Torque_off(void);
     void Cal_CP(void);
+    void Cal_CP2(void);
     void Trot_Walking(void);
     void Get_gain(void);
     void Trot_Walking_Traj_First(unsigned int i);
@@ -255,6 +263,12 @@ public:
 //    void CP_foot_step_planner(VectorNd init_foot_l_3d, VectorNd init_foot_r_3d);
     void CP_foot_traj_gen();
     void check_CP(void);
+    void CP_Con_trot(unsigned int i);
+    void Body_Ori_Con(void);
+    void Body_Ori_Con2(void);
+    void One_Step_Standing_Jump(void);
+    void Jump_COM_Z_Traj_Gen(void);
+    
     
 
     enum Fc_Phase {
@@ -293,6 +307,7 @@ public:
     int ControlMode;
     int CommandFlag;
     int sub_ctrl_flag;
+    int Mode;
 
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
     RigidBodyDynamics::Math::VectorNd RobotState;
@@ -341,6 +356,8 @@ public:
     VectorNd init_pos = VectorNd::Zero(13);
 
     VectorNd target_pos = VectorNd::Zero(13);
+    VectorNd target_pos_with_con = VectorNd::Zero(13);
+    VectorNd target_pos_offset = VectorNd::Zero(13);
     VectorNd target_vel = VectorNd::Zero(13);
     VectorNd target_acc = VectorNd::Zero(13);
     VectorNd pre_target_pos = VectorNd::Zero(13);
@@ -374,6 +391,8 @@ public:
     VectorNd Kp_EP = VectorNd::Zero(12); //(100,100,100,100,100,100,100,100,100,100,100,100);
     VectorNd Kd_EP = VectorNd::Zero(12); //(1,1,1,1,1,1,1,1,1,1,1,1);
     VectorNd target_EP = VectorNd::Zero(12);
+    VectorNd tmp_target_EP = VectorNd::Zero(12);
+    VectorNd target_EP_offset = VectorNd::Zero(12);
     VectorNd pre_target_EP = VectorNd::Zero(12);
     VectorNd target_EP_vel = VectorNd::Zero(12);
     VectorNd target_EP_acc = VectorNd::Zero(12);
@@ -409,6 +428,9 @@ public:
     bool get_CP_flag, CP_check_flag;
     bool get_cp_done_flag;
     bool CP_move_done_flag;
+    int Body_Ori_Con_onoff_flag;
+//    bool Foot_Height_Control_OnOff_Flag;
+//    bool VSD_Control_OnOff_Flag;
     
 //    bool normal_trot_init_flag;
 //    bool normal_trot_final_flag;
@@ -493,12 +515,12 @@ public:
 
     double w1, w2;
 
-    bool Foot_Height_Control_OnOff_Flag;
-    bool VSD_Contrl_OnOff_Flag;
+
     
     double foot_height;
     double com_height;
     double z1[6], z2[6];
+    double jump_z1[6], jump_z2[6], jump_z3[6], jump_z4[6];
     double x1[6], x2[6], x3[6], x4[6], x5[6];
     double walk_time, t1, t2, dsp_t1, dsp_t2;
     
@@ -517,6 +539,8 @@ public:
     
     VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd actual_com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd actual_com_vel = VectorNd::Zero(3); // x,y,z
     VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd foot_l = VectorNd::Zero(3);  // x,y,z
     VectorNd foot_r = VectorNd::Zero(3);  // x,y,z
@@ -608,7 +632,20 @@ public:
     int CP_PHASE;
     double tmp_t;
     int CP_move_step;
+    double cp_y_limit;
+    int moving_cnt;
+    int JUMP_PHASE;
+    double jump_ready_height;
     
+    double jump_ready_time, jump_stance_time, jump_flight_time, jump_landing_time;
+    int jump_ready_cnt, jump_stance_cnt, jump_flight_cnt, jump_landing_cnt;
+    double tmp_Fc1, tmp_Fc2;
+
+    double kp_roll, kd_roll;
+    double target_kp_roll, target_kd_roll;
+    
+    double Kp_y, Ki_y;
+
 private:
 };
 
