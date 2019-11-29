@@ -333,12 +333,19 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
 
     this->model = _model;
 
+    printf("[1]\n");
     RBDLSetting();
+    printf("[2]\n");
     GetLinks();
+    printf("[3]\n");
     GetJoints();
+    printf("[4]\n");
     InitROSPubSetting();
+    printf("[5]\n");
     InitRvizSetting();
+    printf("[6]\n");
     SensorSetting();
+    printf("[7]\n");
     
     PongBotQ.ControlMode = CTRLMODE_HOME_POS;
 
@@ -358,6 +365,43 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     dt = current_time.Double() - this->last_update_time.Double();
     time = time + dt;
 
+    //* get com pos
+    
+    PongBotQ.actual_com_position[0] = this->REAR_BODY->GetWorldPose().pos.x;
+    PongBotQ.actual_com_position[1] = this->REAR_BODY->GetWorldPose().pos.y;
+    PongBotQ.actual_com_position[2] = this->REAR_BODY->GetWorldPose().pos.z;
+    
+    PongBotQ.actual_com_speed[0]=(PongBotQ.actual_com_position[0]-PongBotQ.pre_actual_com_position[0])/0.001;
+    PongBotQ.actual_com_speed[1]=(PongBotQ.actual_com_position[1]-PongBotQ.pre_actual_com_position[1])/0.001;
+    PongBotQ.actual_com_speed[2]=(PongBotQ.actual_com_position[2]-PongBotQ.pre_actual_com_position[2])/0.001;
+    
+    PongBotQ.pre_actual_com_position[0]=PongBotQ.actual_com_position[0];
+    PongBotQ.pre_actual_com_position[1]=PongBotQ.actual_com_position[1];
+    PongBotQ.pre_actual_com_position[2]=PongBotQ.actual_com_position[2];
+    
+//    std::cout<<"pos"<<std::endl;
+//    std::cout<<PongBotQ.actual_com_position[0]<<std::endl;
+//    std::cout<<PongBotQ.actual_com_position[1]<<std::endl;
+//    std::cout<<PongBotQ.actual_com_position[2]<<std::endl;
+//    std::cout<<"_______________"<<std::endl;
+//    std::cout<<"pre"<<std::endl;
+//    std::cout<<PongBotQ.pre_actual_com_position[0]<<std::endl;
+//    std::cout<<PongBotQ.pre_actual_com_position[1]<<std::endl;
+//    std::cout<<PongBotQ.pre_actual_com_position[2]<<std::endl;
+//    std::cout<<"_______________"<<std::endl;
+//    std::cout<<"m"<<std::endl;
+//    std::cout<<(PongBotQ.actual_com_position[0]-PongBotQ.pre_actual_com_position[0])<<std::endl;
+//    std::cout<<(PongBotQ.actual_com_position[1]-PongBotQ.pre_actual_com_position[1])<<std::endl;
+//    std::cout<<(PongBotQ.actual_com_position[2]-PongBotQ.pre_actual_com_position[2])<<std::endl;
+//    std::cout<<"_______________"<<std::endl;
+//    std::cout<<"vel"<<std::endl;
+//    std::cout<<PongBotQ.actual_com_speed[0]<<std::endl;
+//    std::cout<<PongBotQ.actual_com_speed[1]<<std::endl;
+//    std::cout<<PongBotQ.actual_com_speed[2]<<std::endl;
+//    std::cout<<"_______________"<<std::endl;
+    
+    
+    
     //* Read Sensors
     IMUSensorRead();
     FTSensorRead();
@@ -397,6 +441,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         cout << "============= [CTRLMODE_WALK_READY] ==========" << endl;
 
         PongBotQ.ctc_cnt = 0;
+//        PongBotQ.FC_PHASE = PongBotQ.STOP;
 
         for (unsigned int i = 0; i < 13; ++i) {
             //                    PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
@@ -413,6 +458,10 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
         PongBotQ.ctc_cnt2 = 0;
         PongBotQ.traj_stop_flag = true;
+        PongBotQ.turn_mode = 0;
+        PongBotQ.turn_start_flag = false;
+        PongBotQ.turn_cnt = 0;
+        
        
         PongBotQ.X_new << 0,0,0;
         PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
@@ -428,7 +477,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case CTRLMODE_FLYING_TROT:
         cout << "============= [CTRLMODE_FLYING_TROT] ==========" << endl;
 
-        PongBotQ.ctc_cnt2 = 0;
+        PongBotQ.ft_cnt = 0;
         PongBotQ.traj_stop_flag = true;
         PongBotQ.flying_trot_init_flag = true;
         
@@ -527,7 +576,8 @@ void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg)
 
 void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg)
 {
-    PongBotQ.tmp_moving_speed = msg->data;
+//    PongBotQ.tmp_moving_speed2 = msg->data;
+    PongBotQ.des_theta = msg->data * D2R;
 }
 
 void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg)
@@ -738,8 +788,7 @@ void gazebo::PongBotQ_plugin::IMUSensorRead()
     PongBotQ.IMURoll = pose.rot.GetRoll() * R2D;//PongBotQ.IMURoll + PongBotQ.IMURoll_dot*dt;
     PongBotQ.IMUPitch = pose.rot.GetPitch() * R2D;//PongBotQ.IMUPitch + PongBotQ.IMUPitch_dot*dt;
     PongBotQ.IMUYaw = pose.rot.GetYaw() * R2D;//PongBotQ.IMUYaw + PongBotQ.IMUYaw_dot*dt;
-    
-    
+     
 //    printf("angular_vel_x = %f [rad/s]\n",angular_vel_x);
 }
 
@@ -867,8 +916,6 @@ void gazebo::PongBotQ_plugin::jointController()
         }
     }
     
-
-
     //* Applying torques
     this->RL_HR_JOINT->SetForce(0, PongBotQ.joint[0].torque); //PongBotQ.target_tor[0]);
     this->RL_HP_JOINT->SetForce(1, PongBotQ.joint[1].torque); //PongBotQ.target_tor[1]);
@@ -909,6 +956,20 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
 //    TmpData[19] = PongBotQ.foot_r_pos(1);//PongBotQ.target_EP[9];
 //    TmpData[20] = PongBotQ.foot_r_pos(2);//PongBotQ.CP_x;
 //    TmpData[21] = PongBotQ.tmp_zmp_x_ref;//PongBotQ.CP_y;
+    
+    TmpData[0] = PongBotQ.target_vel[1]*60/PI2*50; //rad/s -> rpm
+    TmpData[1] = PongBotQ.target_vel[2]*60/PI2*50;
+    TmpData[2] = PongBotQ.joint[1].torque/50.0;//PongBotQ.local_foot_l_pos[2];
+    TmpData[3] = PongBotQ.joint[2].torque/50.0;//PongBotQ.local_foot_r_pos[0];
+    TmpData[4] = PongBotQ.local_foot_r_pos[1];
+    TmpData[5] = PongBotQ.local_foot_r_pos[2];
+    
+    TmpData[6] = PongBotQ.target_acc[0];
+    TmpData[7] = PongBotQ.target_acc[1];
+    TmpData[8] = PongBotQ.target_acc[2];
+    
+    TmpData[9] = PongBotQ.turn_xl_EP;
+    TmpData[10] = PongBotQ.turn_yl_EP;
 
     TmpData[11] = PongBotQ.Fc_RL_z;//PongBotQ.target_EP_vel[0];
     TmpData[12] = PongBotQ.Fc_RR_z;//PongBotQ.target_EP_vel[3];
@@ -917,22 +978,33 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
     
     TmpData[15] = PongBotQ.target_cp_foot_pos_y;//PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
     TmpData[16] = PongBotQ.IMURoll;//PongBotQ.target_EP[1];//IMUPitch;
-    TmpData[17] = PongBotQ.com_pos[2];//PongBotQ.target_EP[2];//IMURoll_dot;
+    TmpData[17] = PongBotQ.actual_com_pos[1];//PongBotQ.target_EP[2];//IMURoll_dot;
     TmpData[18] = PongBotQ.CP_y;//PongBotQ.target_EP[3];//IMURoll;
     
-    TmpData[19] = PongBotQ.tmp_target_EP[0];//IMUPitch;
-    TmpData[20] = PongBotQ.tmp_target_EP[3];//IMURoll_dot;
-    TmpData[21] = PongBotQ.tmp_target_EP[6];//IMURoll;
+    TmpData[19] = PongBotQ.com_pos[0];//PongBotQ.tmp_target_EP[1];//IMUPitch;
+    TmpData[20] = PongBotQ.com_pos[1];//PongBotQ.tmp_target_EP[4];//IMURoll_dot;
+    TmpData[21] = PongBotQ.com_pos[2];//PongBotQ.tmp_target_EP[7];//IMURoll;
+    TmpData[22] = PongBotQ.foot_l_pos[0];//PongBotQ.tmp_target_EP[10];//IMUPitch;
+    TmpData[23] = PongBotQ.foot_l_pos[1];//PongBotQ.actual_com_pos[1];//tmp_target_EP[4];//IMURoll_dot;
+    TmpData[24] = PongBotQ.foot_l_pos[2];//PongBotQ.actual_com_vel[1];//tmp_target_EP[5];//PongBotQ.X_new(1);
     
-    TmpData[22] = PongBotQ.tmp_target_EP[9];//IMUPitch;
-    TmpData[23] = PongBotQ.actual_com_pos[1];//tmp_target_EP[4];//IMURoll_dot;
-    TmpData[24] = PongBotQ.actual_com_vel[1];//tmp_target_EP[5];//PongBotQ.X_new(1);
-    TmpData[25] = PongBotQ.IMURoll_dot; //0;//PongBotQ.target_EP[10];//PongBotQ.X_new(2);
-    TmpData[26] = 0;//PongBotQ.target_EP[11];//PongBotQ.X_new(2);
-
+    TmpData[25] = PongBotQ.turn_xl_EP;
+    TmpData[26] = PongBotQ.turn_yl_EP;
+    TmpData[27] = PongBotQ.turn_xr_EP;
+    TmpData[28] = PongBotQ.turn_yr_EP;
+    //    TmpData[25] = PongBotQ.foot_r_pos[0];//PongBotQ.IMURoll_dot; //0;//PongBotQ.target_EP[10];//PongBotQ.X_new(2);
+//    TmpData[26] = PongBotQ.foot_r_pos[1];//PongBotQ.target_EP[11];//PongBotQ.X_new(2);
+//    //TmpData[27] = PongBotQ.foot_r_pos[2];
+//    
+//    TmpData[27] = PongBotQ.ft_time2;
+//    TmpData[28] = PongBotQ.target_com_vel[0];
+    //TmpData[29] = PongBotQ.target_com_acc[0];
+//    TmpData[29] = sqrt(pow(PongBotQ.actual_com_speed[0],2)+pow(PongBotQ.actual_com_speed[1],2));
+    
     for (unsigned int i = 0; i < 30; ++i) {
         ros_msg2.data[i] = TmpData[i];
     }
 
     ros_pub2.publish(ros_msg2);
 }
+

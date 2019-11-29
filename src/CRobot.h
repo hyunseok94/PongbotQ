@@ -268,7 +268,12 @@ public:
     void Body_Ori_Con2(void);
     void One_Step_Standing_Jump(void);
     void Jump_COM_Z_Traj_Gen(void);
-    
+    void Get_act_com(void);
+    void Damping_con(void);
+    void COM_FT_X_Traj_Gen(void);
+    void COM_FT_Z_Traj_Gen(void);
+    void SF_FT_X_Traj_Gen(void);
+    void SF_FT_Z_Traj_Gen(void);
     
 
     enum Fc_Phase {
@@ -347,6 +352,7 @@ public:
 
     VectorNd abs_pos = VectorNd::Zero(13);
     VectorNd inc_pos = VectorNd::Zero(13);
+    VectorNd inc_offset_pos = VectorNd::Zero(13);
     VectorNd actual_pos = VectorNd::Zero(13);
     VectorNd actual_vel = VectorNd::Zero(13);
     VectorNd lpf_actual_vel = VectorNd::Zero(13);
@@ -429,6 +435,7 @@ public:
     bool get_cp_done_flag;
     bool CP_move_done_flag;
     int Body_Ori_Con_onoff_flag;
+    bool turn_start_flag;
 //    bool Foot_Height_Control_OnOff_Flag;
 //    bool VSD_Control_OnOff_Flag;
     
@@ -481,8 +488,13 @@ public:
     double _t = 0;
     double _out[6] = {0, 0, 0, 0, 0, 0};
 
-    double moving_speed; // [m/s]
-    double tmp_moving_speed;
+    double moving_speed, pre_moving_speed, y_moving_speed; // [m/s]
+    //double actual_com_position[3], pre_actual_com_position[3];
+    //double actual_com_speed[3];
+    VectorNd actual_com_position=VectorNd::Zero(3);
+    VectorNd pre_actual_com_position=VectorNd::Zero(3);
+    VectorNd actual_com_speed=VectorNd::Zero(3);
+    double tmp_moving_speed, tmp_moving_speed2;
     double x_step = 0; //step_time*moving_speed/2.0;
     double x_fsp = 0; //fsp_time*moving_speed/2.0;
     double pre_foot_l[3]; // = [ -x_step - x_fsp,-moving_speed,0];
@@ -539,9 +551,15 @@ public:
     
     VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd old_com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd old_com_vel = VectorNd::Zero(3); // x,y,z
+    VectorNd target_com_vel = VectorNd::Zero(3); // x,y,z
+    VectorNd target_com_acc = VectorNd::Zero(3); // x,y,z
     VectorNd actual_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd actual_com_vel = VectorNd::Zero(3); // x,y,z
     VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd pre_foot_l_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd pre_foot_r_pos = VectorNd::Zero(3); // x,y,z
     VectorNd foot_l = VectorNd::Zero(3);  // x,y,z
     VectorNd foot_r = VectorNd::Zero(3);  // x,y,z
     VectorNd local_foot_l_pos = VectorNd::Zero(3);
@@ -600,7 +618,9 @@ public:
     double h_0, h_1, h_2, h_3, v_0, v_1, v_2, v_3, a_0, a_1, a_2, a_3;
     double swing_foot_height;
     double c_com_z1[6], c_com_z2[6], c_com_z3[6], c_com_z4[6];
+    double c_com_x1[6], c_com_x2[6], c_com_x3[6], c_com_x4[6], c_com_x5[6];
     double c_sf_z1[6], c_sf_z2[6], c_sf_z3[6], c_sf_z4[6];
+    double c_sf_x1[6], c_sf_x2[6], c_sf_x3[6], c_sf_x4[6];
     
     
     // ============================ //
@@ -633,6 +653,7 @@ public:
     double tmp_t;
     int CP_move_step;
     double cp_y_limit;
+    double cp_com_limit;
     int moving_cnt;
     int JUMP_PHASE;
     double jump_ready_height;
@@ -645,8 +666,22 @@ public:
     double target_kp_roll, target_kd_roll;
     
     double Kp_y, Ki_y;
+    double cp_foot_offset_y;
+    double Kp_cp;
+    double ft_time, ft_step_time;
+    double ft_time2;
+    int  ft_cnt, ft_step_cnt;
+    int  ft_cnt2;
+    double des_theta;
+    int turn_mode, turn_cnt;
+    double turn_xl_EP, turn_yl_EP, turn_xr_EP, turn_yr_EP;
+    
+    int js_x_vel;
+//    double js_theta;
+
 
 private:
 };
 
 #endif /* CROBOT_H */
+
