@@ -1,6 +1,6 @@
 <launch>
  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-  <arg name="paused" default="true"/>
+  <!--<arg name="paused" default="true"/>-->
   <arg name="world_name" value="$(find pongbot_q_v1)/worlds/pongbot_q_v1.world"/>
  </include>
  <!--<include file="$(find pongbot_rviz)/launch/display.launch" />-->

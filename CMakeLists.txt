@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  sensor_msgs
 )
 
 
@@ -27,7 +28,7 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${
 catkin_package(
 #   INCLUDE_DIRS include
    LIBRARIES pongbot_q_v1
-   DEPENDS gazebo_ros roscpp rospy std_msgs
+   DEPENDS gazebo_ros roscpp rospy std_msgs sensor_msgs
 #  DEPENDS system_lib
 )
 

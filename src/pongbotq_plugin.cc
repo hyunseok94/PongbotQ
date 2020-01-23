@@ -21,8 +21,14 @@
 #include <sensor_msgs/JointState.h>             //for rviz
 #include <tf/transform_broadcaster.h>           //for rviz
 #include <geometry_msgs/WrenchStamped.h>        //for rviz
+#include <sensor_msgs/Joy.h>
 // by BKCho
 #include "CRobot.h" 
+
+// DH Ahn
+//#include <conio.h>
+//#include <string>
+#include <linux/input.h>
 
 using namespace std;
 
@@ -31,6 +37,14 @@ using Eigen::VectorXd;
 using Eigen::Vector3d;
 
 Model* pongbot_q_model = new Model();
+
+//#define KEY_UP 72
+//#define KEY_DOWN 80
+//#define KEY_LEFT 75
+//#define KEY_RIGHT 77
+//#define KEY_X 120
+
+//struct input_event event;
 
 namespace gazebo
 {
@@ -88,6 +102,7 @@ namespace gazebo
         event::ConnectionPtr update_connection;
         double dt = 0;
         double time = 0;
+        double time2 = 0;
 
         //IMU sensor
         sensors::SensorPtr Sensor;
@@ -216,8 +231,11 @@ namespace gazebo
 
         //ros::Publisher P_joint_force;
         // DH PARA
-        double TmpData[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        double TmpData1[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        double TmpData2[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        ros::Publisher ros_pub1;
         ros::Publisher ros_pub2;
+        std_msgs::Float64MultiArray ros_msg1;
         std_msgs::Float64MultiArray ros_msg2;
 
         // FT sensor Transformation
@@ -287,7 +305,10 @@ namespace gazebo
         ros::Subscriber server_sub3;
         ros::Subscriber server_sub4;
         ros::Subscriber server_sub5;
+        ros::Subscriber server_sub6;
 
+        
+        bool moving_flag = false;
         //ROS MODE
         int ROSMode_Flag = 0;
 
@@ -301,11 +322,12 @@ namespace gazebo
 
         // Callback function
         void PongBot_Q_ROSmode(const std_msgs::Int32Ptr &msg);
-        void Callback(const std_msgs::Int32Ptr &msg);
-        void Callback2(const std_msgs::Float64Ptr &msg);
-        void Callback3(const std_msgs::Int32Ptr &msg);
-        void Callback4(const std_msgs::Int32Ptr &msg);
-        void Callback5(const std_msgs::Int32Ptr &msg);
+//        void Callback(const std_msgs::Int32Ptr &msg);
+//        void Callback2(const std_msgs::Float64Ptr &msg);
+//        void Callback3(const std_msgs::Int32Ptr &msg);
+//        void Callback4(const std_msgs::Int32Ptr &msg);
+//        void Callback5(const std_msgs::Int32Ptr &msg);
+        void Callback6(const sensor_msgs::Joy::ConstPtr &msg);
         void Print(void); //Print function added by HSKIM
 
         void RBDLSetting();
@@ -320,7 +342,8 @@ namespace gazebo
         void EncoderRead();
 
         void jointController();
-        void ROSMsgPublish();
+        void ROSMsgPublish1();
+        void ROSMsgPublish2();
 
 
     };
@@ -329,6 +352,16 @@ namespace gazebo
 
 void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
 {
+//    cout << "keyboard test !" << endl;
+    
+//    char playerName;
+//    cout << "Enter Player Name : " ;
+//    cin >> playerName;
+//    
+//    char key = getch();
+//    int value = key;
+    
+    
     printf("============= [Load] =============\n");
 
     this->model = _model;
@@ -364,6 +397,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     current_time = this->model->GetWorld()->GetSimTime();
     dt = current_time.Double() - this->last_update_time.Double();
     time = time + dt;
+    time2 = time2 + 0.001;
 
     //* get com pos
     
@@ -407,6 +441,9 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     FTSensorRead();
     EncoderRead();
 
+    
+//    printf("PongBotQ.ControlMode = %d\n",PongBotQ.ControlMode);
+    
     //* ControlMode
     switch (PongBotQ.ControlMode) {
     case CTRLMODE_NONE:
@@ -418,13 +455,14 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case CTRLMODE_INITIALIZE:
         cout << "============= [CTRLMODE_INITIALIZE] ==========" << endl;
 
-        PongBotQ.ctc_cnt = 0;
-        PongBotQ.ctc_cnt2 = 0;
-        
-        PongBotQ.X_new << 0,0,0;
-        PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
-        PongBotQ.step_num = 0;
-        PongBotQ.traj_stop_flag = true;
+//        PongBotQ.ctc_cnt = 0;
+//        PongBotQ.ctc_cnt2 = 0;
+//        
+//        PongBotQ.X_new << 0,0,0;
+//        PongBotQ.Y_new << 0,0,0;
+//        PongBotQ.zmp_ref_array = MatrixNd::Zero(PongBotQ.preview_cnt,2);
+//        PongBotQ.step_num = 0;
+//        PongBotQ.traj_stop_flag = true;
         
 
         PongBotQ.CommandFlag = NO_ACT_WITH_CTC;
@@ -449,57 +487,91 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         }
 
         PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
-        PongBotQ.walk_ready_moving_done_flag = false;
+//        PongBotQ.walk_ready_moving_done_flag = false;
         PongBotQ.ControlMode = CTRLMODE_NONE;
+        
+        PongBotQ.target_pos = PongBotQ.actual_pos;
         break;
         
     case CTRLMODE_TROT:
         cout << "============= [CTRLMODE_TROT] ==========" << endl;
-
-        PongBotQ.ctc_cnt2 = 0;
-        PongBotQ.traj_stop_flag = true;
-        PongBotQ.turn_mode = 0;
-        PongBotQ.turn_start_flag = false;
-        PongBotQ.turn_cnt = 0;
         
-       
-        PongBotQ.X_new << 0,0,0;
-        PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
-        PongBotQ.step_num = 0;
+//        PongBotQ.ctc_cnt2 = 0;
+//        PongBotQ.traj_stop_flag = true;
+//        PongBotQ.turn_mode = 0;
+//        PongBotQ.turn_start_flag = false;
+//        PongBotQ.turn_cnt = 0; 
+//       
+//        PongBotQ.X_new << 0,0,0;
+//        PongBotQ.Y_new << 0,0,0;
+//        PongBotQ.zmp_ref_array = MatrixNd::Zero(PongBotQ.preview_cnt,2);//VectorNd::Zero(PongBotQ.preview_cnt);
+//        PongBotQ.pre_foot_l_2d = MatrixNd::Zero(5,2);
+//        PongBotQ.pre_foot_r_2d = MatrixNd::Zero(5,2);
+//        PongBotQ.pre_zmp_ref_y = 0;
+//        PongBotQ.step_num = 0;
         
 //        PongBotQ.Get_gain(); // for preview control
 
-        PongBotQ.CommandFlag = NOMAL_TROT_WALKING;
+        if(PongBotQ.walk_ready_moving_done_flag == true){
+            PongBotQ.tw_cnt = 0;
+            PongBotQ.CommandFlag = NOMAL_TROT_WALKING;       
+        }
+        else{
+            cout << " ======== not yet walk ready ======== " << endl;
+        }
         PongBotQ.ControlMode = CTRLMODE_NONE;
+        
         break;
         
         
     case CTRLMODE_FLYING_TROT:
         cout << "============= [CTRLMODE_FLYING_TROT] ==========" << endl;
 
-        PongBotQ.ft_cnt = 0;
-        PongBotQ.traj_stop_flag = true;
-        PongBotQ.flying_trot_init_flag = true;
-        
-        PongBotQ.X_new << 0,0,0;
-        PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
-        PongBotQ.step_num = 0;
+        if(PongBotQ.walk_ready_moving_done_flag == true){
+            PongBotQ.ft_cnt = 0;
 
-        PongBotQ.CommandFlag = FLYING_TROT_RUNNING;
+            PongBotQ.turn_mode = 0;
+            PongBotQ.turn_start_flag = false;
+            PongBotQ.turn_cnt = 0; 
+            
+            PongBotQ.ft_ready_flag = true;
+            PongBotQ.ft_finish_flag = false;
+            PongBotQ.ft_ready_cnt = 0;
+            PongBotQ.ft_finish_cnt = 0;
+            
+
+            PongBotQ.CommandFlag = FLYING_TROT_RUNNING;
+        }
+        else{
+            cout << " ======== not yet walk ready ======== " << endl;
+        }
+        PongBotQ.ControlMode = CTRLMODE_NONE;
+        
+        break;
+        
+    case CTRLMODE_PRONK_JUMP:
+        cout << "============= [CTRLMODE_STANDING_JUMP] ==========" << endl;
+
+        if(PongBotQ.walk_ready_moving_done_flag == true){
+            PongBotQ.moving_cnt = 0;
+            PongBotQ.JUMP_PHASE = 0;
+            PongBotQ.jump_num = 0;
+
+            PongBotQ.CommandFlag = PRONK_JUMP;
+        }
+        else{
+            cout << " ======== not yet walk ready ======== " << endl;
+        }
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
         
-    case CTRLMODE_ONE_STEP_STANDING_JUMP:
-        cout << "============= [CTRLMODE_STANDING_JUMP] ==========" << endl;
+    case CTRLMODE_TEST:
+        cout << "============= [CTRLMODE_TEST] ==========" << endl;
 
-        PongBotQ.moving_cnt = 0;
-        PongBotQ.JUMP_PHASE = 0;
-        
-//        PongBotQ.X_new << 0,0,0;
-//        PongBotQ.zmp_ref_array = VectorNd::Zero(PongBotQ.preview_cnt);
-//        PongBotQ.step_num = 0;
+        PongBotQ.ctc_cnt2 = 0;
+//        PongBotQ.tmp_init_z = PongBotQ.target_EP[5];
 
-        PongBotQ.CommandFlag = ONE_STEP_STANDING_JUMP;
+        PongBotQ.CommandFlag = TEST_FLAG;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
     }
@@ -520,18 +592,18 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     case GOTO_HOME_POS:
         PongBotQ.Torque_off(); // Temp
+//        printf("[100]\n");
         PongBotQ.Init_Pos_Traj(); // Only simulation
+//        printf("[101]\n");
         break;
 
     case GOTO_WALK_READY_POS:
 
-//        PongBotQ.get_zmp();
-        PongBotQ.Home_Pos_Traj();
-        
-        if(PongBotQ.CP_con_onoff_flag == 1){
-            PongBotQ.CP_Con();
-        }
-        
+//        if(PongBotQ.ControlMode == CTRLMODE_NONE){
+//            PongBotQ.WalkReady_Pos_Traj();
+//        }
+      
+        PongBotQ.WalkReady_Pos_Traj();
         
         PongBotQ.ComputeTorqueControl();
         break;
@@ -539,25 +611,35 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case NOMAL_TROT_WALKING:
 //        printf("===========================================\n");
 //        PongBotQ.get_zmp();
-        PongBotQ.Trot_Walking();
+        
+        PongBotQ.Trot_Walking2();
+        
         PongBotQ.ComputeTorqueControl();
         break;
         
     case FLYING_TROT_RUNNING:
 //        printf("===========================================\n");
 //        PongBotQ.get_zmp();
-        
         PongBotQ.Flying_Trot_Running();
+        
         PongBotQ.ComputeTorqueControl();
         break;  
         
-    case ONE_STEP_STANDING_JUMP:
+    case PRONK_JUMP:
 //        printf("===========================================\n");
 //        PongBotQ.get_zmp();
-        PongBotQ.One_Step_Standing_Jump();
+        PongBotQ.Pronk_Jump();
+        
         PongBotQ.ComputeTorqueControl();
         break;  
         
+    case TEST_FLAG:
+//        printf("===========================================\n");
+//        PongBotQ.get_zmp();
+        PongBotQ.Test_Function();
+        
+        PongBotQ.ComputeTorqueControl();
+        break;
         
 
     }
@@ -566,33 +648,104 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     jointController();
 
-    ROSMsgPublish();
+    ROSMsgPublish1();
+    ROSMsgPublish2();
 }
 
-void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg)
-{
-    PongBotQ.ControlMode = msg->data;
-}
+//void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg)
+//{
+////    PongBotQ.ControlMode = msg->data;
+//}
+//
+//void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg)
+//{
+////    PongBotQ.tmp_moving_speed2 = msg->data;
+////    PongBotQ.des_theta = msg->data * D2R;
+//    
+////    PongBotQ.tmp_y_moving_speed = msg->data;
+//}
+//
+//void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg)
+//{
+////    PongBotQ.sub_ctrl_flag = (int) (msg->data);
+//}
+//
+//void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Int32Ptr &msg)
+//{
+////    PongBotQ.CP_con_onoff_flag = (int) (msg->data);
+//}
+//
+//void gazebo::PongBotQ_plugin::Callback5(const std_msgs::Int32Ptr &msg)
+//{
+////    PongBotQ.Body_Ori_Con_onoff_flag = (int) (msg->data);
+//}
 
-void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg)
+void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
 {
-//    PongBotQ.tmp_moving_speed2 = msg->data;
-    PongBotQ.des_theta = msg->data * D2R;
-}
+    const double max_x_vel = 1.2;
+    const double max_y_vel = 0.25;
+    const double max_theta = 15*D2R;
 
-void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg)
-{
-    PongBotQ.sub_ctrl_flag = (int) (msg->data);
-}
-
-void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Int32Ptr &msg)
-{
-    PongBotQ.CP_con_onoff_flag = (int) (msg->data);
-}
-
-void gazebo::PongBotQ_plugin::Callback5(const std_msgs::Int32Ptr &msg)
-{
-    PongBotQ.Body_Ori_Con_onoff_flag = (int) (msg->data);
+    if(msg->buttons[13] == true){
+        // ========= [Walk Ready] ========== //
+        if(PongBotQ.moving_done_flag == true){
+            PongBotQ.ControlMode = 3;
+        }
+        
+    }
+    else if(msg->buttons[0] == true){
+        // ========= [Trot Walk] ========== //
+        if(PongBotQ.moving_done_flag == true){
+            PongBotQ.ControlMode = 4;
+            PongBotQ.sub_ctrl_flag = 0;
+        }
+    }
+    else if(msg->buttons[3] == true){
+        // ========= [Pronk] ========== //
+        if(PongBotQ.moving_done_flag == true){
+            PongBotQ.ControlMode = 6;
+            PongBotQ.sub_ctrl_flag = 0;
+        }
+        
+    }
+    else if(msg->buttons[5] == true){
+        // ========= [Test] ========== //
+//        if(PongBotQ.moving_done_flag == true){
+//            PongBotQ.ControlMode = 7;
+//            PongBotQ.sub_ctrl_flag = 0;
+//        }
+    }
+    else if(msg->buttons[4] == true){
+        // ========= [Flying Trot] ========== //
+        if(PongBotQ.moving_done_flag == true){
+            PongBotQ.ControlMode = 5;
+            PongBotQ.sub_ctrl_flag = 0;
+        }
+    }
+    else{
+        PongBotQ.ControlMode = 0;
+    }
+    
+    if(msg->buttons[2] == true){
+//        moving_flag = true;
+        PongBotQ.moving_done_flag = true;
+        PongBotQ.sub_ctrl_flag = 1;
+    }
+    
+    if(msg->buttons[9] == true){
+        PongBotQ.CommandFlag = TORQUE_OFF;
+    }
+    
+    if(msg->axes[0] > 0.1 || msg->axes[0] < -0.1){
+        PongBotQ.tmp_y_moving_speed = (msg->axes[0])*max_y_vel;
+    }
+    else{
+        PongBotQ.tmp_y_moving_speed = 0;
+    }
+//    PongBotQ.tmp_y_moving_speed = (msg->axes[0])*max_y_vel;
+    PongBotQ.tmp_x_moving_speed = (msg->axes[1])*max_x_vel;
+    PongBotQ.des_theta = (msg->axes[2])*max_theta;
+   
 }
 
 
@@ -621,7 +774,6 @@ void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
 
 void gazebo::PongBotQ_plugin::GetLinks()
 {
-
     this->RL_HIP = this->model->GetLink("RL_HIP");
     this->RL_THIGH = this->model->GetLink("RL_THIGH");
     this->RL_CALF = this->model->GetLink("RL_CALF");
@@ -648,7 +800,6 @@ void gazebo::PongBotQ_plugin::GetLinks()
 
 void gazebo::PongBotQ_plugin::GetJoints()
 {
-
     //JOINT DEFINITION    
     this->RL_HR_JOINT = this->model->GetJoint("RL_HR_JOINT");
     this->RL_HP_JOINT = this->model->GetJoint("RL_HP_JOINT");
@@ -715,7 +866,9 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
     P_pitch_comp = n.advertise<std_msgs::Float64>("pitch_comp", 1);
 
     // DH Publisher
-    ros_pub2 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data/", 1000);
+    ros_pub1 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data1/", 1000);
+    ros_pub2 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data2/", 1000);
+    ros_msg1.data.resize(30);
     ros_msg2.data.resize(30);
 
     P_RL_force = n.advertise<geometry_msgs::WrenchStamped>("RL_force", 1000);
@@ -727,14 +880,15 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
     m_FL_force.header.frame_id = "FL_TIP";
     m_FR_force.header.frame_id = "FR_TIP";
     //ros::Rate loop_rate(1000);
-    server_sub1 = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback, this);
-
-    //    S_ROSMODE = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::PongBot_Q_ROSmode, this);
-
-    server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
-    server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
-    server_sub4 = n.subscribe("cp_con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback4, this);
-    server_sub5 = n.subscribe("Body_Ori_Con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback5, this);
+//    server_sub1 = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback, this);
+//
+//    //    S_ROSMODE = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::PongBot_Q_ROSmode, this);
+//
+//    server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
+//    server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
+//    server_sub4 = n.subscribe("cp_con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback4, this);
+//    server_sub5 = n.subscribe("Body_Ori_Con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback5, this);
+    server_sub6 = n.subscribe("/joy", 1, &gazebo::PongBotQ_plugin::Callback6, this);
 
 }
 
@@ -858,6 +1012,63 @@ void gazebo::PongBotQ_plugin::FTSensorRead()
     
 //    cout << "RLz = " << RL_Force_E[2] << "RRz = " << RR_Force_E[2] << "FLz = " << FL_Force_E[2] << "FRz = " << FR_Force_E[2] << endl;
     
+    const double thre = 10;
+    const double thre_num = 4;
+    static int rl_fz_cnt = 0, rr_fz_cnt = 0, fl_fz_cnt = 0, fr_fz_cnt = 0;
+    
+    if(PongBotQ.RL.ftSensor.Fz > thre){
+        if(rl_fz_cnt < thre_num){
+            rl_fz_cnt++;
+        }
+        else{
+            PongBotQ.T_RL = true;
+        }
+    }
+    else{
+        PongBotQ.T_RL = false;
+        rl_fz_cnt = 0;
+    }
+    
+    if(PongBotQ.RR.ftSensor.Fz > thre){
+        if(rr_fz_cnt < thre_num){
+            rr_fz_cnt++;
+        }
+        else{
+            PongBotQ.T_RR = true;
+        }
+    }
+    else{
+        PongBotQ.T_RR = false;
+        rr_fz_cnt = 0;
+    }
+    
+    if(PongBotQ.FL.ftSensor.Fz > thre){
+        if(fl_fz_cnt < thre_num){
+            fl_fz_cnt++;
+        }
+        else{
+            PongBotQ.T_FL = true;
+        }
+    }
+    else{
+        PongBotQ.T_FL = false;
+        fl_fz_cnt = 0;
+    }
+    
+    if(PongBotQ.FR.ftSensor.Fz > thre){
+        if(fr_fz_cnt < thre_num){
+            fr_fz_cnt++;
+        }
+        else{
+            PongBotQ.T_FR = true;
+        }
+    }
+    else{
+        PongBotQ.T_FR = false;
+        fr_fz_cnt = 0;
+    }
+
+//    printf("FZ_RL = %f, PongBotQ.T_RL = %d\n",PongBotQ.RL.ftSensor.Fz,PongBotQ.T_RL);    
 }
 
 void gazebo::PongBotQ_plugin::EncoderRead()
@@ -892,15 +1103,11 @@ void gazebo::PongBotQ_plugin::EncoderRead()
         
         // filter
          PongBotQ.lpf_actual_vel[i] = (1 - act_vel_alpha) * PongBotQ.lpf_actual_vel[i] + act_vel_alpha*PongBotQ.actual_vel[i];
-        
-        
-        
     }
 }
 
 void gazebo::PongBotQ_plugin::jointController()
 {
-
     //***************************Set Torque********************************//
 
     PongBotQ.joint[6].torque = PongBotQ.Kp_q[6]*(PongBotQ.target_pos[6] - PongBotQ.actual_pos[6]) + PongBotQ.Kd_q[6]*(0 - PongBotQ.lpf_actual_vel[6]);
@@ -937,61 +1144,50 @@ void gazebo::PongBotQ_plugin::jointController()
 
 }
 
-void gazebo::PongBotQ_plugin::ROSMsgPublish()
+void gazebo::PongBotQ_plugin::ROSMsgPublish1()
 {
-
     //********************* DH : Data plot ***************************//
 
-    for (unsigned int i = 0; i < 12; ++i) {
-        TmpData[i] = PongBotQ.tmp_data[i];
-    }
+//    for (unsigned int i = 0; i < 12; ++i) {
+//        TmpData[i] = PongBotQ.tmp_data[i];
+//    }
 
-//    TmpData[12] = PongBotQ.com_pos(0);//PongBotQ.target_EP_vel[0];
-//    TmpData[13] = PongBotQ.com_pos(1);//PongBotQ.target_EP_vel[3];
-//    TmpData[14] = PongBotQ.com_pos(2);//PongBotQ.target_EP_acc[0];
-//    TmpData[15] = PongBotQ.foot_l_pos(0);//PongBotQ.target_EP_acc[3];
-//    TmpData[16] = PongBotQ.foot_l_pos(1);//PongBotQ.target_EP[0];
-//    TmpData[17] = PongBotQ.foot_l_pos(2);//PongBotQ.target_EP[3];
-//    TmpData[18] = PongBotQ.foot_r_pos(0);//PongBotQ.target_EP[6];
-//    TmpData[19] = PongBotQ.foot_r_pos(1);//PongBotQ.target_EP[9];
-//    TmpData[20] = PongBotQ.foot_r_pos(2);//PongBotQ.CP_x;
-//    TmpData[21] = PongBotQ.tmp_zmp_x_ref;//PongBotQ.CP_y;
+    TmpData1[0] = PongBotQ.Fc_RL_z;//PongBotQ.target_EP_vel[0];
+    TmpData1[1] = PongBotQ.Fc_RR_z;//PongBotQ.target_EP_vel[3];
+    TmpData1[2] = PongBotQ.Fc_FL_z;//PongBotQ.target_EP_acc[0];
+    TmpData1[3] = PongBotQ.Fc_FR_z;
     
-    TmpData[0] = PongBotQ.target_vel[1]*60/PI2*50; //rad/s -> rpm
-    TmpData[1] = PongBotQ.target_vel[2]*60/PI2*50;
-    TmpData[2] = PongBotQ.joint[1].torque/50.0;//PongBotQ.local_foot_l_pos[2];
-    TmpData[3] = PongBotQ.joint[2].torque/50.0;//PongBotQ.local_foot_r_pos[0];
-    TmpData[4] = PongBotQ.local_foot_r_pos[1];
-    TmpData[5] = PongBotQ.local_foot_r_pos[2];
-    
-    TmpData[6] = PongBotQ.target_acc[0];
-    TmpData[7] = PongBotQ.target_acc[1];
-    TmpData[8] = PongBotQ.target_acc[2];
-    
-    TmpData[9] = PongBotQ.turn_xl_EP;
-    TmpData[10] = PongBotQ.turn_yl_EP;
+    TmpData1[4] = -PongBotQ.RL.ftSensor.Fz;//PongBotQ.T_RR_on_flag*(-0.3);//PongBotQ.target_EP[5];//PongBotQ.cp_foot_l_3d[1];//PongBotQ.T_RL;//PongBotQ.zmp_ref(0);//PongBotQ.target_vel[1]*60/PI2*50; //rad/s -> rpm
+    TmpData1[5] = -PongBotQ.RR.ftSensor.Fz;//PongBotQ.T_FL_on_flag*(-0.3);//PongBotQ.cp_foot_r_3d[1];//PongBotQ.T_RR;//PongBotQ.zmp_ref(1);//
+    TmpData1[6] = -PongBotQ.FL.ftSensor.Fz;//PongBotQ.Kp_q[2];//PongBotQ.T_FL;//PongBotQ.com_pos(0);//PongBotQ.target_vel[2]*60/PI2*50;
+    TmpData1[7] = -PongBotQ.FR.ftSensor.Fz;//PongBotQ.Kd_q[2];//PongBotQ.T_FR;//PongBotQ.com_pos(1);//PongBotQ.joint[1].torque/50.0;//PongBotQ.local_foot_l_pos[2];
 
-    TmpData[11] = PongBotQ.Fc_RL_z;//PongBotQ.target_EP_vel[0];
-    TmpData[12] = PongBotQ.Fc_RR_z;//PongBotQ.target_EP_vel[3];
-    TmpData[13] = PongBotQ.Fc_FL_z;//PongBotQ.target_EP_acc[0];
-    TmpData[14] = PongBotQ.Fc_FR_z;
+    TmpData1[8] = PongBotQ.CP_x;//PongBotQ.Kp_q[5];//0;//PongBotQ.target_EP[5];//com_pos(2);//PongBotQ.joint[2].torque/50.0;//PongBotQ.local_foot_r_pos[0];   
+    TmpData1[9] = PongBotQ.CP_y;//PongBotQ.target_EP[1];//PongBotQ.Kd_q[5];//PongBotQ.target_EP[8];//PongBotQ.foot_l_pos[1];//PongBotQ.target_acc[0];
+    TmpData1[10] = PongBotQ.IMURoll;//PongBotQ.cp_foot_pos_y;//PongBotQ.target_EP[3];//PongBotQ.com_acc[2];//PongBotQ.foot_r_pos[1];//PongBotQ.target_acc[1];
+    TmpData1[11] = PongBotQ.IMUPitch;//0;//PongBotQ.target_EP[4];//PongBotQ.tmp_test_time;
     
-    TmpData[15] = PongBotQ.target_cp_foot_pos_y;//PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
-    TmpData[16] = PongBotQ.IMURoll;//PongBotQ.target_EP[1];//IMUPitch;
-    TmpData[17] = PongBotQ.actual_com_pos[1];//PongBotQ.target_EP[2];//IMURoll_dot;
-    TmpData[18] = PongBotQ.CP_y;//PongBotQ.target_EP[3];//IMURoll;
+    TmpData1[12] = PongBotQ.com_pos(0);//PongBotQ.target_EP[0];//(double)PongBotQ.test_phase*(-0.1);//PongBotQ.turn_xl_EP;
+    TmpData1[13] = PongBotQ.com_pos(1);//PongBotQ.target_EP[3];//;//PongBotQ.T_FL_on_flag;//PongBotQ.turn_yl_EP;
+    TmpData1[14] = PongBotQ.com_pos(2);
     
-    TmpData[19] = PongBotQ.com_pos[0];//PongBotQ.tmp_target_EP[1];//IMUPitch;
-    TmpData[20] = PongBotQ.com_pos[1];//PongBotQ.tmp_target_EP[4];//IMURoll_dot;
-    TmpData[21] = PongBotQ.com_pos[2];//PongBotQ.tmp_target_EP[7];//IMURoll;
-    TmpData[22] = PongBotQ.foot_l_pos[0];//PongBotQ.tmp_target_EP[10];//IMUPitch;
-    TmpData[23] = PongBotQ.foot_l_pos[1];//PongBotQ.actual_com_pos[1];//tmp_target_EP[4];//IMURoll_dot;
-    TmpData[24] = PongBotQ.foot_l_pos[2];//PongBotQ.actual_com_vel[1];//tmp_target_EP[5];//PongBotQ.X_new(1);
+    TmpData1[15] = PongBotQ.target_com_vel[0];//PongBotQ.target_EP[2];//PongBotQ.target_cp_foot_pos_y;//PongBotQ.IMURoll;//PongBotQ.target_EP[0];//IMURoll;
+    TmpData1[16] = PongBotQ.cp_foot_pos_y;//PongBotQ.target_EP[5];//PongBotQ.IMURoll;//PongBotQ.target_EP[1];//IMUPitch;
+    TmpData1[17] = PongBotQ.cp_RL_foot_pos[1];//PongBotQ.target_EP[8];//PongBotQ.IMUPitch;//actual_com_pos[1];//PongBotQ.target_EP[2];//IMURoll_dot;
+    TmpData1[18] = PongBotQ.cp_RR_foot_pos[1];//PongBotQ.target_EP[11];//PongBotQ.CP_y;//PongBotQ.target_EP[3];//IMURoll;
     
-    TmpData[25] = PongBotQ.turn_xl_EP;
-    TmpData[26] = PongBotQ.turn_yl_EP;
-    TmpData[27] = PongBotQ.turn_xr_EP;
-    TmpData[28] = PongBotQ.turn_yr_EP;
+    TmpData1[19] = PongBotQ.cp_FL_foot_pos[1];//PongBotQ.turn_xl_EP;//PongBotQ.target_EP[6];//PongBotQ.target_pos[10];//PongBotQ.com_pos[0];//PongBotQ.tmp_target_EP[1];//IMUPitch;
+    TmpData1[20] = PongBotQ.cp_FR_foot_pos[1];//PongBotQ.turn_yl_EP;//PongBotQ.target_EP[7];//PongBotQ.target_pos[11];//PongBotQ.com_pos[1];//PongBotQ.tmp_target_EP[4];//IMURoll_dot;
+    TmpData1[21] = PongBotQ.target_com_vel[0];//PongBotQ.turn_xr_EP;//PongBotQ.target_EP[9];//PongBotQ.target_pos[12];//PongBotQ.com_pos[2];//PongBotQ.tmp_target_EP[7];//IMURoll;
+    TmpData1[22] = PongBotQ.turn_yr_EP;//PongBotQ.target_EP[10];//PongBotQ.target_vel[10];//PongBotQ.foot_l_pos[0];//PongBotQ.tmp_target_EP[10];//IMUPitch;
+    
+    TmpData1[23] = PongBotQ.joint[11].torque/50.0;//PongBotQ.turn_xr_EP;//PongBotQ.tmp_para[0];//PongBotQ.target_EP_vel[2];//PongBotQ.Kp_q[9];//0;//PongBotQ.target_vel[11];//PongBotQ.foot_l_pos[1];//PongBotQ.actual_com_pos[1];//tmp_target_EP[4];//IMURoll_dot;
+    TmpData1[24] = PongBotQ.joint[12].torque/50.0;//PongBotQ.turn_yr_EP;//PongBotQ.tmp_para[1];//PongBotQ.target_EP_vel[5];//PongBotQ.Kd_q[9];//0;//PongBotQ.target_vel[12];//PongBotQ.foot_l_pos[2];//PongBotQ.actual_com_vel[1];//tmp_target_EP[5];//PongBotQ.X_new(1);
+    TmpData1[25] = PongBotQ.target_vel[11]*60/PI2*50;//PongBotQ.turn_xl_EP;//PongBotQ.tmp_para[2];//PongBotQ.target_EP_vel[8];//PongBotQ.Kp_q[12];//PongBotQ.target_acc[10];//PongBotQ.target_EP[1];//PongBotQ.turn_xl_EP;
+    TmpData1[26] = PongBotQ.target_vel[12]*60/PI2*50;//PongBotQ.turn_yl_EP;//PongBotQ.tmp_para[3];//PongBotQ.target_EP_vel[11];//PongBotQ.Kd_q[12];//PongBotQ.target_acc[11];//PongBotQ.target_EP[4];//PongBotQ.turn_yl_EP;
+    TmpData1[27] = PongBotQ.com_acc[2];//PongBotQ.target_com_vel[0];//PongBotQ.com_acc[2];//PongBotQ.target_pos[2]*R2D;//PongBotQ.tmp_para[4];//0;//PongBotQ.target_acc[12];//PongBotQ.target_EP[7];//PongBotQ.turn_xr_EP;
+    TmpData1[28] = PongBotQ.actual_com_pos[1];//PongBotQ.RL_foot_pos[0];//PongBotQ.target_acc[9];//PongBotQ.tmp_para[5];//PongBotQ.T_RR;//PongBotQ.cp_foot_offset_y;//PongBotQ.Kp_q[4];//PongBotQ.target_EP[10];//PongBotQ.turn_yr_EP;
+    TmpData1[29] = PongBotQ.actual_com_vel[1];//PongBotQ.RR_foot_pos[0];//PongBotQ.target_acc[12];//PongBotQ.T_FL;//0;//PongBotQ.foot_r_pos(2);//PongBotQ.Kd_q[4];
     //    TmpData[25] = PongBotQ.foot_r_pos[0];//PongBotQ.IMURoll_dot; //0;//PongBotQ.target_EP[10];//PongBotQ.X_new(2);
 //    TmpData[26] = PongBotQ.foot_r_pos[1];//PongBotQ.target_EP[11];//PongBotQ.X_new(2);
 //    //TmpData[27] = PongBotQ.foot_r_pos[2];
@@ -1002,7 +1198,70 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish()
 //    TmpData[29] = sqrt(pow(PongBotQ.actual_com_speed[0],2)+pow(PongBotQ.actual_com_speed[1],2));
     
     for (unsigned int i = 0; i < 30; ++i) {
-        ros_msg2.data[i] = TmpData[i];
+        ros_msg1.data[i] = TmpData1[i];
+    }
+
+    ros_pub1.publish(ros_msg1);
+}
+
+void gazebo::PongBotQ_plugin::ROSMsgPublish2()
+{
+
+    //********************* DH : Data plot ***************************//
+
+//    for(int i=0;i<13;++i){
+//        TmpData2[i] = PongBotQ.joint[i].torque/50.0;//PongBotQ.target_pos_with_con[i]*R2D;//(PongBotQ.target_pos[i] - PongBotQ.actual_pos[i])*R2D;
+//    }
+    
+//    cout << "RLHR = " << PongBotQ.target_pos[0]*R2D << endl;
+    
+//    for(int i=0;i<12;++i){
+////        TmpData2[i+13] = PongBotQ.target_EP[i] - PongBotQ.actual_EP[i];
+//        TmpData2[i+13] = PongBotQ.target_EP[i];// - PongBotQ.actual_EP[i];
+//    }
+    
+//    TmpData2[13] = PongBotQ.turn_xl_EP;
+//    TmpData2[14] = PongBotQ.turn_yl_EP;
+//    TmpData2[15] = PongBotQ.turn_xr_EP;
+//    TmpData2[16] = PongBotQ.turn_yr_EP;
+    
+    TmpData2[0] = PongBotQ.tmp_data2[0];
+    TmpData2[1] = PongBotQ.tmp_data2[1];
+    TmpData2[2] = PongBotQ.tmp_data2[2];
+    TmpData2[3] = PongBotQ.tmp_data2[3];
+    TmpData2[4] = PongBotQ.tmp_data2[4];
+    TmpData2[5] = PongBotQ.tmp_data2[5];
+    TmpData2[6] = PongBotQ.tmp_data2[6];
+    TmpData2[7] = PongBotQ.tmp_data2[7];
+    TmpData2[8] = PongBotQ.tmp_data2[8];
+    TmpData2[9] = PongBotQ.tmp_data2[9];
+    TmpData2[10] = PongBotQ.tmp_data2[10];
+    TmpData2[11] = PongBotQ.tmp_data2[11];
+    TmpData2[12] = PongBotQ.tmp_data2[12];
+    TmpData2[13] = PongBotQ.tmp_data2[13];
+    TmpData2[14] = PongBotQ.tmp_data2[14];
+    TmpData2[15] = PongBotQ.tmp_data2[15];
+    TmpData2[16] = PongBotQ.tmp_data2[16];
+    TmpData2[17] = PongBotQ.tmp_data2[17];
+    TmpData2[18] = time2;
+    
+//    TmpData2[17] = PongBotQ.target_vel[7]*60/PI2*50;
+//    TmpData2[18] = PongBotQ.target_vel[8]*60/PI2*50;
+//    TmpData2[19] = PongBotQ.target_vel[9]*60/PI2*50;
+//    TmpData2[20] = PongBotQ.target_vel[10]*60/PI2*50;
+//    TmpData2[21] = PongBotQ.target_vel[11]*60/PI2*50;
+//    TmpData2[22] = PongBotQ.target_vel[12]*60/PI2*50;
+    
+
+    TmpData2[25] = PongBotQ.cp_foot_offset_y;
+    TmpData2[26] = PongBotQ.cp_RL_foot_pos[1];
+    TmpData2[27] = PongBotQ.cp_RR_foot_pos[1];
+    TmpData2[28] = PongBotQ.cp_RL_foot_pos[0];
+    TmpData2[29] = PongBotQ.cp_FL_foot_pos[0];
+    
+    
+    for (unsigned int i = 0; i < 30; ++i) {
+        ros_msg2.data[i] = TmpData2[i];
     }
 
     ros_pub2.publish(ros_msg2);
