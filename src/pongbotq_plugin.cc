@@ -927,7 +927,7 @@ void gazebo::PongBotQ_plugin::RBDLSetting()
     version_test = rbdl_get_api_version();
     printf("rbdl api version = %d\n", version_test);
 
-    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V3/urdf/PONGBOT_Q_V3.urdf", pongbot_q_model, true, false);
+    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V4/urdf/PONGBOT_Q_V4.urdf", pongbot_q_model, true, false);
     //Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
     PongBotQ.setRobotModel(pongbot_q_model);
 
@@ -1076,21 +1076,21 @@ void gazebo::PongBotQ_plugin::EncoderRead()
     //************************** Encoder ********************************//
     PongBotQ.actual_pos[0] = this->RL_HR_JOINT->GetAngle(0).Radian();
     PongBotQ.actual_pos[1] = this->RL_HP_JOINT->GetAngle(0).Radian();
-    PongBotQ.actual_pos[2] = this->RL_KN_JOINT->GetAngle(0).Radian();
+    PongBotQ.actual_pos[2] = this->RL_KN_JOINT->GetAngle(0).Radian() - 0.36259;
 
     PongBotQ.actual_pos[3] = this->RR_HR_JOINT->GetAngle(0).Radian();
     PongBotQ.actual_pos[4] = this->RR_HP_JOINT->GetAngle(0).Radian();
-    PongBotQ.actual_pos[5] = this->RR_KN_JOINT->GetAngle(0).Radian();
+    PongBotQ.actual_pos[5] = this->RR_KN_JOINT->GetAngle(0).Radian() - 0.36259;
 
     PongBotQ.actual_pos[6] = this->WAIST_JOINT->GetAngle(0).Radian();
 
     PongBotQ.actual_pos[7] = this->FL_HR_JOINT->GetAngle(0).Radian();
     PongBotQ.actual_pos[8] = this->FL_HP_JOINT->GetAngle(0).Radian();
-    PongBotQ.actual_pos[9] = this->FL_KN_JOINT->GetAngle(0).Radian();
+    PongBotQ.actual_pos[9] = this->FL_KN_JOINT->GetAngle(0).Radian() - 0.36259;
 
     PongBotQ.actual_pos[10] = this->FR_HR_JOINT->GetAngle(0).Radian();
     PongBotQ.actual_pos[11] = this->FR_HP_JOINT->GetAngle(0).Radian();
-    PongBotQ.actual_pos[12] = this->FR_KN_JOINT->GetAngle(0).Radian();
+    PongBotQ.actual_pos[12] = this->FR_KN_JOINT->GetAngle(0).Radian() - 0.36259;
 
     //* calculating errors
     // Angle & Angular velocity of leg

@@ -6,6 +6,8 @@ LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR} )
 
 FIND_PACKAGE (RBDL REQUIRED)
 FIND_PACKAGE (Eigen3 3.0.0 REQUIRED)
+# Find OSQP library and headers
+FIND_PACKAGE (osqp REQUIRED)
 
 
 find_package(catkin REQUIRED COMPONENTS
@@ -24,6 +26,7 @@ include_directories(${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE
 
 add_library(${PROJECT_NAME} src/pongbotq_plugin.cc src/CRobot.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${RBDL_LIBRARY} ${RBDL_URDFReader_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqp)
 
 catkin_package(
 #   INCLUDE_DIRS include

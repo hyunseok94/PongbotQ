@@ -1,9 +1,10 @@
 #ifndef CROBOT_H
 #define CROBOT_H
 
-
 #include "rbdl/rbdl.h"
 #include <rbdl/addons/urdfreader/urdfreader.h>
+
+#include "osqp.h"
 
 #define PI  3.14159265359
 #define PI2 6.28318530718
@@ -358,9 +359,9 @@ public:
     VectorNd EP_FL = Vector3d(0, 0, 0);
     VectorNd EP_FR = Vector3d(0, 0, 0);
 
-    double L3_x = 0.025516;
-    double L3_y = 0.0;
-    double L3_z = 0.304515;
+    double L3_x = 0;//0.025516;
+    double L3_y = 0;//0.0;
+    double L3_z = 0.309;//0.304515;
 
     VectorNd EP_OFFSET_RL = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_RR = Vector3d(-L3_x, L3_y, -L3_z);
@@ -439,7 +440,51 @@ public:
     VectorNd EP_vel_err = VectorNd::Zero(12);
 
     VectorNd init_target_pos = VectorNd::Zero(13);
-
+    
+    VectorNd RL_base2hip_pos = VectorNd::Zero(3);
+    VectorNd RR_base2hip_pos = VectorNd::Zero(3);
+    VectorNd FL_base2hip_pos = VectorNd::Zero(3);
+    VectorNd FR_base2hip_pos = VectorNd::Zero(3);
+    
+    VectorNd base2hip_pos = VectorNd::Zero(12);
+    VectorNd init_RL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd init_RR_foot_pos_local = VectorNd::Zero(3);
+    VectorNd init_FL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd init_FR_foot_pos_local = VectorNd::Zero(3);
+    
+    VectorNd RL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd RR_foot_pos_local = VectorNd::Zero(3);
+    VectorNd FL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd FR_foot_pos_local = VectorNd::Zero(3);
+    
+    
+    VectorNd des_x_2dot = VectorNd::Zero(3);
+    VectorNd des_w_dot = VectorNd::Zero(3);
+    
+    double _m;
+    MatrixNd _I_g = MatrixNd::Zero(3, 3);
+    MatrixNd _A = MatrixNd::Zero(6, 12);
+    MatrixNd p_com_oross_pro = MatrixNd::Zero(3,12);
+    VectorNd _g = VectorNd::Zero(3);
+    VectorNd _b = VectorNd::Zero(6);
+    MatrixNd _C = MatrixNd::Identity(12, 12);
+    VectorNd _d_u = VectorNd::Zero(12);
+    VectorNd _d_l = VectorNd::Zero(12);
+    
+    // weight
+    MatrixNd _S = MatrixNd::Identity(6, 6);
+    MatrixNd _W = MatrixNd::Identity(12, 12);
+    double _alpha = 0.1;
+    
+    MatrixNd _P = MatrixNd::Zero(12, 12);
+    VectorNd _q = VectorNd::Zero(12);
+    
+    
+    double fx_max, fx_min;
+    double fy_max, fy_min;
+    double fz_max, fz_min;
+    
+    
     // =============== Flag Define ================ //
     bool moving_done_flag;
     bool home_init_flag = true;
@@ -739,7 +784,7 @@ public:
     double tw_time;
     
     double des_pitch_deg;
-    
+ 
 private:
 };
 
