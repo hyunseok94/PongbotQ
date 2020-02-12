@@ -57,8 +57,11 @@ void CRobot::setRobotModel(Model* getModel)
         Kp_q << 200, 250, 250, 200, 250, 250, 5000, 200, 250, 250, 200, 250, 250;
         Kd_q << 4, 5, 5, 4, 5, 5, 100, 4, 5, 5, 4, 5, 5;
 
-        Kp_t << 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100;
-        Kd_t << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+        Kp_t << 11153, 11153, 1153, 11153, 11153, 1153, 11153, 11153, 1153, 11153, 11153, 1153;
+        Kd_t << 498, 498, 157, 498, 498, 157, 498, 498, 157, 498, 498, 157;
+        
+//        Kp_t << 2319, 2319, 1153, 2319, 2319, 1153, 2319, 2319, 1153, 2319, 2319, 1153;
+//        Kd_t << 227, 227, 157, 227, 227, 157, 227, 227, 157, 227, 227, 157;
  
         FT_Kp_q << 400, 500, 500, 400, 500, 500, 5000, 400, 500, 500, 400, 500, 500;
         FT_Kd_q << 10, 12, 12, 10, 12, 12, 100, 10, 12, 12, 10, 12, 12;
@@ -223,6 +226,7 @@ void CRobot::setRobotModel(Model* getModel)
         pd_con_joint[i] = 0;
         pd_con_task[i] = 0;
     }
+    pd_con_task[6] = 0;
     
     tmp_CTC_Torque = CTC_Torque;
     
@@ -467,9 +471,12 @@ void CRobot::ComputeTorqueControl()
     RobotStatedot(AXIS_Yaw) = base.currentYawvel;
 
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
-        RobotState(6 + nJoint) = target_pos[nJoint]; //actual_pos[nJoint];
-        RobotStatedot(6 + nJoint) = target_vel[nJoint]; //actual_vel[nJoint];
-        RobotState2dot(6 + nJoint) = target_acc[nJoint]; //actual_vel[nJoint];
+        RobotState(6 + nJoint) = actual_pos[nJoint];
+        RobotStatedot(6 + nJoint) = actual_vel[nJoint];
+        RobotState2dot(6 + nJoint) = actual_acc[nJoint];
+        //        RobotState(6 + nJoint) = target_pos[nJoint]; //actual_pos[nJoint];
+//        RobotStatedot(6 + nJoint) = target_vel[nJoint]; //actual_vel[nJoint];
+//        RobotState2dot(6 + nJoint) = target_acc[nJoint]; //actual_vel[nJoint];
     }
 
     Math::Quaternion QQ(0, 0, 0, 1);
@@ -483,8 +490,8 @@ void CRobot::ComputeTorqueControl()
 
     actual_EP = FK1(actual_pos) + base2hip_pos;
     
-    cout << "actual_EP = " << actual_EP.transpose() << endl;
-    cout << "target_EP = " << target_EP.transpose() << endl;
+//    cout << "actual_EP = " << actual_EP.transpose() << endl;
+//    cout << "target_EP = " << target_EP.transpose() << endl;
     
 
     target_pos = IK1(target_EP - base2hip_pos);
@@ -554,12 +561,14 @@ void CRobot::ComputeTorqueControl()
 
     for (unsigned int i = 0; i < 13; ++i) {
 //        pd_con_joint[i + 6] = Kp_q[i]*(target_pos_with_con[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
-        pd_con_joint[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
+        pd_con_joint[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);    
     }
     
-//    for (unsigned int i = 0; i < 12; ++i) {
-//        pd_con_task[i + 6] = Kp_t[i]*(tmp_target_EP[i] - actual_EP[i]) + Kd_t[i]*(0 - actual_EP_vel[i]);
-//     }
+
+    
+    for (unsigned int i = 0; i < 12; ++i) {
+        pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(0 - actual_EP_vel[i]);
+     }
     
 
     CompositeRigidBodyAlgorithm(*m_pModel, RobotState, M_term, true);
@@ -690,6 +699,8 @@ void CRobot::ComputeTorqueControl()
 //    cout << "JFc = " << J_A.transpose() * (Fc) << endl;
     
     CTC_Torque = C_term + G_term  + pd_con_joint - J_A.transpose() * (Fc);// - pd_con_task); //
+    
+    CTC_Torque =   J_A.transpose() * (pd_con_task);// - pd_con_task); //
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
