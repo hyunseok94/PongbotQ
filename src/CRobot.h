@@ -234,6 +234,7 @@ public:
     void ComputeTorqueControl();
     void FTsensorTransformation();
     VectorNd FK1(VectorNd q);
+    void FK2(void);
     VectorNd IK1(VectorNd EP);
     void Init_Pos_Traj(void);
     void WalkReady_Pos_Traj(void);
@@ -293,7 +294,7 @@ public:
     void check_CP_FT(void);
     void FT_Traj_Gen(void);
     void Cal_JFc(void);
-    
+    void StateUpdate(void);
     
 
     enum Fc_Phase {
@@ -354,10 +355,10 @@ public:
     VectorNd JFc = VectorNd::Zero(19);
     VectorNd tmp_CTC_Torque = VectorNd::Zero(19);
 
-    VectorNd EP_RL = Vector3d(0, 0, 0);
-    VectorNd EP_RR = Vector3d(0, 0, 0);
-    VectorNd EP_FL = Vector3d(0, 0, 0);
-    VectorNd EP_FR = Vector3d(0, 0, 0);
+//    VectorNd EP_RL = Vector3d(0, 0, 0);
+//    VectorNd EP_RR = Vector3d(0, 0, 0);
+//    VectorNd EP_FL = Vector3d(0, 0, 0);
+//    VectorNd EP_FR = Vector3d(0, 0, 0);
 
     double L3_x = 0;//0.025516;
     double L3_y = 0;//0.0;
@@ -452,10 +453,25 @@ public:
     VectorNd init_FL_foot_pos_local = VectorNd::Zero(3);
     VectorNd init_FR_foot_pos_local = VectorNd::Zero(3);
     
-    VectorNd RL_foot_pos_local = VectorNd::Zero(3);
-    VectorNd RR_foot_pos_local = VectorNd::Zero(3);
-    VectorNd FL_foot_pos_local = VectorNd::Zero(3);
-    VectorNd FR_foot_pos_local = VectorNd::Zero(3);
+    VectorNd tar_RL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd tar_RR_foot_pos_local = VectorNd::Zero(3);
+    VectorNd tar_FL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd tar_FR_foot_pos_local = VectorNd::Zero(3);
+    
+    VectorNd act_RL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd act_RR_foot_pos_local = VectorNd::Zero(3);
+    VectorNd act_FL_foot_pos_local = VectorNd::Zero(3);
+    VectorNd act_FR_foot_pos_local = VectorNd::Zero(3);
+    
+    VectorNd act_RL_foot_pos = VectorNd::Zero(3);
+    VectorNd act_RR_foot_pos = VectorNd::Zero(3);
+    VectorNd act_FL_foot_pos = VectorNd::Zero(3);
+    VectorNd act_FR_foot_pos = VectorNd::Zero(3);
+    
+    VectorNd goal_RL_foot_pos = VectorNd::Zero(3);
+    VectorNd goal_RR_foot_pos = VectorNd::Zero(3);
+    VectorNd goal_FL_foot_pos = VectorNd::Zero(3);
+    VectorNd goal_FR_foot_pos = VectorNd::Zero(3);
     
     
     VectorNd des_x_2dot = VectorNd::Zero(3);
@@ -566,9 +582,9 @@ public:
     double _out[6] = {0, 0, 0, 0, 0, 0};
 
     double x_moving_speed, y_moving_speed, pre_x_moving_speed, pre_y_moving_speed; // [m/s]
-    VectorNd actual_com_position=VectorNd::Zero(3);
-    VectorNd pre_actual_com_position=VectorNd::Zero(3);
-    VectorNd actual_com_speed=VectorNd::Zero(3);
+    VectorNd act_com_pos = VectorNd::Zero(3);
+    VectorNd pre_act_com_pos = VectorNd::Zero(3);
+    VectorNd act_com_vel = VectorNd::Zero(3);
     double tmp_x_moving_speed, tmp_y_moving_speed;
     double x_step = 0; //step_time*moving_speed/2.0;
     double x_fsp = 0; //fsp_time*moving_speed/2.0;
@@ -626,13 +642,21 @@ public:
     
     VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd com_vel = VectorNd::Zero(3); // x,y,z
+    VectorNd com_ori = VectorNd::Zero(3); // roll,pitch,yaw
+    VectorNd pre_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
+    VectorNd com_ori_dot = VectorNd::Zero(3); // roll,pitch,yaw
+    VectorNd act_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
+    VectorNd act_com_ori_dot = VectorNd::Zero(3); // roll,pitch,yaw
+    VectorNd com_ori_quat = VectorNd::Zero(4); // roll,pitch,yaw
     VectorNd old_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd old_com_vel = VectorNd::Zero(3); // x,y,z
     VectorNd target_com_vel = VectorNd::Zero(3); // x,y,z
     VectorNd target_com_acc = VectorNd::Zero(3); // x,y,z
-    VectorNd actual_com_pos = VectorNd::Zero(3); // x,y,z
-    VectorNd actual_com_vel = VectorNd::Zero(3); // x,y,z
-    VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
+//    VectorNd actual_com_pos = VectorNd::Zero(3); // x,y,z
+//    VectorNd actual_com_vel = VectorNd::Zero(3); // x,y,z
+//    VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
     
     VectorNd local_RL_foot_pos = VectorNd::Zero(3);
     VectorNd local_RR_foot_pos = VectorNd::Zero(3);
@@ -675,6 +699,7 @@ public:
     VectorNd zmp_ref = VectorNd::Zero(2,1);
 
     VectorNd init_com_pos = VectorNd::Zero(3);
+    VectorNd goal_com_pos = VectorNd::Zero(3);
     
     VectorNd init_RL_foot_pos = VectorNd::Zero(3);
     VectorNd init_RR_foot_pos = VectorNd::Zero(3);
@@ -739,6 +764,16 @@ public:
     MatrixNd FR_C_HR_KN=MatrixNd::Zero(3,3);
     MatrixNd FR_C_KN_TIP=MatrixNd::Zero(3,3);
     
+    MatrixNd Rot_x = MatrixNd::Zero(3,3);
+    MatrixNd Rot_y = MatrixNd::Zero(3,3);
+    MatrixNd Rot_z = MatrixNd::Zero(3,3);
+    
+    MatrixNd Kp_x = MatrixNd::Zero(3,3);
+    MatrixNd Kd_x = MatrixNd::Zero(3,3);
+    MatrixNd Kp_w = MatrixNd::Zero(3,3);
+    MatrixNd Kd_w = MatrixNd::Zero(3,3);
+    
+    
     
     int CP_PHASE;
     double tmp_t, tmp_t2, tmp_t3;
@@ -784,6 +819,9 @@ public:
     double tw_time;
     
     double des_pitch_deg;
+
+    double fc_weight = 0;
+    double test_cnt = 0;
  
 private:
 };

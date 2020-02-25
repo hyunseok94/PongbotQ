@@ -18,94 +18,113 @@ CRobot::~CRobot()
 void CRobot::setRobotModel(Model* getModel)
 {
     Mode = MODE_SIMULATION;
-    //	Mode = MODE_ACTUAL_ROBOT;
-    
+//    Mode = MODE_ACTUAL_ROBOT;
+
 
     // ============== Controller OnOff ================ //
     Body_Ori_Con_onoff_flag = false; //false; //true; //true;
     CP_con_onoff_flag = false; //true; //false;//true;
     // ============== Controller OnOff End ================ //
+
+    RL_base2hip_pos << -0.350, 0.115, -0.053;
+    RR_base2hip_pos << -0.350, -0.115, -0.053;
+    FL_base2hip_pos << 0.350, 0.115, -0.053;
+    FR_base2hip_pos << 0.350, -0.115, -0.053;
     
-    RL_base2hip_pos << -0.350 , 0.115 ,-0.053;
-    RR_base2hip_pos << -0.350 ,-0.115 ,-0.053;
-    FL_base2hip_pos <<  0.350 , 0.115 ,-0.053;
-    FR_base2hip_pos <<  0.350 ,-0.115 ,-0.053;
-    
+    // global init foot position
+    init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105,  0.0;
+    init_RR_foot_pos << RR_base2hip_pos(0), RR_base2hip_pos(1) - 0.105,  0.0;
+    init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105,  0.0;
+    init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105,  0.0;
+
     base2hip_pos << RL_base2hip_pos, RR_base2hip_pos, FL_base2hip_pos, FR_base2hip_pos;
 
-//    cout << "base2hip_pos = " << base2hip_pos << endl;
-    
-    VectorNd tmp_init_RL_foot_pos = VectorNd::Zero(3);
-    VectorNd tmp_init_RR_foot_pos = VectorNd::Zero(3);
-    VectorNd tmp_init_FL_foot_pos = VectorNd::Zero(3);
-    VectorNd tmp_init_FR_foot_pos = VectorNd::Zero(3);
-    
+    //    cout << "base2hip_pos = " << base2hip_pos << endl;
+
 //    VectorNd tmp_init_RL_foot_pos = VectorNd::Zero(3);
 //    VectorNd tmp_init_RR_foot_pos = VectorNd::Zero(3);
 //    VectorNd tmp_init_FL_foot_pos = VectorNd::Zero(3);
 //    VectorNd tmp_init_FR_foot_pos = VectorNd::Zero(3);
-    
+
+    //    VectorNd tmp_init_RL_foot_pos = VectorNd::Zero(3);
+    //    VectorNd tmp_init_RR_foot_pos = VectorNd::Zero(3);
+    //    VectorNd tmp_init_FL_foot_pos = VectorNd::Zero(3);
+    //    VectorNd tmp_init_FR_foot_pos = VectorNd::Zero(3);
+
     if (Mode == MODE_SIMULATION) {
         com_height = 0.40;
-        init_com_pos << 0.0, 0, com_height;
+        init_com_pos << 0, 0, com_height;
         foot_height = 0.05;
         swing_foot_height = 0.05;
-        
-//        Kp_q << 400, 500, 500, 400, 500, 500, 5000, 400, 500, 500, 400, 500, 500;
-//        Kd_q << 10, 12, 12, 10, 12, 12, 100, 10, 12, 12, 10, 12, 12;
-        
+
         Kp_q << 200, 250, 250, 200, 250, 250, 5000, 200, 250, 250, 200, 250, 250;
         Kd_q << 4, 5, 5, 4, 5, 5, 100, 4, 5, 5, 4, 5, 5;
 
-        Kp_t << 11153, 11153, 1153, 11153, 11153, 1153, 11153, 11153, 1153, 11153, 11153, 1153;
-        Kd_t << 498, 498, 157, 498, 498, 157, 498, 498, 157, 498, 498, 157;
-        
-//        Kp_t << 2319, 2319, 1153, 2319, 2319, 1153, 2319, 2319, 1153, 2319, 2319, 1153;
-//        Kd_t << 227, 227, 157, 227, 227, 157, 227, 227, 157, 227, 227, 157;
- 
+        Kp_t << 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000;
+        Kd_t << 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200;
+
         FT_Kp_q << 400, 500, 500, 400, 500, 500, 5000, 400, 500, 500, 400, 500, 500;
         FT_Kd_q << 10, 12, 12, 10, 12, 12, 100, 10, 12, 12, 10, 12, 12;
-        
-//        tmp_init_RL_foot_pos << 0.05, 0.105, -0.03;
-//        tmp_init_RR_foot_pos << 0.05, -0.105, -0.03;
-//        tmp_init_FL_foot_pos << 0.05, 0.105, 0.0;
-//        tmp_init_FR_foot_pos << 0.05, -0.105, 0.0;
-        
-        tmp_init_RL_foot_pos << 0.0,  0.105, -0.0;
-        tmp_init_RR_foot_pos << 0.0, -0.105, -0.0;
-        tmp_init_FL_foot_pos << 0.0,  0.105,  0.0;
-        tmp_init_FR_foot_pos << 0.0, -0.105,  0.0;
-        
-        init_RL_foot_pos = tmp_init_RL_foot_pos + RL_base2hip_pos;
-        init_RR_foot_pos = tmp_init_RR_foot_pos + RR_base2hip_pos;
-        init_FL_foot_pos = tmp_init_FL_foot_pos + FL_base2hip_pos;
-        init_FR_foot_pos = tmp_init_FR_foot_pos + FR_base2hip_pos;
-        
-        
+
     }
     else if (Mode == MODE_ACTUAL_ROBOT) {
         com_height = 0.40;
-        init_com_pos << 0.0, 0, com_height;
+        init_com_pos << 0, 0, com_height;
         foot_height = 0.05;
         swing_foot_height = 0.050;
 
         Kp_q << 200, 400, 400, 200, 400, 400, 5000, 200, 400, 400, 200, 400, 400;
         Kd_q << 3, 10, 10, 3, 10, 10, 100, 3, 10, 10, 3, 10, 10;
 
+        Kp_t << 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000;
+        Kd_t << 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50;
+
         FT_Kp_q << 300, 500, 500, 300, 500, 500, 5000, 300, 500, 500, 300, 500, 500;
         FT_Kd_q << 5, 12, 12, 5, 12, 12, 100, 5, 12, 12, 5, 12, 12;
-        
-        tmp_init_RL_foot_pos << 0.03, 0.105, -0.030;
-        tmp_init_RR_foot_pos << 0.03, -0.105, -0.030;
-        tmp_init_FL_foot_pos << 0.03, 0.105, -0.0;
-        tmp_init_FR_foot_pos << 0.03, -0.105, -0.0;
-        
-        init_RL_foot_pos = tmp_init_RL_foot_pos + RL_base2hip_pos;
-        init_RR_foot_pos = tmp_init_RR_foot_pos + RR_base2hip_pos;
-        init_FL_foot_pos = tmp_init_FL_foot_pos + FL_base2hip_pos;
-        init_FR_foot_pos = tmp_init_FR_foot_pos + FR_base2hip_pos;
     }
+    
+    Kp_x << 1,0,0,0,1,0,0,0,1;
+    Kd_x << 0.01,0,0,0,0.01,0,0,0,0.01;
+    Kp_w << 1,0,0,0,1,0,0,0,1;
+    Kd_w << 0.01,0,0,0,0.01,0,0,0,0.01;
+    
+    com_pos = init_com_pos; //global
+    com_ori << 0*D2R,0,0;
+    pre_com_pos = com_pos;
+    pre_com_ori = com_ori;
+    goal_com_pos << 0, 0, com_height-0.05;
+    
+    RL_foot_pos = init_RL_foot_pos; // global
+    RR_foot_pos = init_RR_foot_pos;
+    FL_foot_pos = init_FL_foot_pos;
+    FR_foot_pos = init_FR_foot_pos;
 
+    Rot_x << 1,        0,             0, 
+             0, cos(com_ori(0)), -sin(com_ori(0)),
+             0, sin(com_ori(0)),  cos(com_ori(0));
+    Rot_y << cos(com_ori(1)), 0,  sin(com_ori(1)),
+                    0,        1,        0,
+            -sin(com_ori(1)), 0,  cos(com_ori(1));
+    
+    Rot_z << cos(com_ori(2)), -sin(com_ori(2)), 0,
+             sin(com_ori(2)),  cos(com_ori(2)), 0,
+                    0,                0,        1;
+    
+    cout << "Rot_x = " << endl << Rot_x << endl;
+    cout << "Rot_y = " << endl << Rot_y << endl;
+    cout << "Rot_z = " << endl << Rot_z << endl;
+
+    init_RL_foot_pos_local = Rot_z*Rot_y*Rot_x*(RL_foot_pos - com_pos);
+    init_RR_foot_pos_local = Rot_z*Rot_y*Rot_x*(RR_foot_pos - com_pos);
+    init_FL_foot_pos_local = Rot_z*Rot_y*Rot_x*(FL_foot_pos - com_pos);
+    init_FR_foot_pos_local = Rot_z*Rot_y*Rot_x*(FR_foot_pos - com_pos);
+    
+    goal_RL_foot_pos = init_RL_foot_pos;
+    goal_RR_foot_pos = init_RR_foot_pos;
+    goal_FL_foot_pos = init_FL_foot_pos;
+    goal_FR_foot_pos = init_FR_foot_pos;
+    
+    
     des_pitch_deg = 0.0;
 
     init_Kp_q = Kp_q;
@@ -114,15 +133,10 @@ void CRobot::setRobotModel(Model* getModel)
     x_moving_speed = 0;
     y_moving_speed = 0;
 
-    init_RL_foot_pos_local = init_RL_foot_pos - init_com_pos;
-    init_RR_foot_pos_local = init_RR_foot_pos - init_com_pos;
-    init_FL_foot_pos_local = init_FL_foot_pos - init_com_pos;
-    init_FR_foot_pos_local = init_FR_foot_pos - init_com_pos;
-    
-//    cout << "init_RL_foot_pos_local = " << init_RL_foot_pos_local.transpose() << endl;
-//    cout << "init_RR_foot_pos_local = " << init_RR_foot_pos_local.transpose() << endl;
-//    cout << "init_FL_foot_pos_local = " << init_FL_foot_pos_local.transpose() << endl;
-//    cout << "init_FR_foot_pos_local = " << init_FR_foot_pos_local.transpose() << endl;
+    //    cout << "init_RL_foot_pos_local = " << init_RL_foot_pos_local.transpose() << endl;
+    //    cout << "init_RR_foot_pos_local = " << init_RR_foot_pos_local.transpose() << endl;
+    //    cout << "init_FL_foot_pos_local = " << init_FL_foot_pos_local.transpose() << endl;
+    //    cout << "init_FR_foot_pos_local = " << init_FR_foot_pos_local.transpose() << endl;
 
     m_pModel = getModel;
     m_pModel->gravity = Vector3d(0., 0., -9.81);
@@ -147,10 +161,10 @@ void CRobot::setRobotModel(Model* getModel)
     m_pModel->SetQuaternion(base.ID, QQ, RobotState);
 
     init_target_pos << 0, 45, -90, 0, 45, -90, 0, 0, 45, -90, 0, 45, -90;
-    goal_EP << init_RL_foot_pos_local, init_RR_foot_pos_local, init_FL_foot_pos_local, init_FR_foot_pos_local;
+//    goal_EP << init_RL_foot_pos_local, init_RR_foot_pos_local, init_FL_foot_pos_local, init_FR_foot_pos_local;
 
-    cout << "goal_EP = " << goal_EP << endl;
-    
+//    cout << "goal_EP = " << goal_EP << endl;
+
     home_pos_time = 2;
 
     for (unsigned int i = 0; i < 13; ++i) {
@@ -204,10 +218,10 @@ void CRobot::setRobotModel(Model* getModel)
 
     // =============== CP Initialize END =============== //
 
-    tar_Fc_RL = 120; //100;
-    tar_Fc_RR = 120; //100;
-    tar_Fc_FL = 120; //100;
-    tar_Fc_FR = 120; //100;
+    tar_Fc_RL = 110; //100;
+    tar_Fc_RR = 110; //100;
+    tar_Fc_FL = 110; //100;
+    tar_Fc_FR = 110; //100;
 
     Kp_cp = 0.05; //0.05;
 
@@ -221,181 +235,183 @@ void CRobot::setRobotModel(Model* getModel)
 
     ft_ready_flag = false;
     ft_finish_flag = false;
-    
+
     for (unsigned int i = 0; i < 6; ++i) {
         pd_con_joint[i] = 0;
         pd_con_task[i] = 0;
     }
     pd_con_task[6] = 0;
-    
+
     tmp_CTC_Torque = CTC_Torque;
-    
+
     // Selection matrix
-    
+
     S_mat.block<6, 19>(0, 0) = MatrixNd::Zero(6, 19);
     S_mat.block<13, 6>(6, 0) = MatrixNd::Zero(13, 6);
     S_mat.block<13, 13>(6, 6) = MatrixNd::Identity(13, 13);
-     
-//    // ===================== OSQP TEST ====================== //
-//    
-//    // Load problem data
-//    c_float P_x[3] = {4.0, 1.0, 2.0, };
-//    c_int P_nnz = 3;
-//    c_int P_i[3] = {0, 0, 1, };
-//    c_int P_p[3] = {0, 1, 3, };
-//    c_float q[2] = {1.0, 1.0, };
-//    c_float A_x[4] = {1.0, 1.0, 1.0, 1.0, };
-//    c_int A_nnz = 4;
-//    c_int A_i[4] = {0, 1, 0, 2, };
-//    c_int A_p[3] = {0, 2, 4, };
-//    c_float l[3] = {1.0, 0.0, 0.0, };
-//    c_float u[3] = {1.0, 0.7, 0.7, };
-//    c_int n = 2;
-//    c_int m = 3;
-//    
-//    // Exitflag
-//    c_int exitflag = 0;
-//    
-//    // Workspace structures
-//    OSQPWorkspace *work;
-//    OSQPSettings  *settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings));
-//    OSQPData      *data     = (OSQPData *)c_malloc(sizeof(OSQPData));
-//    
-//    // Populate data
-//    if (data) {
-//        data->n = n;
-//        data->m = m;
-//        data->P = csc_matrix(data->n, data->n, P_nnz, P_x, P_i, P_p);
-//        data->q = q;
-//        data->A = csc_matrix(data->m, data->n, A_nnz, A_x, A_i, A_p);
-//        data->l = l;
-//        data->u = u;
-//    }
-//    
-////    cout << "data->n = " << data->n << endl;
-////    cout << "P->nz = " << data->P-> << endl;
-//    
-//    // Define solver settings as default
-//    if (settings) {
-//        osqp_set_default_settings(settings);
-//        settings->alpha = 1.0; // Change alpha parameter
-//    }
-//
-//    // Setup workspace
-//    exitflag = osqp_setup(&work, data, settings);
-//
-//    // Solve Problem
-//    osqp_solve(work);
-//    
-//    cout << "solution = " << work->solution->x[0] << endl;
-//    cout << "solution = " << work->solution->x[1] << endl;
-//
-//    // Cleanup
-//    if (data) {
-//        if (data->A) c_free(data->A);
-//        if (data->P) c_free(data->P);
-//        c_free(data);
-//    }
-//    if (settings) c_free(settings);
-// 
-//    // ==================== OSQP TEST END =================== //
     
-    des_x_2dot << 0,0,0;
-    des_w_dot  << 0,0,0;
     
+
+    //    // ===================== OSQP TEST ====================== //
+    //    
+    //    // Load problem data
+    //    c_float P_x[3] = {4.0, 1.0, 2.0, };
+    //    c_int P_nnz = 3;
+    //    c_int P_i[3] = {0, 0, 1, };
+    //    c_int P_p[3] = {0, 1, 3, };
+    //    c_float q[2] = {1.0, 1.0, };
+    //    c_float A_x[4] = {1.0, 1.0, 1.0, 1.0, };
+    //    c_int A_nnz = 4;
+    //    c_int A_i[4] = {0, 1, 0, 2, };
+    //    c_int A_p[3] = {0, 2, 4, };
+    //    c_float l[3] = {1.0, 0.0, 0.0, };
+    //    c_float u[3] = {1.0, 0.7, 0.7, };
+    //    c_int n = 2;
+    //    c_int m = 3;
+    //    
+    //    // Exitflag
+    //    c_int exitflag = 0;
+    //    
+    //    // Workspace structures
+    //    OSQPWorkspace *work;
+    //    OSQPSettings  *settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings));
+    //    OSQPData      *data     = (OSQPData *)c_malloc(sizeof(OSQPData));
+    //    
+    //    // Populate data
+    //    if (data) {
+    //        data->n = n;
+    //        data->m = m;
+    //        data->P = csc_matrix(data->n, data->n, P_nnz, P_x, P_i, P_p);
+    //        data->q = q;
+    //        data->A = csc_matrix(data->m, data->n, A_nnz, A_x, A_i, A_p);
+    //        data->l = l;
+    //        data->u = u;
+    //    }
+    //    
+    ////    cout << "data->n = " << data->n << endl;
+    ////    cout << "P->nz = " << data->P-> << endl;
+    //    
+    //    // Define solver settings as default
+    //    if (settings) {
+    //        osqp_set_default_settings(settings);
+    //        settings->alpha = 1.0; // Change alpha parameter
+    //    }
+    //
+    //    // Setup workspace
+    //    exitflag = osqp_setup(&work, data, settings);
+    //
+    //    // Solve Problem
+    //    osqp_solve(work);
+    //    
+    //    cout << "solution = " << work->solution->x[0] << endl;
+    //    cout << "solution = " << work->solution->x[1] << endl;
+    //
+    //    // Cleanup
+    //    if (data) {
+    //        if (data->A) c_free(data->A);
+    //        if (data->P) c_free(data->P);
+    //        c_free(data);
+    //    }
+    //    if (settings) c_free(settings);
+    // 
+    //    // ==================== OSQP TEST END =================== //
+
+    des_x_2dot << 0, 0, 0;
+    des_w_dot << 0, 0, 0;
+
     _m = 46; //kg
     _I_g << 1.7214, -0.0038, -0.1540,
             -0.0038, 4.9502, -0.0006,
             -0.1540, -0.0006, 5.1152;
-            
-//    cout << "_I_g = " << _I_g << endl;
-    _A.block<3,3>(0,0) = MatrixNd::Identity(3,3);
-    _A.block<3,3>(0,3) = MatrixNd::Identity(3,3);
-    _A.block<3,3>(0,6) = MatrixNd::Identity(3,3);
-    _A.block<3,3>(0,9) = MatrixNd::Identity(3,3);
-    
-    RL_foot_pos_local = init_RL_foot_pos_local;
-    RR_foot_pos_local = init_RR_foot_pos_local;
-    FL_foot_pos_local = init_FL_foot_pos_local;
-    FR_foot_pos_local = init_FR_foot_pos_local;    
-    
-    p_com_oross_pro << 0 , -RL_foot_pos_local(2), RL_foot_pos_local(1), 0 , -RR_foot_pos_local(2), RR_foot_pos_local(1), 0 , -FL_foot_pos_local(2), FL_foot_pos_local(1), 0 , -FR_foot_pos_local(2), FR_foot_pos_local(1),
-                       RL_foot_pos_local(2), 0, -RL_foot_pos_local(0), RR_foot_pos_local(2), 0, -RR_foot_pos_local(0), FL_foot_pos_local(2), 0, -FL_foot_pos_local(0), FR_foot_pos_local(2), 0, -FR_foot_pos_local(0), 
-                      -RL_foot_pos_local(1), RL_foot_pos_local(0), 0, -RR_foot_pos_local(1), RR_foot_pos_local(0), 0, -FL_foot_pos_local(1), FL_foot_pos_local(0), 0, -FR_foot_pos_local(1), FR_foot_pos_local(0), 0;
-    
-    _A.block<3,12>(3,0) = p_com_oross_pro;
-        
+
+    //    cout << "_I_g = " << _I_g << endl;
+    _A.block<3, 3>(0, 0) = MatrixNd::Identity(3, 3);
+    _A.block<3, 3>(0, 3) = MatrixNd::Identity(3, 3);
+    _A.block<3, 3>(0, 6) = MatrixNd::Identity(3, 3);
+    _A.block<3, 3>(0, 9) = MatrixNd::Identity(3, 3);
+
+    tar_RL_foot_pos_local = init_RL_foot_pos_local;
+    tar_RR_foot_pos_local = init_RR_foot_pos_local;
+    tar_FL_foot_pos_local = init_FL_foot_pos_local;
+    tar_FR_foot_pos_local = init_FR_foot_pos_local;
+
+    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
+                      tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
+                     -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
+
+    _A.block<3, 12>(3, 0) = p_com_oross_pro;
+
     _g << 0, 0, 9.81;
-    
-    _b << _m*(des_x_2dot + _g),
-          _I_g*des_w_dot;
-        
+
+    _b << _m * (des_x_2dot + _g),
+            _I_g*des_w_dot;
+
     fx_max = 50;
     fx_min = -50;
     fy_max = 50;
     fy_min = -50;
     fz_max = 500;
     fz_min = 0;
-    
+
     _d_u << fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max;
     _d_l << fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min;
 
-    _P = _A.transpose()*_S*_A + _alpha*_W;
-    _q = -_A.transpose()*_S*_b;
-    
+    _P = _A.transpose() * _S * _A + _alpha*_W;
+    _q = -_A.transpose() * _S*_b;
+
     cout << "_P = " << _P << endl;
     cout << "_q = " << _q << endl;
-            
+
     // ===================== OSQP  ====================== //
-    
-    c_float P_x[78] = {_P(0,0), 
-                       _P(0,1), _P(1,1), 
-                       _P(0,2), _P(1,2), _P(2,2),
-                       _P(0,3), _P(1,3), _P(2,3), _P(3,3),
-                       _P(0,4), _P(1,4), _P(2,4), _P(3,4), _P(4,4),
-                       _P(0,5), _P(1,5), _P(2,5), _P(3,5), _P(4,5), _P(5,5),
-                       _P(0,6), _P(1,6), _P(2,6), _P(3,6), _P(4,6), _P(5,6), _P(6,6),
-                       _P(0,7), _P(1,7), _P(2,7), _P(3,7), _P(4,7), _P(5,7), _P(6,7), _P(7,7),
-                       _P(0,8), _P(1,8), _P(2,8), _P(3,8), _P(4,8), _P(5,8), _P(6,8), _P(7,8), _P(8,8),
-                       _P(0,9), _P(1,9), _P(2,9), _P(3,9), _P(4,9), _P(5,9), _P(6,9), _P(7,9), _P(8,9), _P(9,9),
-                       _P(0,10), _P(1,10), _P(2,10), _P(3,10), _P(4,10), _P(5,10), _P(6,10), _P(7,10), _P(8,10), _P(9,10), _P(10,10), 
-                       _P(0,11), _P(1,11), _P(2,11), _P(3,11), _P(4,11), _P(5,11), _P(6,11), _P(7,11), _P(8,11), _P(9,11), _P(10,11), _P(11,11)};
+
+    c_float P_x[78] = {_P(0, 0),
+        _P(0, 1), _P(1, 1),
+        _P(0, 2), _P(1, 2), _P(2, 2),
+        _P(0, 3), _P(1, 3), _P(2, 3), _P(3, 3),
+        _P(0, 4), _P(1, 4), _P(2, 4), _P(3, 4), _P(4, 4),
+        _P(0, 5), _P(1, 5), _P(2, 5), _P(3, 5), _P(4, 5), _P(5, 5),
+        _P(0, 6), _P(1, 6), _P(2, 6), _P(3, 6), _P(4, 6), _P(5, 6), _P(6, 6),
+        _P(0, 7), _P(1, 7), _P(2, 7), _P(3, 7), _P(4, 7), _P(5, 7), _P(6, 7), _P(7, 7),
+        _P(0, 8), _P(1, 8), _P(2, 8), _P(3, 8), _P(4, 8), _P(5, 8), _P(6, 8), _P(7, 8), _P(8, 8),
+        _P(0, 9), _P(1, 9), _P(2, 9), _P(3, 9), _P(4, 9), _P(5, 9), _P(6, 9), _P(7, 9), _P(8, 9), _P(9, 9),
+        _P(0, 10), _P(1, 10), _P(2, 10), _P(3, 10), _P(4, 10), _P(5, 10), _P(6, 10), _P(7, 10), _P(8, 10), _P(9, 10), _P(10, 10),
+        _P(0, 11), _P(1, 11), _P(2, 11), _P(3, 11), _P(4, 11), _P(5, 11), _P(6, 11), _P(7, 11), _P(8, 11), _P(9, 11), _P(10, 11), _P(11, 11)};
 
     c_int P_nnz = 78;
-    c_int P_i[78] = {0, 
-                     0, 1, 
-                     0, 1, 2, 
-                     0, 1, 2, 3,
-                     0, 1, 2, 3, 4,
-                     0, 1, 2, 3, 4, 5,
-                     0, 1, 2, 3, 4, 5, 6,
-                     0, 1, 2, 3, 4, 5, 6, 7,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int P_i[78] = {0,
+        0, 1,
+        0, 1, 2,
+        0, 1, 2, 3,
+        0, 1, 2, 3, 4,
+        0, 1, 2, 3, 4, 5,
+        0, 1, 2, 3, 4, 5, 6,
+        0, 1, 2, 3, 4, 5, 6, 7,
+        0, 1, 2, 3, 4, 5, 6, 7, 8,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
-    c_int P_p[13] = {0,1,3,6,10,15,21,28,36,45,55,66,78};
-    c_float q[12] = {_q(0), _q(1), _q(2), _q(3), _q(4), _q(5), _q(6), _q(7), _q(8), _q(9), _q(10), _q(11) };    
-    c_float A_x[12] = {1,1,1,1,1,1,1,1,1,1,1,1};
+    c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
+    c_float q[12] = {_q(0), _q(1), _q(2), _q(3), _q(4), _q(5), _q(6), _q(7), _q(8), _q(9), _q(10), _q(11)};
+    c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     c_int A_nnz = 12;
-    c_int A_i[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
-    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    c_float l[12] = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5),_d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
-    c_float u[12] = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5),_d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
+    c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    c_float l[12] = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
+    c_float u[12] = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
     c_int n = 12;
     c_int m = 12;
-    
+
     // Exitflag
     c_int exitflag = 0;
-    
+
     // Workspace structures
     OSQPWorkspace *work;
-    OSQPSettings  *settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings));
-    OSQPData      *data     = (OSQPData *)c_malloc(sizeof(OSQPData));
-    
-//    cout << "[9]" << endl;
-    
+    OSQPSettings *settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
+    OSQPData *data = (OSQPData *) c_malloc(sizeof (OSQPData));
+
+    //    cout << "[9]" << endl;
+
     // Populate data
     if (data) {
         data->n = n;
@@ -407,25 +423,25 @@ void CRobot::setRobotModel(Model* getModel)
         data->u = u;
 
     }
-    
-//    cout << "[10]" << endl;
-    
-//    cout << "data->n = " << data->n << endl;
-//    cout << "P->nz = " << data->P-> << endl;
-    
+
+    //    cout << "[10]" << endl;
+
+    //    cout << "data->n = " << data->n << endl;
+    //    cout << "P->nz = " << data->P-> << endl;
+
     // Define solver settings as default
     if (settings) {
         osqp_set_default_settings(settings);
         settings->alpha = 1.0; // Change alpha parameter
     }
 
-//    cout << "[11]" << endl;
-    
+    //    cout << "[11]" << endl;
+
     // Setup workspace
     exitflag = osqp_setup(&work, data, settings);
 
-//    cout << "[12]" << endl;
-    
+    //    cout << "[12]" << endl;
+
     // Solve Problem
     osqp_solve(work);
 
@@ -433,18 +449,18 @@ void CRobot::setRobotModel(Model* getModel)
     cout << "[RR] x = " << work->solution->x[3] << ", y = " << work->solution->x[4] << ", z = " << work->solution->x[5] << endl;
     cout << "[FL] x = " << work->solution->x[6] << ", y = " << work->solution->x[7] << ", z = " << work->solution->x[8] << endl;
     cout << "[FR] x = " << work->solution->x[9] << ", y = " << work->solution->x[10] << ", z = " << work->solution->x[11] << endl;
-    
-//    cout << "solution = " << work->solution->x[1] << endl;
-//    cout << "solution = " << work->solution->x[2] << endl;
 
-//    // Cleanup
-//    if (data) {
-//        if (data->A) c_free(data->A);
-//        if (data->P) c_free(data->P);
-//        c_free(data);
-//    }
-//    if (settings) c_free(settings);
- 
+    //    cout << "solution = " << work->solution->x[1] << endl;
+    //    cout << "solution = " << work->solution->x[2] << endl;
+
+    //    // Cleanup
+    //    if (data) {
+    //        if (data->A) c_free(data->A);
+    //        if (data->P) c_free(data->P);
+    //        c_free(data);
+    //    }
+    //    if (settings) c_free(settings);
+
     // ==================== OSQP TEST END =================== //
 }
 
@@ -455,14 +471,16 @@ void CRobot::setRobotModel(Model* getModel)
 
 // ============================================================================================ //
 
-void CRobot::ComputeTorqueControl()
-{
-    RobotState(AXIS_X) = base.currentX;
-    RobotState(AXIS_Y) = base.currentY;
-    RobotState(AXIS_Z) = base.currentZ;
-    RobotState(AXIS_Roll) = base.currentRoll;
-    RobotState(AXIS_Pitch) = base.currentPitch;
-    RobotState(AXIS_Yaw) = base.currentYaw;
+void CRobot::StateUpdate(void){
+    
+//    com_pos << 1.0,0,0.4;
+            
+    RobotState(AXIS_X) = com_pos(0);//base.currentX;
+    RobotState(AXIS_Y) = com_pos(1);//base.currentY;
+    RobotState(AXIS_Z) = com_pos(2);//base.currentZ;
+    RobotState(AXIS_Roll) = com_ori(0);//base.currentRoll;
+    RobotState(AXIS_Pitch) = com_ori(1);//base.currentPitch;
+    RobotState(AXIS_Yaw) = com_ori(2);//base.currentYaw;
     RobotStatedot(AXIS_X) = base.currentXvel;
     RobotStatedot(AXIS_Y) = base.currentYvel;
     RobotStatedot(AXIS_Z) = base.currentZvel;
@@ -475,49 +493,29 @@ void CRobot::ComputeTorqueControl()
         RobotStatedot(6 + nJoint) = actual_vel[nJoint];
         RobotState2dot(6 + nJoint) = actual_acc[nJoint];
         //        RobotState(6 + nJoint) = target_pos[nJoint]; //actual_pos[nJoint];
-//        RobotStatedot(6 + nJoint) = target_vel[nJoint]; //actual_vel[nJoint];
-//        RobotState2dot(6 + nJoint) = target_acc[nJoint]; //actual_vel[nJoint];
+        //        RobotStatedot(6 + nJoint) = target_vel[nJoint]; //actual_vel[nJoint];
+        //        RobotState2dot(6 + nJoint) = target_acc[nJoint]; //actual_vel[nJoint];
     }
 
-    Math::Quaternion QQ(0, 0, 0, 1);
+    com_ori_quat = Math::Quaternion::fromXYZAngles(com_ori);
+    
+    Math::Quaternion QQ(com_ori_quat);
     m_pModel->SetQuaternion(base.ID, QQ, RobotState);
-
-//    if ((Body_Ori_Con_onoff_flag == true && CommandFlag != FLYING_TROT_RUNNING) || (Body_Ori_Con_onoff_flag == true && CommandFlag == FLYING_TROT_RUNNING && ft_finish_flag == true)) {
-//        Body_Ori_Con2();
-//    }
-
-//    tmp_target_EP = target_EP;// + target_EP_offset;
-
-    actual_EP = FK1(actual_pos) + base2hip_pos;
     
-//    cout << "actual_EP = " << actual_EP.transpose() << endl;
-//    cout << "target_EP = " << target_EP.transpose() << endl;
-    
+    FK2();
+}
 
-    target_pos = IK1(target_EP - base2hip_pos);
 
-//    Damping_con();
-
-//    Get_act_com();
-
-    for (unsigned int i = 0; i < 13; ++i) {
-//        target_vel[i] = (target_pos_with_con[i] - pre_target_pos[i]) / dt;
-//        pre_target_pos[i] = target_pos_with_con[i];
-
-        target_vel[i] = (target_pos[i] - pre_target_pos[i]) / dt;
-        pre_target_pos[i] = target_pos[i];
-        
-        target_acc[i] = (target_vel[i] - pre_target_vel[i]) / dt;
-        pre_target_vel[i] = target_vel[i];
-    }
-
+void CRobot::ComputeTorqueControl()
+{
+    // ================= Cal Jacobian ================= //
     CalcPointJacobian6D(*m_pModel, RobotState, base.ID, Originbase, J_BASE, true);
     CalcPointJacobian6D(*m_pModel, RobotState, front_body.ID, Originbase, J_FRONT_BODY, true);
     CalcPointJacobian(*m_pModel, RobotState, RL.ID, EP_OFFSET_RL, J_RL, true);
     CalcPointJacobian(*m_pModel, RobotState, RR.ID, EP_OFFSET_RR, J_RR, true);
     CalcPointJacobian(*m_pModel, RobotState, FL.ID, EP_OFFSET_FL, J_FL, true);
     CalcPointJacobian(*m_pModel, RobotState, FR.ID, EP_OFFSET_FR, J_FR, true);
-    
+
     J_A.block<6, 19>(0, 0) = J_BASE;
     J_A.block<1, 19>(6, 0) = J_FRONT_BODY.block<1, 19>(2, 0); // only yaw
     J_A.block<3, 19>(7, 0) = J_RL;
@@ -525,132 +523,128 @@ void CRobot::ComputeTorqueControl()
     J_A.block<3, 19>(13, 0) = J_FL;
     J_A.block<3, 19>(16, 0) = J_FR;
 
+    // ================= Cal Jacobian END ================= //
+    
     x_dot = J_A*RobotStatedot;
-
     actual_EP_vel = x_dot.block(7, 0, 12, 1);
     
-    // ====================== Get dJdQ for CTC ===================== //
- 
-    base_dJdQ = CalcPointAcceleration6D(*m_pModel, RobotState, RobotStatedot, ddqZero, base.ID, Originbase, true);
-    FRONT_BODY_dJdQ = CalcPointAcceleration6D(*m_pModel, RobotState, RobotStatedot, ddqZero, front_body.ID, Originbase, true);
-    RL_dJdQ = CalcPointAcceleration(*m_pModel, RobotState, RobotStatedot, ddqZero, RL.ID, EP_OFFSET_RL, true);
-    RR_dJdQ = CalcPointAcceleration(*m_pModel, RobotState, RobotStatedot, ddqZero, RR.ID, EP_OFFSET_RR, true);
-    FL_dJdQ = CalcPointAcceleration(*m_pModel, RobotState, RobotStatedot, ddqZero, FL.ID, EP_OFFSET_FL, true);
-    FR_dJdQ = CalcPointAcceleration(*m_pModel, RobotState, RobotStatedot, ddqZero, FR.ID, EP_OFFSET_FR, true);
-
-    dJdQ.block<6, 1>(0, 0)  = base_dJdQ;
-    dJdQ.block<1, 1>(6, 0)  = FRONT_BODY_dJdQ.block<1, 1>(2, 0);
-    dJdQ.block<3, 1>(7, 0)  = RL_dJdQ;
-    dJdQ.block<3, 1>(10, 0) = RR_dJdQ;
-    dJdQ.block<3, 1>(13, 0) = FL_dJdQ;
-    dJdQ.block<3, 1>(16, 0) = FR_dJdQ;
+    // target_EP : Global
+    // actual_EP : Global
+    // target local foot position
+    tar_RL_foot_pos_local = Rot_z*Rot_y*Rot_x*(RL_foot_pos - com_pos);
+    tar_RR_foot_pos_local = Rot_z*Rot_y*Rot_x*(RR_foot_pos - com_pos);
+    tar_FL_foot_pos_local = Rot_z*Rot_y*Rot_x*(FL_foot_pos - com_pos);
+    tar_FR_foot_pos_local = Rot_z*Rot_y*Rot_x*(FR_foot_pos - com_pos);
     
     
-    for (unsigned int i = 0; i < 12; ++i) {
-        //        EP_vel_err[i] = target_EP_vel[i] - actual_EP_vel[i];
-        EP_err[i] = target_EP[i] - actual_EP[i];
-//        tmp_data2[i] = EP_err[i];
-    }
 
-//    Cal_CP2();
-
-//    if (CommandFlag != TEST_FLAG) {
-//        Cal_Fc();
+    
+//    for (unsigned int i = 0; i < 12; ++i) {
+//        //        EP_vel_err[i] = target_EP_vel[i] - actual_EP_vel[i];
+//        EP_err[i] = target_EP[i] - actual_EP[i];
+//        //        tmp_data2[i] = EP_err[i];
 //    }
 
+    //    Cal_CP2();
 
-    for (unsigned int i = 0; i < 13; ++i) {
-//        pd_con_joint[i + 6] = Kp_q[i]*(target_pos_with_con[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
-        pd_con_joint[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);    
-    }
-    
+    //    if (CommandFlag != TEST_FLAG) {
+    //        Cal_Fc();
+    //    }
 
+
+//    for (unsigned int i = 0; i < 13; ++i) {
+//        //        pd_con_joint[i + 6] = Kp_q[i]*(target_pos_with_con[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
+//        pd_con_joint[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
+//    }
     
+//    cout << "[test]"<< endl;
+    target_EP << tar_RL_foot_pos_local,tar_RR_foot_pos_local,tar_FL_foot_pos_local,tar_FR_foot_pos_local;
+    actual_EP << act_RL_foot_pos_local,act_RR_foot_pos_local,act_FL_foot_pos_local,act_FR_foot_pos_local;
+//    cout << "target_EP = " << target_EP.transpose() << endl;
+//    cout << "actual_EP = " << actual_EP.transpose() << endl;
+
     for (unsigned int i = 0; i < 12; ++i) {
         pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(0 - actual_EP_vel[i]);
-     }
-    
+    }
 
     CompositeRigidBodyAlgorithm(*m_pModel, RobotState, M_term, true);
     NonlinearEffects(*m_pModel, RobotState, RobotStatedot, hatNonLinearEffects);
     NonlinearEffects(*m_pModel, RobotState, VectorNd::Zero(m_pModel->dof_count), G_term);
-
     C_term = hatNonLinearEffects - G_term;
-  
-//    Cal_JFc();
-    
+
     // ==================== Fc =================== //
     
-    RL_foot_pos_local << target_EP(0), target_EP(1), target_EP(2);
-    RR_foot_pos_local << target_EP(3), target_EP(4), target_EP(5);
-    FL_foot_pos_local << target_EP(6), target_EP(7), target_EP(8);
-    FR_foot_pos_local << target_EP(9), target_EP(10), target_EP(11);
+    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
+             tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
+            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
+
+    _A.block<3, 12>(3, 0) = p_com_oross_pro;
+
+    Get_act_com();
+//    des_x_2dot << 0, 0, 0;
+//    des_w_dot  << 0, 0, 0;
     
-    p_com_oross_pro << 0 , -RL_foot_pos_local(2), RL_foot_pos_local(1), 0 , -RR_foot_pos_local(2), RR_foot_pos_local(1), 0 , -FL_foot_pos_local(2), FL_foot_pos_local(1), 0 , -FR_foot_pos_local(2), FR_foot_pos_local(1),
-                       RL_foot_pos_local(2), 0, -RL_foot_pos_local(0), RR_foot_pos_local(2), 0, -RR_foot_pos_local(0), FL_foot_pos_local(2), 0, -FL_foot_pos_local(0), FR_foot_pos_local(2), 0, -FR_foot_pos_local(0), 
-                      -RL_foot_pos_local(1), RL_foot_pos_local(0), 0, -RR_foot_pos_local(1), RR_foot_pos_local(0), 0, -FL_foot_pos_local(1), FL_foot_pos_local(0), 0, -FR_foot_pos_local(1), FR_foot_pos_local(0), 0;
+    des_x_2dot = Kp_x*(com_pos - act_com_pos) + Kd_x*(com_vel - act_com_vel);
+    des_w_dot = Kp_w*(com_ori - act_com_ori) + Kd_w*(com_ori_dot - act_com_ori_dot);
     
-    _A.block<3,12>(3,0) = p_com_oross_pro;
-    
-    
-    
-    _b << _m*(des_x_2dot + _g),
-          _I_g*des_w_dot;
+
+    _b << _m * (des_x_2dot + _g),
+            _I_g*des_w_dot;
 
 
-    _P = _A.transpose()*_S*_A + _alpha*_W;
-    _q = -_A.transpose()*_S*_b;
-            
+    _P = _A.transpose() * _S * _A + _alpha*_W;
+    _q = -_A.transpose() * _S*_b;
+
     // ===================== OSQP  ====================== //
-    
-    c_float P_x[78] = {_P(0,0), 
-                       _P(0,1), _P(1,1), 
-                       _P(0,2), _P(1,2), _P(2,2),
-                       _P(0,3), _P(1,3), _P(2,3), _P(3,3),
-                       _P(0,4), _P(1,4), _P(2,4), _P(3,4), _P(4,4),
-                       _P(0,5), _P(1,5), _P(2,5), _P(3,5), _P(4,5), _P(5,5),
-                       _P(0,6), _P(1,6), _P(2,6), _P(3,6), _P(4,6), _P(5,6), _P(6,6),
-                       _P(0,7), _P(1,7), _P(2,7), _P(3,7), _P(4,7), _P(5,7), _P(6,7), _P(7,7),
-                       _P(0,8), _P(1,8), _P(2,8), _P(3,8), _P(4,8), _P(5,8), _P(6,8), _P(7,8), _P(8,8),
-                       _P(0,9), _P(1,9), _P(2,9), _P(3,9), _P(4,9), _P(5,9), _P(6,9), _P(7,9), _P(8,9), _P(9,9),
-                       _P(0,10), _P(1,10), _P(2,10), _P(3,10), _P(4,10), _P(5,10), _P(6,10), _P(7,10), _P(8,10), _P(9,10), _P(10,10), 
-                       _P(0,11), _P(1,11), _P(2,11), _P(3,11), _P(4,11), _P(5,11), _P(6,11), _P(7,11), _P(8,11), _P(9,11), _P(10,11), _P(11,11)};
+
+    c_float P_x[78] = {_P(0, 0),
+        _P(0, 1), _P(1, 1),
+        _P(0, 2), _P(1, 2), _P(2, 2),
+        _P(0, 3), _P(1, 3), _P(2, 3), _P(3, 3),
+        _P(0, 4), _P(1, 4), _P(2, 4), _P(3, 4), _P(4, 4),
+        _P(0, 5), _P(1, 5), _P(2, 5), _P(3, 5), _P(4, 5), _P(5, 5),
+        _P(0, 6), _P(1, 6), _P(2, 6), _P(3, 6), _P(4, 6), _P(5, 6), _P(6, 6),
+        _P(0, 7), _P(1, 7), _P(2, 7), _P(3, 7), _P(4, 7), _P(5, 7), _P(6, 7), _P(7, 7),
+        _P(0, 8), _P(1, 8), _P(2, 8), _P(3, 8), _P(4, 8), _P(5, 8), _P(6, 8), _P(7, 8), _P(8, 8),
+        _P(0, 9), _P(1, 9), _P(2, 9), _P(3, 9), _P(4, 9), _P(5, 9), _P(6, 9), _P(7, 9), _P(8, 9), _P(9, 9),
+        _P(0, 10), _P(1, 10), _P(2, 10), _P(3, 10), _P(4, 10), _P(5, 10), _P(6, 10), _P(7, 10), _P(8, 10), _P(9, 10), _P(10, 10),
+        _P(0, 11), _P(1, 11), _P(2, 11), _P(3, 11), _P(4, 11), _P(5, 11), _P(6, 11), _P(7, 11), _P(8, 11), _P(9, 11), _P(10, 11), _P(11, 11)};
 
     c_int P_nnz = 78;
-    c_int P_i[78] = {0, 
-                     0, 1, 
-                     0, 1, 2, 
-                     0, 1, 2, 3,
-                     0, 1, 2, 3, 4,
-                     0, 1, 2, 3, 4, 5,
-                     0, 1, 2, 3, 4, 5, 6,
-                     0, 1, 2, 3, 4, 5, 6, 7,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int P_i[78] = {0,
+        0, 1,
+        0, 1, 2,
+        0, 1, 2, 3,
+        0, 1, 2, 3, 4,
+        0, 1, 2, 3, 4, 5,
+        0, 1, 2, 3, 4, 5, 6,
+        0, 1, 2, 3, 4, 5, 6, 7,
+        0, 1, 2, 3, 4, 5, 6, 7, 8,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
-    c_int P_p[13] = {0,1,3,6,10,15,21,28,36,45,55,66,78};
-    c_float q[12] = {_q(0), _q(1), _q(2), _q(3), _q(4), _q(5), _q(6), _q(7), _q(8), _q(9), _q(10), _q(11) };    
-    c_float A_x[12] = {1,1,1,1,1,1,1,1,1,1,1,1};
+    c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
+    c_float q[12] = {_q(0), _q(1), _q(2), _q(3), _q(4), _q(5), _q(6), _q(7), _q(8), _q(9), _q(10), _q(11)};
+    c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     c_int A_nnz = 12;
-    c_int A_i[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
-    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    c_float l[12] = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5),_d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
-    c_float u[12] = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5),_d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
+    c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    c_float l[12] = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
+    c_float u[12] = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
     c_int n = 12;
     c_int m = 12;
-    
+
     // Exitflag
     c_int exitflag = 0;
-    
+
     // Workspace structures
     OSQPWorkspace *work;
-    OSQPSettings  *settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings));
-    OSQPData      *data     = (OSQPData *)c_malloc(sizeof(OSQPData));
-    
-//    cout << "[9]" << endl;
-    
+    OSQPSettings *settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
+    OSQPData *data = (OSQPData *) c_malloc(sizeof (OSQPData));
+
+    //    cout << "[9]" << endl;
+
     // Populate data
     if (data) {
         data->n = n;
@@ -661,85 +655,87 @@ void CRobot::ComputeTorqueControl()
         data->l = l;
         data->u = u;
     }
-    
-//    cout << "[10]" << endl;
-    
-//    cout << "data->n = " << data->n << endl;
-//    cout << "P->nz = " << data->P-> << endl;
-    
-    // Define solver settings as default
-//    if (settings) {
-        osqp_set_default_settings(settings);
-//        settings->alpha = 1.0; // Change alpha parameter
-//    }
 
-//    cout << "[11]" << endl;
-    
+    //    cout << "[10]" << endl;
+
+    //    cout << "data->n = " << data->n << endl;
+    //    cout << "P->nz = " << data->P-> << endl;
+
+    // Define solver settings as default
+    //    if (settings) {
+    osqp_set_default_settings(settings);
+    //        settings->alpha = 1.0; // Change alpha parameter
+    //    }
+
+    //    cout << "[11]" << endl;
+
     // Setup workspace
     exitflag = osqp_setup(&work, data, settings);
 
-//    cout << "[12]" << endl;
-    
+    //    cout << "[12]" << endl;
+
     // Solve Problem
     osqp_solve(work);
 
-    cout << "[RL] x = " << work->solution->x[0] << ", y = " << work->solution->x[1] << ", z = " << work->solution->x[2] << endl;
-    cout << "[RR] x = " << work->solution->x[3] << ", y = " << work->solution->x[4] << ", z = " << work->solution->x[5] << endl;
-    cout << "[FL] x = " << work->solution->x[6] << ", y = " << work->solution->x[7] << ", z = " << work->solution->x[8] << endl;
-    cout << "[FR] x = " << work->solution->x[9] << ", y = " << work->solution->x[10] << ", z = " << work->solution->x[11] << endl;
-    
-    for(unsigned int i = 0;i<12;++i){
-        Fc(i+7) = work->solution->x[i];
+    //    cout << "[RL] x = " << work->solution->x[0] << ", y = " << work->solution->x[1] << ", z = " << work->solution->x[2] << endl;
+    //    cout << "[RR] x = " << work->solution->x[3] << ", y = " << work->solution->x[4] << ", z = " << work->solution->x[5] << endl;
+    //    cout << "[FL] x = " << work->solution->x[6] << ", y = " << work->solution->x[7] << ", z = " << work->solution->x[8] << endl;
+    //    cout << "[FR] x = " << work->solution->x[9] << ", y = " << work->solution->x[10] << ", z = " << work->solution->x[11] << endl;
+
+    for (unsigned int i = 0; i < 12; ++i) {
+        Fc(i + 7) = fc_weight * work->solution->x[i];
     }
-    
-    
+
+
     // ==================== Fc end =================== //
-    
-    
-//    cout << "JFc = " << J_A.transpose() * (Fc) << endl;
-    
-    CTC_Torque = C_term + G_term  + pd_con_joint - J_A.transpose() * (Fc);// - pd_con_task); //
-    
-    CTC_Torque =   J_A.transpose() * (pd_con_task);// - pd_con_task); //
+
+//    Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
+
+    //    cout << "JFc = " << J_A.transpose() * (Fc) << endl;
+
+    //    CTC_Torque = C_term + G_term  + pd_con_joint - J_A.transpose() * (Fc);
+    CTC_Torque = C_term + G_term - J_A.transpose() * (Fc - pd_con_task);
+
+    //    CTC_Torque =   J_A.transpose() * (pd_con_task);// - Fc);// - pd_con_task); //
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
-    
-//    tmp_data2[0] = Fc2[16];
-//    tmp_data2[1] = Fc2[17];
-//    tmp_data2[2] = Fc2[18];
-//    tmp_data2[3] = CTC_Torque[16];
-//    tmp_data2[4] = CTC_Torque[17];
-//    tmp_data2[5] = CTC_Torque[18];
-//    tmp_data2[6] = C_term[16];
-//    tmp_data2[7] = C_term[17];
-//    tmp_data2[8] = C_term[18];
-//    tmp_data2[9] = G_term[16];
-//    tmp_data2[10] = G_term[17];
-//    tmp_data2[11] = G_term[18];
-//    tmp_data2[12] = pd_con_joint[16];
-//    tmp_data2[13] = pd_con_joint[17];
-//    tmp_data2[14] = pd_con_joint[18];
-//    tmp_data2[15] = JFc[16];
-//    tmp_data2[16] = JFc[17];
-//    tmp_data2[17] = JFc[18];    
-        
-    
-    
-    
-//    cout << "J_A.transpose() * (Fc2) = " << J_A.transpose() * (Fc2) << endl;
-    
-//    cout << "[2] CTC_Torque = " << CTC_Torque.transpose() << endl;
-    
-//    cout << endl << M_term << endl;
-    
-    
-//    cout << S_mat << endl << endl;
-//    S_mat = 
-    
 
-    
-    
+    //    tmp_data2[0] = Fc2[16];
+    //    tmp_data2[1] = Fc2[17];
+    //    tmp_data2[2] = Fc2[18];
+    //    tmp_data2[3] = CTC_Torque[16];
+    //    tmp_data2[4] = CTC_Torque[17];
+    //    tmp_data2[5] = CTC_Torque[18];
+    //    tmp_data2[6] = C_term[16];
+    //    tmp_data2[7] = C_term[17];
+    //    tmp_data2[8] = C_term[18];
+    //    tmp_data2[9] = G_term[16];
+    //    tmp_data2[10] = G_term[17];
+    //    tmp_data2[11] = G_term[18];
+    //    tmp_data2[12] = pd_con_joint[16];
+    //    tmp_data2[13] = pd_con_joint[17];
+    //    tmp_data2[14] = pd_con_joint[18];
+    //    tmp_data2[15] = JFc[16];
+    //    tmp_data2[16] = JFc[17];
+    //    tmp_data2[17] = JFc[18];    
+
+
+
+
+    //    cout << "J_A.transpose() * (Fc2) = " << J_A.transpose() * (Fc2) << endl;
+
+    //    cout << "[2] CTC_Torque = " << CTC_Torque.transpose() << endl;
+
+    //    cout << endl << M_term << endl;
+
+
+    //    cout << S_mat << endl << endl;
+    //    S_mat = 
+
+
+
+
 }
 
 void CRobot::FTsensorTransformation()
@@ -823,6 +819,31 @@ VectorNd CRobot::FK1(VectorNd q)
     return actual_EP;
 }
 
+void CRobot::FK2(void)
+{
+//    RL_foot_pos = CalBodyToBaseCoordinates(*m_pModel, RobotState, RobotStatedot, ddqZero, RL.ID, EP_OFFSET_RL, true););
+    
+    act_RL_foot_pos = CalcBodyToBaseCoordinates(*m_pModel, RobotState, RL.ID, EP_OFFSET_RL, true);
+    act_RR_foot_pos = CalcBodyToBaseCoordinates(*m_pModel, RobotState, RR.ID, EP_OFFSET_RR, true);
+    act_FL_foot_pos = CalcBodyToBaseCoordinates(*m_pModel, RobotState, FL.ID, EP_OFFSET_FL, true);
+    act_FR_foot_pos = CalcBodyToBaseCoordinates(*m_pModel, RobotState, FR.ID, EP_OFFSET_FR, true);
+    
+    act_RL_foot_pos_local = act_RL_foot_pos - CalcBodyToBaseCoordinates(*m_pModel, RobotState, base.ID, Originbase, true);
+    act_RR_foot_pos_local = act_RR_foot_pos - CalcBodyToBaseCoordinates(*m_pModel, RobotState, base.ID, Originbase, true);
+    act_FL_foot_pos_local = act_FL_foot_pos - CalcBodyToBaseCoordinates(*m_pModel, RobotState, base.ID, Originbase, true);
+    act_FR_foot_pos_local = act_FR_foot_pos - CalcBodyToBaseCoordinates(*m_pModel, RobotState, base.ID, Originbase, true);
+ 
+    
+    
+//    cout << "EP_RL = " <<CalcBodyToBaseCoordinates(*m_pModel, RobotState, RL.ID, EP_OFFSET_RL, true) << endl;
+//    cout << "base = "  <<CalcBodyToBaseCoordinates(*m_pModel, RobotState, base.ID, Originbase, true) << endl;
+//    cout << "act_RL_foot_pos_local = " <<act_RL_foot_pos_local << endl;
+//    
+//    cout << "============================= " << endl;
+//    cout << "RL_foot_pos = " << endl << RL_foot_pos << endl;
+    
+}
+
 VectorNd CRobot::IK1(VectorNd EP)
 {
     const double L1 = 0.105;
@@ -896,42 +917,74 @@ void CRobot::WalkReady_Pos_Traj(void)
         moving_done_flag = false;
         FC_PHASE = INIT_Fc;
 
-        actual_EP = FK1(actual_pos) + base2hip_pos;
+        com_pos = init_com_pos;
+        com_ori << 0,0,0;
         
-        cout << "actual_EP = " << actual_EP << endl;
+//        actual_EP = FK1(actual_pos) + base2hip_pos;
+        
+        // Global
+        init_RL_foot_pos = act_RL_foot_pos;
+        init_RR_foot_pos = act_RR_foot_pos;
+        init_FL_foot_pos = act_FL_foot_pos;
+        init_FR_foot_pos = act_FR_foot_pos;
+        
+        RL_foot_pos = init_RL_foot_pos;
+        RR_foot_pos = init_RR_foot_pos;
+        FL_foot_pos = init_FL_foot_pos;
+        FR_foot_pos = init_FR_foot_pos;
+        
 
-        for (unsigned int i = 0; i < 12; ++i) {
-            init_EP[i] = actual_EP[i];
-            target_EP[i] = actual_EP[i];
+//        cout << "actual_EP = " << actual_EP << endl;
 
-            target_EP_vel[i] = 0;
-            target_EP_acc[i] = 0;
-        }
+//        for (unsigned int i = 0; i < 12; ++i) {
+//            init_EP[i] = actual_EP[i];
+//            target_EP[i] = actual_EP[i];
+//
+//            target_EP_vel[i] = 0;
+//            target_EP_acc[i] = 0;
+//        }
+//
+//        // waist
+//        init_pos[6] = actual_pos[6];
+//        target_pos[6] = actual_pos[6];
 
-        // waist
-        init_pos[6] = actual_pos[6];
-        target_pos[6] = actual_pos[6];
+        fc_weight = 0;
 
         ctc_cnt++;
     }
 
     else if (ctc_cnt <= (unsigned int) (home_pos_time / dt)) {
 
-        for (unsigned int i = 0; i < 12; ++i) {
-            target_EP[i] = init_EP[i] + (goal_EP[i] - init_EP[i]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-            target_EP_vel[i] = (goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2)*(sin(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-            target_EP_acc[i] = (goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2) * PI2 / (home_pos_time * 2)*(cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-            
-//            target_EP[i] = init_EP[i];// + (goal_EP[i] - init_EP[i]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-//            target_EP_vel[i] = 0;//(goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2)*(sin(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-//            target_EP_acc[i] = 0;//(goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2) * PI2 / (home_pos_time * 2)*(cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-        }
+        com_pos = init_com_pos;
+        com_ori << 0,0,0;
+        
+        RL_foot_pos = init_RL_foot_pos + (goal_RL_foot_pos - init_RL_foot_pos)/ 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+        RR_foot_pos = init_RR_foot_pos + (goal_RR_foot_pos - init_RR_foot_pos)/ 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+        FL_foot_pos = init_FL_foot_pos + (goal_FL_foot_pos - init_FL_foot_pos)/ 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+        FR_foot_pos = init_FR_foot_pos + (goal_FR_foot_pos - init_FR_foot_pos)/ 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+        
+        
+//        for (unsigned int i = 0; i < 12; ++i) {
+//            
+//            target_EP[i] = init_EP[i] + (goal_EP[i] - init_EP[i]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//            
+//            
+////            target_EP[i] = init_EP[i] + (goal_EP[i] - init_EP[i]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+////            target_EP_vel[i] = (goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2)*(sin(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+////            target_EP_acc[i] = (goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2) * PI2 / (home_pos_time * 2)*(cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//
+//            //            target_EP[i] = init_EP[i];// + (goal_EP[i] - init_EP[i]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//            //            target_EP_vel[i] = 0;//(goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2)*(sin(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//            //            target_EP_acc[i] = 0;//(goal_EP[i] - init_EP[i]) / 2.0 * PI2 / (home_pos_time * 2) * PI2 / (home_pos_time * 2)*(cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//        }
+//
+//        // waist
+//        target_pos[6] = init_pos[6] + (0 - init_pos[6]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//
+//        kp_roll = target_kp_roll / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+//        kd_roll = target_kd_roll / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
 
-        // waist
-        target_pos[6] = init_pos[6] + (0 - init_pos[6]) / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-
-        kp_roll = target_kp_roll / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-        kd_roll = target_kd_roll / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
+        fc_weight = 1 / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
 
         ctc_cnt++;
 
@@ -950,27 +1003,81 @@ void CRobot::WalkReady_Pos_Traj(void)
     }
 
     else {
-        for (unsigned int i = 0; i < 12; ++i) {
-            target_EP[i] = goal_EP[i];
-            target_EP_vel[i] = 0;
-            target_EP_acc[i] = 0;
-//            target_EP[i] = init_EP[i];
+        
+        RL_foot_pos = goal_RL_foot_pos;
+        RR_foot_pos = goal_RR_foot_pos;
+        FL_foot_pos = goal_FL_foot_pos;
+        FR_foot_pos = goal_FR_foot_pos;
+        
+//        for (unsigned int i = 0; i < 12; ++i) {
+//            target_EP[i] = goal_EP[i];
 //            target_EP_vel[i] = 0;
 //            target_EP_acc[i] = 0;
-        }
-        // waist
-        target_pos[6] = 0;
-
-        static double tmp_tt = 0;
-        
-        des_w_dot[2] = 20*sin(PI2/(2)*tmp_tt);
-        
-        tmp_tt = tmp_tt + dt;
-        
-        
-//        if (CP_con_onoff_flag == true) {
-//            CP_Con();
+//            //            target_EP[i] = init_EP[i];
+//            //            target_EP_vel[i] = 0;
+//            //            target_EP_acc[i] = 0;
 //        }
+//        // waist
+//        target_pos[6] = 0;
+//
+//        static double tmp_tt = 0;
+//
+//        des_w_dot[2] = 0 * sin(PI2 / (2) * tmp_tt);
+//
+//        tmp_tt = tmp_tt + dt;
+
+
+        //        if (CP_con_onoff_flag == true) {
+        //            CP_Con();
+        //        }
+    }
+}
+
+void CRobot::Test_Function(void){
+    if (test_cnt == 0) {
+
+        moving_done_flag = false;
+        com_pos = init_com_pos;
+        com_ori << 0,0,0;
+        
+        init_com_pos = com_pos;
+                
+        // Global
+        RL_foot_pos = goal_RL_foot_pos;
+        RR_foot_pos = goal_RR_foot_pos;
+        FL_foot_pos = goal_FL_foot_pos;
+        FR_foot_pos = goal_FR_foot_pos;
+
+        test_cnt++;
+    }
+
+    else if (test_cnt <= (unsigned int) (home_pos_time*3 / dt)) {
+
+        com_pos = init_com_pos;
+        com_ori << 0,0,0;
+        
+        com_pos(2) = init_com_pos(2) + (goal_com_pos(2) - init_com_pos(2))/ 2.0 * (1 - cos(PI2 / (home_pos_time * 1)*(double) (test_cnt) * dt));
+        
+        RL_foot_pos = goal_RL_foot_pos;
+        RR_foot_pos = goal_RR_foot_pos;
+        FL_foot_pos = goal_FL_foot_pos;
+        FR_foot_pos = goal_FR_foot_pos;
+        
+        test_cnt++;
+
+        if (test_cnt == (unsigned int) (home_pos_time*3 / dt)) {       
+            cout << "!! Up & Down Done !!" << endl;
+            moving_done_flag = true;
+        }
+    }
+
+    else {   
+        com_pos = init_com_pos;
+                
+        RL_foot_pos = goal_RL_foot_pos;
+        RR_foot_pos = goal_RR_foot_pos;
+        FL_foot_pos = goal_FL_foot_pos;
+        FR_foot_pos = goal_FR_foot_pos;
     }
 }
 
@@ -5575,9 +5682,9 @@ void CRobot::Cal_Fc(void)
     }
 
     //    printf("Fc_RL_z = %f\n",Fc_RL_z);
-//    Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, Fc_RL_z, 0, 0, Fc_RR_z, 0, 0, Fc_FL_z, 0, 0, Fc_FR_z;
+    //    Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, Fc_RL_z, 0, 0, Fc_RR_z, 0, 0, Fc_FL_z, 0, 0, Fc_FR_z;
     //     For friction modeling
-            Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
 
 }
@@ -5629,19 +5736,19 @@ void CRobot::Cal_CP(void)
 
 void CRobot::Cal_CP2(void)
 {
-    static double CP_y_alpha = 0.07, CP_y_dot_alpha = 0.03;
-
-    natural_freq = sqrt(com_height / GRAVITY);
-
-    lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha * actual_com_pos[1];
-    lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha * actual_com_vel[1];
-
-    if (Mode == MODE_SIMULATION) {
-        CP_y = (lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot) / 15.0; // weighted CP_y
-    }
-    else {
-        CP_y = (lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot) / 5.0; // weighted CP_y
-    }
+//    static double CP_y_alpha = 0.07, CP_y_dot_alpha = 0.03;
+//
+//    natural_freq = sqrt(com_height / GRAVITY);
+//
+//    lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha * actual_com_pos[1];
+//    lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha * actual_com_vel[1];
+//
+//    if (Mode == MODE_SIMULATION) {
+//        CP_y = (lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot) / 15.0; // weighted CP_y
+//    }
+//    else {
+//        CP_y = (lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot) / 5.0; // weighted CP_y
+//    }
 
 }
 
@@ -5780,84 +5887,109 @@ void CRobot::get_zmp(void)
 
 void CRobot::Get_act_com(void)
 {
-    if (CommandFlag == GOTO_WALK_READY_POS || CommandFlag == PRONK_JUMP) {
+    // ============== Get COM Position & Orientation ============ //
 
-        if (FC_PHASE == STOP) {
-            //            cout << "1" << endl;
-            actual_com_pos[1] = -(actual_pos[0] + actual_pos[3] + actual_pos[7] + actual_pos[10]) / 4.0 * com_height;
-            actual_com_vel[1] = -(actual_vel[0] + actual_vel[3] + actual_vel[7] + actual_vel[10]) / 4.0 * com_height;
-        }
-        else if (FC_PHASE == STANCE_RRFL) {
-            actual_com_pos[1] = -(actual_pos[3] + actual_pos[7]) / 2.0 * com_height;
-            actual_com_vel[1] = -(actual_vel[3] + actual_vel[7]) / 2.0 * com_height;
-        }
-        else if (FC_PHASE == STANCE_RLFR) {
-            actual_com_pos[1] = -(actual_pos[0] + actual_pos[10]) / 2.0 * com_height;
-            actual_com_vel[1] = -(actual_vel[0] + actual_vel[10]) / 2.0 * com_height;
-        }
-    }
-
-    else if (CommandFlag == NOMAL_TROT_WALKING) {
-        if (FC_PHASE == STOP) {
-            actual_com_pos[1] = -(actual_pos[0] + actual_pos[3] + actual_pos[7] + actual_pos[10]) / 4.0 * com_height;
-            actual_com_vel[1] = -(actual_vel[0] + actual_vel[3] + actual_vel[7] + actual_vel[10]) / 4.0 * com_height;
-        }
-        else if (FC_PHASE == STANCE_RRFL) {
-            actual_com_pos[1] = -(actual_pos[3] + actual_pos[7]) / 2.0 * com_height;
-            actual_com_vel[1] = -(actual_vel[3] + actual_vel[7]) / 2.0 * com_height;
-        }
-        else if (FC_PHASE == STANCE_RLFR) {
-            actual_com_pos[1] = -(actual_pos[0] + actual_pos[10]) / 2.0 * com_height;
-            actual_com_vel[1] = -(actual_vel[0] + actual_vel[10]) / 2.0 * com_height;
-        }
-    }
-    else if (CommandFlag == FLYING_TROT_RUNNING) {
-        //    static double CP_x_alpha = 0.05, CP_x_dot_alpha = 0.003;
-        //    static double CP_y_alpha = 0.03, CP_y_dot_alpha = 0.001;
-        //
-        if (ft_cnt < 5 * ft_step_cnt + 1) {
-            natural_freq = sqrt(com_height / GRAVITY);
-
-            // roll
-            actual_com_pos[1] = -com_height * IMURoll * PI / 180 * 1.0;
-            actual_com_vel[1] = -com_height * IMURoll_dot * PI / 180 * 1.0;
-        }
-        else {
-            if (FC_PHASE == STOP) {
-                actual_com_pos[1] = -(actual_pos[0] + actual_pos[3] + actual_pos[7] + actual_pos[10]) / 4.0 * com_height;
-                actual_com_vel[1] = -(actual_vel[0] + actual_vel[3] + actual_vel[7] + actual_vel[10]) / 4.0 * com_height;
-            }
-            else if (FC_PHASE == STANCE_RRFL) {
-                actual_com_pos[1] = -(actual_pos[3] + actual_pos[7]) / 2.0 * com_height;
-                actual_com_vel[1] = -(actual_vel[3] + actual_vel[7]) / 2.0 * com_height;
-            }
-            else if (FC_PHASE == STANCE_RLFR) {
-                actual_com_pos[1] = -(actual_pos[0] + actual_pos[10]) / 2.0 * com_height;
-                actual_com_vel[1] = -(actual_vel[0] + actual_vel[10]) / 2.0 * com_height;
-            }
-        }
-
-        //
-        //    lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha*COM_y;
-        //    lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha*COM_y_dot;
-        //
-        //    CP_y = lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot;
-        //
-        ////    printf("IMURoll=%f\n",IMURoll);
-        //    
-        //    // pitch
-        //    COM_x = com_height * IMUPitch * PI / 180;
-        //    COM_x_dot = com_height * IMUPitch_dot * PI / 180;
-        //
-        //    lpf_COM_x = (1 - CP_x_alpha) * lpf_COM_x + CP_x_alpha*COM_x;
-        //    lpf_COM_x_dot = (1 - CP_x_dot_alpha) * lpf_COM_x_dot + CP_x_dot_alpha*COM_x_dot;
-        //
-        //    CP_x = lpf_COM_x + 1 / natural_freq * lpf_COM_x_dot;
-    }
-    else {
-        actual_com_pos[1] = 0;
-        actual_com_vel[1] = 0;
-    }
+            //x
+            act_com_pos[0] = com_pos[0] + com_height * IMUPitch * PI / 180;
+            act_com_vel[0] = com_height * IMUPitch_dot * PI / 180;
+            
+            // y
+            act_com_pos[1] = com_pos[1] + -com_height * IMURoll * PI / 180 * 1.0;
+            act_com_vel[1] = -com_height * IMURoll_dot * PI / 180 * 1.0;
+            
+            //z
+            act_com_pos[2] = -(act_RL_foot_pos_local[2]+act_RR_foot_pos_local[2]+act_FL_foot_pos_local[2]+act_FR_foot_pos_local[2])/4.0;
+            act_com_vel[2] = -(actual_EP_vel[2]+actual_EP_vel[5]+actual_EP_vel[8]+actual_EP_vel[11])/4.0;
+            
+            
+            
+            act_com_ori << IMURoll, IMUPitch, IMUYaw;
+            act_com_ori_dot << IMURoll_dot, IMUPitch_dot, IMUYaw_dot;
+            
+            
+            
+            
+        
+    
+    
+//    if (CommandFlag == GOTO_WALK_READY_POS || CommandFlag == PRONK_JUMP) {
+//
+//        if (FC_PHASE == STOP) {
+//            //            cout << "1" << endl;
+//            actual_com_pos[1] = -(actual_pos[0] + actual_pos[3] + actual_pos[7] + actual_pos[10]) / 4.0 * com_height;
+//            actual_com_vel[1] = -(actual_vel[0] + actual_vel[3] + actual_vel[7] + actual_vel[10]) / 4.0 * com_height;
+//        }
+//        else if (FC_PHASE == STANCE_RRFL) {
+//            actual_com_pos[1] = -(actual_pos[3] + actual_pos[7]) / 2.0 * com_height;
+//            actual_com_vel[1] = -(actual_vel[3] + actual_vel[7]) / 2.0 * com_height;
+//        }
+//        else if (FC_PHASE == STANCE_RLFR) {
+//            actual_com_pos[1] = -(actual_pos[0] + actual_pos[10]) / 2.0 * com_height;
+//            actual_com_vel[1] = -(actual_vel[0] + actual_vel[10]) / 2.0 * com_height;
+//        }
+//    }
+//
+//    else if (CommandFlag == NOMAL_TROT_WALKING) {
+//        if (FC_PHASE == STOP) {
+//            actual_com_pos[1] = -(actual_pos[0] + actual_pos[3] + actual_pos[7] + actual_pos[10]) / 4.0 * com_height;
+//            actual_com_vel[1] = -(actual_vel[0] + actual_vel[3] + actual_vel[7] + actual_vel[10]) / 4.0 * com_height;
+//        }
+//        else if (FC_PHASE == STANCE_RRFL) {
+//            actual_com_pos[1] = -(actual_pos[3] + actual_pos[7]) / 2.0 * com_height;
+//            actual_com_vel[1] = -(actual_vel[3] + actual_vel[7]) / 2.0 * com_height;
+//        }
+//        else if (FC_PHASE == STANCE_RLFR) {
+//            actual_com_pos[1] = -(actual_pos[0] + actual_pos[10]) / 2.0 * com_height;
+//            actual_com_vel[1] = -(actual_vel[0] + actual_vel[10]) / 2.0 * com_height;
+//        }
+//    }
+//    else if (CommandFlag == FLYING_TROT_RUNNING) {
+//        //    static double CP_x_alpha = 0.05, CP_x_dot_alpha = 0.003;
+//        //    static double CP_y_alpha = 0.03, CP_y_dot_alpha = 0.001;
+//        //
+//        if (ft_cnt < 5 * ft_step_cnt + 1) {
+//            natural_freq = sqrt(com_height / GRAVITY);
+//
+//            // roll
+//            actual_com_pos[1] = -com_height * IMURoll * PI / 180 * 1.0;
+//            actual_com_vel[1] = -com_height * IMURoll_dot * PI / 180 * 1.0;
+//        }
+//        else {
+//            if (FC_PHASE == STOP) {
+//                actual_com_pos[1] = -(actual_pos[0] + actual_pos[3] + actual_pos[7] + actual_pos[10]) / 4.0 * com_height;
+//                actual_com_vel[1] = -(actual_vel[0] + actual_vel[3] + actual_vel[7] + actual_vel[10]) / 4.0 * com_height;
+//            }
+//            else if (FC_PHASE == STANCE_RRFL) {
+//                actual_com_pos[1] = -(actual_pos[3] + actual_pos[7]) / 2.0 * com_height;
+//                actual_com_vel[1] = -(actual_vel[3] + actual_vel[7]) / 2.0 * com_height;
+//            }
+//            else if (FC_PHASE == STANCE_RLFR) {
+//                actual_com_pos[1] = -(actual_pos[0] + actual_pos[10]) / 2.0 * com_height;
+//                actual_com_vel[1] = -(actual_vel[0] + actual_vel[10]) / 2.0 * com_height;
+//            }
+//        }
+//
+//        //
+//        //    lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha*COM_y;
+//        //    lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha*COM_y_dot;
+//        //
+//        //    CP_y = lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot;
+//        //
+//        ////    printf("IMURoll=%f\n",IMURoll);
+//        //    
+//        //    // pitch
+//        //    COM_x = com_height * IMUPitch * PI / 180;
+//        //    COM_x_dot = com_height * IMUPitch_dot * PI / 180;
+//        //
+//        //    lpf_COM_x = (1 - CP_x_alpha) * lpf_COM_x + CP_x_alpha*COM_x;
+//        //    lpf_COM_x_dot = (1 - CP_x_dot_alpha) * lpf_COM_x_dot + CP_x_dot_alpha*COM_x_dot;
+//        //
+//        //    CP_x = lpf_COM_x + 1 / natural_freq * lpf_COM_x_dot;
+//    }
+//    else {
+//        actual_com_pos[1] = 0;
+//        actual_com_vel[1] = 0;
+//    }
 }
 
 void CRobot::Damping_con(void)
@@ -5888,103 +6020,104 @@ void CRobot::Damping_con(void)
 
     target_pos_with_con = target_pos + target_pos_offset;
 }
+
 void CRobot::Cal_JFc(void)
 {
-    const double alpha = 0.002;
-    tmp_CTC_Torque = (1-alpha)*tmp_CTC_Torque + (alpha)*CTC_Torque;
-    
-    Fc2 = (J_A*M_term.inverse()*J_A.transpose()).inverse()*(J_A*M_term.inverse()*(S_mat.transpose()*tmp_CTC_Torque - C_term - G_term) + dJdQ);  
-    
-    const double max_Fc_z = -20;
-    const double min_Fc_z = -800;
-    
-    if(Fc2(7) > abs(Fc2(9))*0.6/sqrt(2)){
-        Fc2(7) = abs(Fc2(9))*0.6/sqrt(2);
-    }
-    else if(Fc2(7) < -abs(Fc2(9))*0.6/sqrt(2)){
-        Fc2(7) = -abs(Fc2(9))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(8) > abs(Fc2(9))*0.6/sqrt(2)){
-        Fc2(8) = abs(Fc2(9))*0.6/sqrt(2);
-    }
-    else if(Fc2(8) < -abs(Fc2(9))*0.6/sqrt(2)){
-        Fc2(8) = -abs(Fc2(9))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(9) > max_Fc_z){
-        Fc2(9) = max_Fc_z;
-    }
-    else if(Fc2(9) < min_Fc_z){
-        Fc2(9) = min_Fc_z;
-    }
-    
-    if(Fc2(10) > abs(Fc2(12))*0.6/sqrt(2)){
-        Fc2(10) = abs(Fc2(12))*0.6/sqrt(2);
-    }
-    else if(Fc2(10) < -abs(Fc2(12))*0.6/sqrt(2)){
-        Fc2(10) = -abs(Fc2(12))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(11) > abs(Fc2(12))*0.6/sqrt(2)){
-        Fc2(11) = abs(Fc2(12))*0.6/sqrt(2);
-    }
-    else if(Fc2(11) < -abs(Fc2(12))*0.6/sqrt(2)){
-        Fc2(11) = -abs(Fc2(12))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(12) > max_Fc_z){
-        Fc2(12) = max_Fc_z;
-    }
-    else if(Fc2(12) < min_Fc_z){
-        Fc2(12) = min_Fc_z;
-    }
-    
-    if(Fc2(13) > abs(Fc2(15))*0.6/sqrt(2)){
-        Fc2(13) = abs(Fc2(15))*0.6/sqrt(2);
-    }
-    else if(Fc2(13) < -abs(Fc2(15))*0.6/sqrt(2)){
-        Fc2(13) = -abs(Fc2(15))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(14) > abs(Fc2(15))*0.6/sqrt(2)){
-        Fc2(14) = abs(Fc2(15))*0.6/sqrt(2);
-    }
-    else if(Fc2(14) < -abs(Fc2(15))*0.6/sqrt(2)){
-        Fc2(14) = -abs(Fc2(15))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(15) > max_Fc_z){
-        Fc2(15) = max_Fc_z;
-    }
-    else if(Fc2(15) < min_Fc_z){
-        Fc2(15) = min_Fc_z;
-    }
-    
-    if(Fc2(16) > abs(Fc2(18))*0.6/sqrt(2)){
-        Fc2(16) = abs(Fc2(18))*0.6/sqrt(2);
-    }
-    else if(Fc2(16) < -abs(Fc2(18))*0.6/sqrt(2)){
-        Fc2(16) = -abs(Fc2(18))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(17) > abs(Fc2(18))*0.6/sqrt(2)){
-        Fc2(17) = abs(Fc2(18))*0.6/sqrt(2);
-    }
-    else if(Fc2(17) < -abs(Fc2(18))*0.6/sqrt(2)){
-        Fc2(17) = -abs(Fc2(18))*0.6/sqrt(2);
-    }
-    
-    if(Fc2(18) > max_Fc_z){
-        Fc2(18) = max_Fc_z;
-    }
-    else if(Fc2(18) < min_Fc_z){
-        Fc2(18) = min_Fc_z;
-    }
-
-    cout << "Fc2 = " << Fc2.transpose() << endl << endl ;
-    
-    JFc = J_A.transpose() * (Fc2);
+//    const double alpha = 0.002;
+//    tmp_CTC_Torque = (1 - alpha) * tmp_CTC_Torque + (alpha) * CTC_Torque;
+//
+//    Fc2 = (J_A * M_term.inverse() * J_A.transpose()).inverse()*(J_A * M_term.inverse()*(S_mat.transpose() * tmp_CTC_Torque - C_term - G_term) + dJdQ);
+//
+//    const double max_Fc_z = -20;
+//    const double min_Fc_z = -800;
+//
+//    if (Fc2(7) > abs(Fc2(9))*0.6 / sqrt(2)) {
+//        Fc2(7) = abs(Fc2(9))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(7) < -abs(Fc2(9))*0.6 / sqrt(2)) {
+//        Fc2(7) = -abs(Fc2(9))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(8) > abs(Fc2(9))*0.6 / sqrt(2)) {
+//        Fc2(8) = abs(Fc2(9))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(8) < -abs(Fc2(9))*0.6 / sqrt(2)) {
+//        Fc2(8) = -abs(Fc2(9))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(9) > max_Fc_z) {
+//        Fc2(9) = max_Fc_z;
+//    }
+//    else if (Fc2(9) < min_Fc_z) {
+//        Fc2(9) = min_Fc_z;
+//    }
+//
+//    if (Fc2(10) > abs(Fc2(12))*0.6 / sqrt(2)) {
+//        Fc2(10) = abs(Fc2(12))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(10) < -abs(Fc2(12))*0.6 / sqrt(2)) {
+//        Fc2(10) = -abs(Fc2(12))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(11) > abs(Fc2(12))*0.6 / sqrt(2)) {
+//        Fc2(11) = abs(Fc2(12))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(11) < -abs(Fc2(12))*0.6 / sqrt(2)) {
+//        Fc2(11) = -abs(Fc2(12))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(12) > max_Fc_z) {
+//        Fc2(12) = max_Fc_z;
+//    }
+//    else if (Fc2(12) < min_Fc_z) {
+//        Fc2(12) = min_Fc_z;
+//    }
+//
+//    if (Fc2(13) > abs(Fc2(15))*0.6 / sqrt(2)) {
+//        Fc2(13) = abs(Fc2(15))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(13) < -abs(Fc2(15))*0.6 / sqrt(2)) {
+//        Fc2(13) = -abs(Fc2(15))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(14) > abs(Fc2(15))*0.6 / sqrt(2)) {
+//        Fc2(14) = abs(Fc2(15))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(14) < -abs(Fc2(15))*0.6 / sqrt(2)) {
+//        Fc2(14) = -abs(Fc2(15))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(15) > max_Fc_z) {
+//        Fc2(15) = max_Fc_z;
+//    }
+//    else if (Fc2(15) < min_Fc_z) {
+//        Fc2(15) = min_Fc_z;
+//    }
+//
+//    if (Fc2(16) > abs(Fc2(18))*0.6 / sqrt(2)) {
+//        Fc2(16) = abs(Fc2(18))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(16) < -abs(Fc2(18))*0.6 / sqrt(2)) {
+//        Fc2(16) = -abs(Fc2(18))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(17) > abs(Fc2(18))*0.6 / sqrt(2)) {
+//        Fc2(17) = abs(Fc2(18))*0.6 / sqrt(2);
+//    }
+//    else if (Fc2(17) < -abs(Fc2(18))*0.6 / sqrt(2)) {
+//        Fc2(17) = -abs(Fc2(18))*0.6 / sqrt(2);
+//    }
+//
+//    if (Fc2(18) > max_Fc_z) {
+//        Fc2(18) = max_Fc_z;
+//    }
+//    else if (Fc2(18) < min_Fc_z) {
+//        Fc2(18) = min_Fc_z;
+//    }
+//
+//    cout << "Fc2 = " << Fc2.transpose() << endl << endl;
+//
+//    JFc = J_A.transpose() * (Fc2);
 }
 
 
