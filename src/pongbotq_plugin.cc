@@ -482,6 +482,14 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         cout << "============= [CTRLMODE_WALK_READY] ==========" << endl;
 
         PongBotQ.ctc_cnt = 0;
+        
+        PongBotQ.com_pos = PongBotQ.init_com_pos;
+        PongBotQ.com_vel << 0, 0, 0;
+        PongBotQ.base_pos = PongBotQ.com_pos + PongBotQ.base_offset;
+        PongBotQ.base_vel << 0, 0, 0;
+        PongBotQ.base_ori << 0, 0, 0;
+        PongBotQ.base_ori_dot << 0, 0, 0;
+        
 
 //        for (unsigned int i = 0; i < 13; ++i) {
 //            //                    PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
@@ -614,17 +622,12 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         
     case TEST_FLAG:
 //        printf("===========================================\n");
-//        PongBotQ.get_zmp();
         PongBotQ.StateUpdate();
         PongBotQ.Test_Function();
         PongBotQ.Get_Opt_F();
         PongBotQ.ComputeTorqueControl();
         break;
-        
-
     }
-
-    //    Print();
 
     jointController();
 
@@ -632,39 +635,11 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     ROSMsgPublish2();
 }
 
-//void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg)
-//{
-////    PongBotQ.ControlMode = msg->data;
-//}
-//
-//void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg)
-//{
-////    PongBotQ.tmp_moving_speed2 = msg->data;
-////    PongBotQ.des_theta = msg->data * D2R;
-//    
-////    PongBotQ.tmp_y_moving_speed = msg->data;
-//}
-//
-//void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Int32Ptr &msg)
-//{
-////    PongBotQ.sub_ctrl_flag = (int) (msg->data);
-//}
-//
-//void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Int32Ptr &msg)
-//{
-////    PongBotQ.CP_con_onoff_flag = (int) (msg->data);
-//}
-//
-//void gazebo::PongBotQ_plugin::Callback5(const std_msgs::Int32Ptr &msg)
-//{
-////    PongBotQ.Body_Ori_Con_onoff_flag = (int) (msg->data);
-//}
-
 void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
 {
     const double max_x_vel = 0.5;
 //    const double max_y_vel = 0.25;
-//    const double max_theta = 15*D2R;
+    const double max_yaw_ori = 5*D2R; // rad
 
     if(msg->buttons[13] == true){
         // ========= [Walk Ready] ========== //
@@ -715,6 +690,7 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
     }
     
     PongBotQ.tmp_x_moving_speed = (msg->axes[1])*max_x_vel;
+    PongBotQ.tmp_base_ori(2) = (msg->axes[2])*max_yaw_ori;
 
 /*    PongBotQ.com_pos[0] = (msg->axes[1])*0.05; // x
        PongBotQ.com_pos[1] = (msg->axes[0])*0.05; // y

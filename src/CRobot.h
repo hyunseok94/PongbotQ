@@ -198,8 +198,6 @@ typedef struct FTSennsor {
 typedef struct EndPoint {
     //RigidBodyDynamics::Math::VectorNd pos;
 
-    //ORI orientation;
-    //POS pos;
     FTS ftSensor;
 
     RigidBodyDynamics::Math::VectorNd current; //* Current values
@@ -310,6 +308,13 @@ public:
         JUMP_Fc,
         ZERO
     };
+    
+    enum Contact_Phase {
+        Four_feet = 0,
+        RLFR,
+        RRFL,
+        Zero
+    };
 
     enum Trot_Phase {
         INIT_FORWARD = 0, // 0
@@ -327,6 +332,7 @@ public:
     };
 
     enum Fc_Phase FC_PHASE;
+    enum Contact_Phase C_PHASE;
     enum Trot_Phase TROT_PHASE;
 
     //Variables
@@ -599,8 +605,9 @@ public:
     double x_moving_speed, y_moving_speed, pre_x_moving_speed, pre_y_moving_speed; // [m/s]
     VectorNd act_com_pos = VectorNd::Zero(3);
     VectorNd pre_act_com_pos = VectorNd::Zero(3);
-    VectorNd act_com_vel = VectorNd::Zero(3);
+    VectorNd tmp_base_ori = VectorNd::Zero(3);
     double tmp_x_moving_speed, tmp_y_moving_speed;
+    VectorNd act_com_vel = VectorNd::Zero(3);
     double x_step = 0; //step_time*moving_speed/2.0;
     double x_fsp = 0; //fsp_time*moving_speed/2.0;
     double pre_foot_l[3]; // = [ -x_step - x_fsp,-moving_speed,0];
@@ -618,7 +625,6 @@ public:
     VectorNd Kd_vsd = VectorNd::Zero(12);
 
     Quaternion QQ;
-
 
     // =============== IMU ================ //
     double IMURoll, IMUPitch, IMUYaw;
@@ -676,6 +682,7 @@ public:
     VectorNd base_vel = VectorNd::Zero(3); 
     VectorNd act_base_vel = VectorNd::Zero(3); 
     VectorNd base_ori = VectorNd::Zero(3); 
+    VectorNd pre_base_ori = VectorNd::Zero(3); 
     VectorNd act_base_ori = VectorNd::Zero(3); 
     VectorNd base_ori_dot = VectorNd::Zero(3); 
     VectorNd act_base_ori_dot = VectorNd::Zero(3);
@@ -740,6 +747,11 @@ public:
     VectorNd RR_foot_pos = VectorNd::Zero(3);
     VectorNd FL_foot_pos = VectorNd::Zero(3);
     VectorNd FR_foot_pos = VectorNd::Zero(3);
+    
+    VectorNd RL_foot_pos_local_offset = VectorNd::Zero(3);
+    VectorNd RR_foot_pos_local_offset = VectorNd::Zero(3);
+    VectorNd FL_foot_pos_local_offset = VectorNd::Zero(3);
+    VectorNd FR_foot_pos_local_offset = VectorNd::Zero(3);
     
     VectorNd pre_RL_foot_pos = VectorNd::Zero(3);
     VectorNd pre_RR_foot_pos = VectorNd::Zero(3);
@@ -877,7 +889,7 @@ public:
     double ft_time2;
     int  ft_cnt, ft_step_cnt, ft_ready_cnt, ft_finish_cnt;
     int  ft_cnt2;
-    double des_theta;
+//    double des_theta;
     int turn_mode, turn_cnt;
     double turn_xl_EP, turn_yl_EP, turn_xr_EP, turn_yr_EP;
     
