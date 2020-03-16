@@ -921,6 +921,7 @@ public:
     int walk_ready_cnt = 2000;
     double walk_ready_time = 2;
     
+    
     VectorNd global_foot_center   = VectorNd::Zero(3,1);
     
 
