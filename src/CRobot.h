@@ -240,13 +240,14 @@ public:
     void Cal_Fc(void);
     void Cal_Fc2(void);
     void Flying_Trot_Traj(void);
-//    void ballistics(double flight_time, double landing_height, double take_off_speed);
+    //    void ballistics(double flight_time, double landing_height, double take_off_speed);
     void Torque_off(void);
     void Cal_CP(void);
     void Cal_CP2(void);
     void Trot_Walking(void);
     void Trot_Walking2(void);
     void Trot_Walking3(void);
+    void Trot_Walking4(void);
     void Get_gain(void);
     void Trot_Walking_Traj_First(unsigned int i);
     void Trot_Walking_Traj(unsigned int i);
@@ -266,16 +267,17 @@ public:
     void SF_Flying_Trot_Z_Traj_Gen(void);
     void COM_Flying_Trot_Z_Traj_Gen(void);
     void CP_Con(void);
-//    void CP_foot_step_planner(VectorNd init_foot_l_3d, VectorNd init_foot_r_3d);
+    //    void CP_foot_step_planner(VectorNd init_foot_l_3d, VectorNd init_foot_r_3d);
     void CP_foot_traj_gen();
     void check_CP(void);
     void CP_Con_TW(void);
     void Body_Ori_Con(void);
-    void Body_Ori_Con2(void);
+    void Base_Ori_Con2(void);
     void One_Step_Standing_Jump(void);
     void Jump_COM_Z_Traj_Gen(double h0, double t[4]);
     void Get_act_com(void);
     void Damping_con(void);
+    void Damping_con2(void);
     void COM_FT_X_Traj_Gen(void);
     void COM_FT_Z_Traj_Gen(void);
     void SF_FT_X_Traj_Gen(void);
@@ -297,8 +299,13 @@ public:
     void Get_Opt_F(void);
     VectorNd Get_COM(VectorNd base, VectorNd q);
     void osqp_init(void);
+    void TW_COM_Traj_Gen(void);
+    void TW_SF_Traj_Gen(void);
+    void Get_CP(void);
 
-//VectorNd FK1(VectorNd q);    
+    //    void Get_CP(void);
+
+    //VectorNd FK1(VectorNd q);    
 
     enum Fc_Phase {
         INIT_Fc = 0,
@@ -308,7 +315,7 @@ public:
         JUMP_Fc,
         ZERO
     };
-    
+
     enum Contact_Phase {
         Four_feet = 0,
         RLFR,
@@ -354,7 +361,7 @@ public:
     RigidBodyDynamics::Math::VectorNd BaseVel;
     RigidBodyDynamics::Math::VectorNd JointAngle;
     RigidBodyDynamics::Math::VectorNd JointVel;
-    
+
     VectorNd pd_con_joint = VectorNd::Zero(19);
     VectorNd pd_con_task = VectorNd::Zero(19);
 
@@ -366,14 +373,14 @@ public:
     VectorNd JFc = VectorNd::Zero(19);
     VectorNd tmp_CTC_Torque = VectorNd::Zero(19);
 
-//    VectorNd EP_RL = Vector3d(0, 0, 0);
-//    VectorNd EP_RR = Vector3d(0, 0, 0);
-//    VectorNd EP_FL = Vector3d(0, 0, 0);
-//    VectorNd EP_FR = Vector3d(0, 0, 0);
+    //    VectorNd EP_RL = Vector3d(0, 0, 0);
+    //    VectorNd EP_RR = Vector3d(0, 0, 0);
+    //    VectorNd EP_FL = Vector3d(0, 0, 0);
+    //    VectorNd EP_FR = Vector3d(0, 0, 0);
 
-    double L3_x = 0;//0.025516;
-    double L3_y = 0;//0.0;
-    double L3_z = 0.309;//0.304515;
+    double L3_x = 0; //0.025516;
+    double L3_y = 0; //0.0;
+    double L3_z = 0.309; //0.304515;
 
     VectorNd EP_OFFSET_RL = Vector3d(-L3_x, L3_y, -L3_z);
     VectorNd EP_OFFSET_RR = Vector3d(-L3_x, L3_y, -L3_z);
@@ -403,10 +410,10 @@ public:
     VectorNd target_acc = VectorNd::Zero(13);
     VectorNd pre_target_pos = VectorNd::Zero(13);
     VectorNd pre_target_vel = VectorNd::Zero(13);
-    
-//    VectorNd target_q2 = VectorNd::Zero(13);
+
+    //    VectorNd target_q2 = VectorNd::Zero(13);
     VectorNd base_pos_ori = VectorNd::Zero(6);
-    
+
 
     VectorNd target_tor = VectorNd::Zero(13);
 
@@ -456,73 +463,73 @@ public:
     VectorNd EP_vel_err = VectorNd::Zero(12);
 
     VectorNd init_target_pos = VectorNd::Zero(13);
-    
+
     VectorNd RL_base2hip_pos = VectorNd::Zero(3);
     VectorNd RR_base2hip_pos = VectorNd::Zero(3);
     VectorNd FL_base2hip_pos = VectorNd::Zero(3);
     VectorNd FR_base2hip_pos = VectorNd::Zero(3);
-    
+
     VectorNd tar_init_RL_foot_pos = VectorNd::Zero(3);
     VectorNd tar_init_RR_foot_pos = VectorNd::Zero(3);
     VectorNd tar_init_FL_foot_pos = VectorNd::Zero(3);
     VectorNd tar_init_FR_foot_pos = VectorNd::Zero(3);
-    
+
     VectorNd base2hip_pos = VectorNd::Zero(12);
     VectorNd init_RL_foot_pos_local = VectorNd::Zero(3);
     VectorNd init_RR_foot_pos_local = VectorNd::Zero(3);
     VectorNd init_FL_foot_pos_local = VectorNd::Zero(3);
     VectorNd init_FR_foot_pos_local = VectorNd::Zero(3);
-    
+
     VectorNd tar_RL_foot_pos_local = VectorNd::Zero(3);
     VectorNd tar_RR_foot_pos_local = VectorNd::Zero(3);
     VectorNd tar_FL_foot_pos_local = VectorNd::Zero(3);
     VectorNd tar_FR_foot_pos_local = VectorNd::Zero(3);
-    
+
     VectorNd act_RL_foot_pos_local = VectorNd::Zero(3);
     VectorNd act_RR_foot_pos_local = VectorNd::Zero(3);
     VectorNd act_FL_foot_pos_local = VectorNd::Zero(3);
     VectorNd act_FR_foot_pos_local = VectorNd::Zero(3);
-    
+
     VectorNd act_RL_foot_pos = VectorNd::Zero(3);
     VectorNd act_RR_foot_pos = VectorNd::Zero(3);
     VectorNd act_FL_foot_pos = VectorNd::Zero(3);
     VectorNd act_FR_foot_pos = VectorNd::Zero(3);
-    
-//    VectorNd goal_RL_foot_pos = VectorNd::Zero(3);
-//    VectorNd goal_RR_foot_pos = VectorNd::Zero(3);
-//    VectorNd goal_FL_foot_pos = VectorNd::Zero(3);
-//    VectorNd goal_FR_foot_pos = VectorNd::Zero(3);
-    
-    
+
+    //    VectorNd goal_RL_foot_pos = VectorNd::Zero(3);
+    //    VectorNd goal_RR_foot_pos = VectorNd::Zero(3);
+    //    VectorNd goal_FL_foot_pos = VectorNd::Zero(3);
+    //    VectorNd goal_FR_foot_pos = VectorNd::Zero(3);
+
+
     VectorNd des_x_2dot = VectorNd::Zero(3);
     VectorNd des_w_dot = VectorNd::Zero(3);
-    
+
     double _m;
     MatrixNd _I_g = MatrixNd::Zero(3, 3);
     MatrixNd _A = MatrixNd::Zero(6, 12);
-    MatrixNd p_com_oross_pro = MatrixNd::Zero(3,12);
+    MatrixNd p_com_oross_pro = MatrixNd::Zero(3, 12);
     VectorNd _g = VectorNd::Zero(3);
     VectorNd _b = VectorNd::Zero(6);
     MatrixNd _C = MatrixNd::Identity(12, 12);
     VectorNd _d_u = VectorNd::Zero(12);
     VectorNd _d_l = VectorNd::Zero(12);
     VectorNd _c = VectorNd::Zero(4);
-    int contact_num = 4;
-    
+    int contact_num;
+
     // weight
     MatrixNd _S = MatrixNd::Identity(6, 6);
     MatrixNd _W = MatrixNd::Identity(12, 12);
-    double _alpha = 0.01;
-    
+    double _alpha = 0.000001;
+
     MatrixNd _P = MatrixNd::Zero(12, 12);
     VectorNd _q = VectorNd::Zero(12);
-    
-    
+
+
     double fx_max, fx_min;
     double fy_max, fy_min;
     double fz_max, fz_min;
-    
-    
+
+
     // =============== Flag Define ================ //
     bool moving_done_flag;
     bool home_init_flag = true;
@@ -542,11 +549,12 @@ public:
     bool get_CP_flag, CP_check_flag;
     bool get_cp_done_flag;
     bool CP_move_done_flag;
-    int Body_Ori_Con_onoff_flag;
+    int Base_Ori_Con_onoff_flag;
     bool turn_start_flag;
     bool first_jump_flag;
     bool T_RL_on_flag, T_RR_on_flag, T_FL_on_flag, T_FR_on_flag;
     bool ft_ready_flag, ft_finish_flag;
+    bool cp_con_on_flag;
 
 
     unsigned int ctc_cnt = 0, ctc_cnt2 = 0;
@@ -570,24 +578,24 @@ public:
 
     // =============== Time ================ //
     // 3Hz
-//    double dsp_time = 0.25, fsp_time = 0.1;
-//    double step_time = dsp_time + fsp_time;
-//    int dsp_cnt = 250, fsp_cnt = 100;
-//    int step_cnt = dsp_cnt + fsp_cnt;
+    //    double dsp_time = 0.25, fsp_time = 0.1;
+    //    double step_time = dsp_time + fsp_time;
+    //    int dsp_cnt = 250, fsp_cnt = 100;
+    //    int step_cnt = dsp_cnt + fsp_cnt;
 
     // 4Hz
-//    double dsp_time = 0.20, fsp_time = 0.05;
-//    double step_time = dsp_time + fsp_time;
-//    int dsp_cnt = 200, fsp_cnt = 50;
-//    int step_cnt = dsp_cnt + fsp_cnt;
+    //    double dsp_time = 0.20, fsp_time = 0.05;
+    //    double step_time = dsp_time + fsp_time;
+    //    int dsp_cnt = 200, fsp_cnt = 50;
+    //    int step_cnt = dsp_cnt + fsp_cnt;
 
-    double dsp_time = 0.22, fsp_time = 0.05;
-	double step_time = dsp_time + fsp_time;
-	int dsp_cnt = 220, fsp_cnt = 50;
-	int step_cnt = dsp_cnt + fsp_cnt;
-    
-    int stride_cnt = step_cnt*2;
-    
+    double dsp_time = 0.20, fsp_time = 0.07; //0.07
+    double step_time = dsp_time + fsp_time;
+    int dsp_cnt = 200, fsp_cnt = 70; //70;
+    int step_cnt = dsp_cnt + fsp_cnt;
+
+//    int stride_cnt = step_cnt * 2;
+
     // =============== Trajectory ================ //
     double tmp_time = 0, tmp_time2 = 0;
     double z_f1[6], z_f2[6], z_f3[6], z_s1[6], z_s2[6], z_s3[6], z_final1[6];
@@ -608,6 +616,9 @@ public:
     VectorNd tmp_base_ori = VectorNd::Zero(3);
     double tmp_x_moving_speed, tmp_y_moving_speed;
     VectorNd act_com_vel = VectorNd::Zero(3);
+    VectorNd act_com_vel2 = VectorNd::Zero(2);
+    VectorNd act_com_pos2 = VectorNd::Zero(2);
+    VectorNd lpf_act_com_vel = VectorNd::Zero(3);
     double x_step = 0; //step_time*moving_speed/2.0;
     double x_fsp = 0; //fsp_time*moving_speed/2.0;
     double pre_foot_l[3]; // = [ -x_step - x_fsp,-moving_speed,0];
@@ -640,7 +651,7 @@ public:
     double w1, w2;
 
 
-    
+
     double foot_height;
     double com_height;
     double z1[6], z2[6], z3[6];
@@ -648,128 +659,147 @@ public:
     double x1[6], x2[6], x3[6], x4[6], x5[6];
     double y1[6], y2[6], y3[6], y4[6], y5[6];
     double walk_time, dsp_t1, dsp_t2;
-    
+
     // ============== Preview ============= //
     unsigned int preview_cnt = 1000;
-    
+
     double Gi = 0;
-    VectorNd Gx = VectorNd::Zero(3);   
+    VectorNd Gx = VectorNd::Zero(3);
     VectorNd Gp = VectorNd::Zero(1000);
-    
+
     MatrixNd AA = MatrixNd::Zero(3, 3);
     VectorNd BB = VectorNd::Zero(3);
     VectorNd CC = VectorNd::Zero(3);
-    
-    double pv_Gp[1000],pv_Gx[3],pv_Gi[1];
-    
-//    VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
+
+    double pv_Gp[1000], pv_Gx[3], pv_Gi[1];
+
+    //    VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd com_vel = VectorNd::Zero(3); // x,y,z
-//    VectorNd com_ori = VectorNd::Zero(3); // roll,pitch,yaw
-//    VectorNd pre_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
-//    VectorNd com_ori_dot = VectorNd::Zero(3); // roll,pitch,yaw
-//    VectorNd act_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
-//    VectorNd act_com_ori_dot = VectorNd::Zero(3); // roll,pitch,yaw
+    //    VectorNd com_ori = VectorNd::Zero(3); // roll,pitch,yaw
+    //    VectorNd pre_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
+    //    VectorNd com_ori_dot = VectorNd::Zero(3); // roll,pitch,yaw
+    //    VectorNd act_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
+    //    VectorNd act_com_ori_dot = VectorNd::Zero(3); // roll,pitch,yaw
     VectorNd base_ori_quat = VectorNd::Zero(4); // roll,pitch,yaw
     VectorNd old_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd old_com_vel = VectorNd::Zero(3); // x,y,z
     VectorNd target_com_vel = VectorNd::Zero(3); // x,y,z
     VectorNd target_com_acc = VectorNd::Zero(3); // x,y,z
-    
+
     VectorNd base_pos = VectorNd::Zero(3); // x,y,z
-    VectorNd act_base_pos = VectorNd::Zero(3); 
-    VectorNd base_vel = VectorNd::Zero(3); 
-    VectorNd act_base_vel = VectorNd::Zero(3); 
-    VectorNd base_ori = VectorNd::Zero(3); 
-    VectorNd pre_base_ori = VectorNd::Zero(3); 
-    VectorNd act_base_ori = VectorNd::Zero(3); 
-    VectorNd base_ori_dot = VectorNd::Zero(3); 
+    VectorNd act_base_pos = VectorNd::Zero(3);
+    VectorNd base_vel = VectorNd::Zero(3);
+    VectorNd act_base_vel = VectorNd::Zero(3);
+    VectorNd pre_act_com_vel = VectorNd::Zero(3);
+    VectorNd base_ori = VectorNd::Zero(3);
+    VectorNd pre_base_ori = VectorNd::Zero(3);
+    VectorNd act_base_ori = VectorNd::Zero(3);
+    VectorNd base_ori_dot = VectorNd::Zero(3);
     VectorNd act_base_ori_dot = VectorNd::Zero(3);
-//    VectorNd pre_base_ori = VectorNd::Zero(3);
-//    VectorNd actual_com_pos = VectorNd::Zero(3); // x,y,z
-//    VectorNd actual_com_vel = VectorNd::Zero(3); // x,y,z
-//    VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
-    
+    VectorNd act_base_ori_dot_w = VectorNd::Zero(3);
+    VectorNd pre_act_base_ori_dot = VectorNd::Zero(3);
+    VectorNd tmp_act_base_ori_dot = VectorNd::Zero(3);
+
+
+
+    MatrixNd lpf_base_alpha = MatrixNd::Identity(3, 3);
+
+    //    VectorNd pre_base_ori = VectorNd::Zero(3);
+    //    VectorNd actual_com_pos = VectorNd::Zero(3); // x,y,z
+    //    VectorNd actual_com_vel = VectorNd::Zero(3); // x,y,z
+    //    VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
+
     VectorNd local_RL_foot_pos = VectorNd::Zero(3);
     VectorNd local_RR_foot_pos = VectorNd::Zero(3);
     VectorNd local_FL_foot_pos = VectorNd::Zero(3);
     VectorNd local_FR_foot_pos = VectorNd::Zero(3);
-    
-    MatrixNd foot_l_2d = MatrixNd::Zero(5,2);
-    MatrixNd foot_r_2d = MatrixNd::Zero(5,2);
-    MatrixNd pre_foot_l_2d = MatrixNd::Zero(5,2);
-    MatrixNd pre_foot_r_2d = MatrixNd::Zero(5,2);
+
+    MatrixNd foot_l_2d = MatrixNd::Zero(5, 2);
+    MatrixNd foot_r_2d = MatrixNd::Zero(5, 2);
+    MatrixNd pre_foot_l_2d = MatrixNd::Zero(5, 2);
+    MatrixNd pre_foot_r_2d = MatrixNd::Zero(5, 2);
     VectorNd final_foot_l_2d = VectorNd::Zero(2);
     VectorNd final_foot_r_2d = VectorNd::Zero(2);
-    MatrixNd zmp_ref_array = MatrixNd::Zero(preview_cnt,2);
+    MatrixNd zmp_ref_array = MatrixNd::Zero(preview_cnt, 2);
     VectorNd XX = VectorNd::Zero(3);
     VectorNd X_new = VectorNd::Zero(3);
     VectorNd Y_new = VectorNd::Zero(3);
-    VectorNd zmp_ref_old = VectorNd::Zero(2,1);
-        
+    VectorNd zmp_ref_old = VectorNd::Zero(2, 1);
+
     VectorNd cp_RL_foot_pos = VectorNd::Zero(3);
     VectorNd cp_RR_foot_pos = VectorNd::Zero(3);
     VectorNd cp_FL_foot_pos = VectorNd::Zero(3);
     VectorNd cp_FR_foot_pos = VectorNd::Zero(3);
-    
+
     VectorNd init_cp_RL_foot_pos = VectorNd::Zero(3);
     VectorNd init_cp_RR_foot_pos = VectorNd::Zero(3);
     VectorNd init_cp_FL_foot_pos = VectorNd::Zero(3);
     VectorNd init_cp_FR_foot_pos = VectorNd::Zero(3);
-    
+
     VectorNd tmp_cp_RL_foot_pos = VectorNd::Zero(3);
     VectorNd tmp_cp_RR_foot_pos = VectorNd::Zero(3);
     VectorNd tmp_cp_FL_foot_pos = VectorNd::Zero(3);
     VectorNd tmp_cp_FR_foot_pos = VectorNd::Zero(3);
-    
-    MatrixNd com_x_array = MatrixNd::Zero(preview_cnt,3);
+
+    MatrixNd com_x_array = MatrixNd::Zero(preview_cnt, 3);
     VectorNd zmp_x_array = VectorNd::Zero(preview_cnt);
     double zmp_x, zmp_y, lpf_zmp_x, old_lpf_zmp_x;
-    VectorNd sum_e = VectorNd::Zero(2,1);
-    VectorNd pre_err = VectorNd::Zero(2,1);
-    VectorNd pre_sum_p = VectorNd::Zero(2,1);
-    VectorNd zmp_ref = VectorNd::Zero(2,1);
+    VectorNd sum_e = VectorNd::Zero(2, 1);
+    VectorNd pre_err = VectorNd::Zero(2, 1);
+    VectorNd pre_sum_p = VectorNd::Zero(2, 1);
+    VectorNd zmp_ref = VectorNd::Zero(2, 1);
 
     VectorNd init_com_pos = VectorNd::Zero(3);
     VectorNd goal_com_pos = VectorNd::Zero(3);
-    
+
     VectorNd init_base_pos = VectorNd::Zero(3);
     VectorNd init_base_ori = VectorNd::Zero(3);
-    
-    
+
+
     VectorNd init_RL_foot_pos = VectorNd::Zero(3);
     VectorNd init_RR_foot_pos = VectorNd::Zero(3);
     VectorNd init_FL_foot_pos = VectorNd::Zero(3);
     VectorNd init_FR_foot_pos = VectorNd::Zero(3);
-    
+
     VectorNd RL_foot_pos = VectorNd::Zero(3);
     VectorNd RR_foot_pos = VectorNd::Zero(3);
     VectorNd FL_foot_pos = VectorNd::Zero(3);
     VectorNd FR_foot_pos = VectorNd::Zero(3);
-    
+
+    VectorNd RL_cp_foot_pos = VectorNd::Zero(3);
+    VectorNd RR_cp_foot_pos = VectorNd::Zero(3);
+    VectorNd FL_cp_foot_pos = VectorNd::Zero(3);
+    VectorNd FR_cp_foot_pos = VectorNd::Zero(3);
+
     VectorNd RL_foot_pos_local_offset = VectorNd::Zero(3);
     VectorNd RR_foot_pos_local_offset = VectorNd::Zero(3);
     VectorNd FL_foot_pos_local_offset = VectorNd::Zero(3);
     VectorNd FR_foot_pos_local_offset = VectorNd::Zero(3);
     
+//    VectorNd RL_foot_pos_local_offset2 = VectorNd::Zero(3);
+//    VectorNd RR_foot_pos_local_offset2 = VectorNd::Zero(3);
+//    VectorNd FL_foot_pos_local_offset2 = VectorNd::Zero(3);
+//    VectorNd FR_foot_pos_local_offset2 = VectorNd::Zero(3);
+
     VectorNd pre_RL_foot_pos = VectorNd::Zero(3);
     VectorNd pre_RR_foot_pos = VectorNd::Zero(3);
     VectorNd pre_FL_foot_pos = VectorNd::Zero(3);
     VectorNd pre_FR_foot_pos = VectorNd::Zero(3);
-    
+
     VectorNd RL_foot_vel = VectorNd::Zero(3);
     VectorNd RR_foot_vel = VectorNd::Zero(3);
     VectorNd FL_foot_vel = VectorNd::Zero(3);
     VectorNd FR_foot_vel = VectorNd::Zero(3);
-    
-    
+
+
     bool stop_flag = false;
     bool traj_stop_flag = true;
     int step_num = 0;
-    
+
     double cp_foot_pos_y, tmp_cp_foot_pos_y, target_cp_foot_pos_y;
-    
+
     // =============== flying trot parameters ================= //
     double ts, tf;
     int ts_cnt, tf_cnt;
@@ -777,99 +807,101 @@ public:
     double swing_foot_height;
     double c_com_z1[6], c_com_z2[6], c_com_z3[6], c_com_z4[6];
     double c_com_x1[6], c_com_x2[6], c_com_x3[6], c_com_x4[6], c_com_x5[6];
+    double c_com_y1[6], c_com_y2[6], c_com_y3[6], c_com_y4[6], c_com_y5[6];
     double c_sf_z1[6], c_sf_z2[6], c_sf_z3[6], c_sf_z4[6];
     double c_sf_x1[6], c_sf_x2[6], c_sf_x3[6], c_sf_x4[6], c_sf_x5[6];
-    
-    
+    double c_sf_y1[6], c_sf_y2[6], c_sf_y3[6], c_sf_y4[6], c_sf_y5[6];
+
+
     // ============================ //
-    
-    MatrixNd C_I_roll=MatrixNd::Zero(3,3);
-    MatrixNd C_I_pitch=MatrixNd::Zero(3,3);
-    
-    MatrixNd RL_C_I_HP=MatrixNd::Zero(3,3);
-    MatrixNd RL_C_HP_HR=MatrixNd::Zero(3,3);
-    MatrixNd RL_C_HR_KN=MatrixNd::Zero(3,3);
-    MatrixNd RL_C_KN_TIP=MatrixNd::Zero(3,3);
-    
-    MatrixNd RR_C_I_HP=MatrixNd::Zero(3,3);
-    MatrixNd RR_C_HP_HR=MatrixNd::Zero(3,3);
-    MatrixNd RR_C_HR_KN=MatrixNd::Zero(3,3);
-    MatrixNd RR_C_KN_TIP=MatrixNd::Zero(3,3);
-    
-    MatrixNd FL_C_I_HP=MatrixNd::Zero(3,3);
-    MatrixNd FL_C_HP_HR=MatrixNd::Zero(3,3);
-    MatrixNd FL_C_HR_KN=MatrixNd::Zero(3,3);
-    MatrixNd FL_C_KN_TIP=MatrixNd::Zero(3,3);
-    
-    MatrixNd FR_C_I_HP=MatrixNd::Zero(3,3);
-    MatrixNd FR_C_HP_HR=MatrixNd::Zero(3,3);
-    MatrixNd FR_C_HR_KN=MatrixNd::Zero(3,3);
-    MatrixNd FR_C_KN_TIP=MatrixNd::Zero(3,3);
-    
-    MatrixNd Rot_x = MatrixNd::Zero(3,3);
-    MatrixNd Rot_y = MatrixNd::Zero(3,3);
-    MatrixNd Rot_z = MatrixNd::Zero(3,3);
-    
-    MatrixNd Kp_x = MatrixNd::Zero(3,3);
-    MatrixNd Kd_x = MatrixNd::Zero(3,3);
-    MatrixNd Kp_w = MatrixNd::Zero(3,3);
-    MatrixNd Kd_w = MatrixNd::Zero(3,3);
-    
-    VectorNd p_base2body_com = VectorNd::Zero(4,1);
-    VectorNd p_RL_hp_com     = VectorNd::Zero(4,1);
-    VectorNd p_RL_thigh_com  = VectorNd::Zero(4,1);
-    VectorNd p_RL_calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_RR_hp_com     = VectorNd::Zero(4,1);
-    VectorNd p_RR_thigh_com  = VectorNd::Zero(4,1);
-    VectorNd p_RR_calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_FL_hp_com     = VectorNd::Zero(4,1);
-    VectorNd p_FL_thigh_com  = VectorNd::Zero(4,1);
-    VectorNd p_FL_calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_FR_hp_com     = VectorNd::Zero(4,1);
-    VectorNd p_FR_thigh_com  = VectorNd::Zero(4,1);
-    VectorNd p_FR_calf_com   = VectorNd::Zero(4,1);
-    
-    MatrixNd R_w2base_R = MatrixNd::Zero(4,4);
-    MatrixNd R_w2base_P = MatrixNd::Zero(4,4);
-    MatrixNd R_w2base_Y = MatrixNd::Zero(4,4);
-    MatrixNd R_w2base = MatrixNd::Zero(4,4);
-    MatrixNd T_w2base = MatrixNd::Zero(4,4);
-    MatrixNd TR_RL_base2hp = MatrixNd::Zero(4,4);
-    MatrixNd TR_RL_hp2thigh = MatrixNd::Zero(4,4);
-    MatrixNd TR_RL_thigh2calf = MatrixNd::Zero(4,4);
-    MatrixNd TR_RR_base2hp = MatrixNd::Zero(4,4);
-    MatrixNd TR_RR_hp2thigh = MatrixNd::Zero(4,4);
-    MatrixNd TR_RR_thigh2calf = MatrixNd::Zero(4,4);
-    MatrixNd TR_FL_base2hp = MatrixNd::Zero(4,4);
-    MatrixNd TR_FL_hp2thigh = MatrixNd::Zero(4,4);
-    MatrixNd TR_FL_thigh2calf = MatrixNd::Zero(4,4);
-    MatrixNd TR_FR_base2hp = MatrixNd::Zero(4,4);
-    MatrixNd TR_FR_hp2thigh = MatrixNd::Zero(4,4);
-    MatrixNd TR_FR_thigh2calf = MatrixNd::Zero(4,4);
-    
-    VectorNd p_RL_base2hp_com   = VectorNd::Zero(4,1);
-    VectorNd p_RL_base2thigh_com   = VectorNd::Zero(4,1);
-    VectorNd p_RL_base2calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_RL_com   = VectorNd::Zero(4,1);
-    VectorNd p_RR_base2hp_com   = VectorNd::Zero(4,1);
-    VectorNd p_RR_base2thigh_com   = VectorNd::Zero(4,1);
-    VectorNd p_RR_base2calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_RR_com   = VectorNd::Zero(4,1);
-    VectorNd p_FL_base2hp_com   = VectorNd::Zero(4,1);
-    VectorNd p_FL_base2thigh_com   = VectorNd::Zero(4,1);
-    VectorNd p_FL_base2calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_FL_com   = VectorNd::Zero(4,1);
-    VectorNd p_FR_base2hp_com   = VectorNd::Zero(4,1);
-    VectorNd p_FR_base2thigh_com   = VectorNd::Zero(4,1);
-    VectorNd p_FR_base2calf_com   = VectorNd::Zero(4,1);
-    VectorNd p_FR_com   = VectorNd::Zero(4,1);
-    
-    VectorNd p_robot_com_from_base   = VectorNd::Zero(4,1);
-    VectorNd p_robot_com_from_w   = VectorNd::Zero(4,1);
-    VectorNd p_robot_com   = VectorNd::Zero(3,1);
-    VectorNd base_offset   = VectorNd::Zero(3,1);
-    VectorNd target_com_pos   = VectorNd::Zero(3,1);
- 
+
+    MatrixNd C_I_roll = MatrixNd::Zero(3, 3);
+    MatrixNd C_I_pitch = MatrixNd::Zero(3, 3);
+
+    MatrixNd RL_C_I_HP = MatrixNd::Zero(3, 3);
+    MatrixNd RL_C_HP_HR = MatrixNd::Zero(3, 3);
+    MatrixNd RL_C_HR_KN = MatrixNd::Zero(3, 3);
+    MatrixNd RL_C_KN_TIP = MatrixNd::Zero(3, 3);
+
+    MatrixNd RR_C_I_HP = MatrixNd::Zero(3, 3);
+    MatrixNd RR_C_HP_HR = MatrixNd::Zero(3, 3);
+    MatrixNd RR_C_HR_KN = MatrixNd::Zero(3, 3);
+    MatrixNd RR_C_KN_TIP = MatrixNd::Zero(3, 3);
+
+    MatrixNd FL_C_I_HP = MatrixNd::Zero(3, 3);
+    MatrixNd FL_C_HP_HR = MatrixNd::Zero(3, 3);
+    MatrixNd FL_C_HR_KN = MatrixNd::Zero(3, 3);
+    MatrixNd FL_C_KN_TIP = MatrixNd::Zero(3, 3);
+
+    MatrixNd FR_C_I_HP = MatrixNd::Zero(3, 3);
+    MatrixNd FR_C_HP_HR = MatrixNd::Zero(3, 3);
+    MatrixNd FR_C_HR_KN = MatrixNd::Zero(3, 3);
+    MatrixNd FR_C_KN_TIP = MatrixNd::Zero(3, 3);
+
+    MatrixNd Rot_x = MatrixNd::Zero(3, 3);
+    MatrixNd Rot_y = MatrixNd::Zero(3, 3);
+    MatrixNd Rot_z = MatrixNd::Zero(3, 3);
+
+    MatrixNd Kp_x = MatrixNd::Zero(3, 3);
+    MatrixNd Kd_x = MatrixNd::Zero(3, 3);
+    MatrixNd Kp_w = MatrixNd::Zero(3, 3);
+    MatrixNd Kd_w = MatrixNd::Zero(3, 3);
+
+    VectorNd p_base2body_com = VectorNd::Zero(4, 1);
+    VectorNd p_RL_hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_RL_thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_RL_calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_calf_com = VectorNd::Zero(4, 1);
+
+    MatrixNd R_w2base_R = MatrixNd::Zero(4, 4);
+    MatrixNd R_w2base_P = MatrixNd::Zero(4, 4);
+    MatrixNd R_w2base_Y = MatrixNd::Zero(4, 4);
+    MatrixNd R_w2base = MatrixNd::Zero(4, 4);
+    MatrixNd T_w2base = MatrixNd::Zero(4, 4);
+    MatrixNd TR_RL_base2hp = MatrixNd::Zero(4, 4);
+    MatrixNd TR_RL_hp2thigh = MatrixNd::Zero(4, 4);
+    MatrixNd TR_RL_thigh2calf = MatrixNd::Zero(4, 4);
+    MatrixNd TR_RR_base2hp = MatrixNd::Zero(4, 4);
+    MatrixNd TR_RR_hp2thigh = MatrixNd::Zero(4, 4);
+    MatrixNd TR_RR_thigh2calf = MatrixNd::Zero(4, 4);
+    MatrixNd TR_FL_base2hp = MatrixNd::Zero(4, 4);
+    MatrixNd TR_FL_hp2thigh = MatrixNd::Zero(4, 4);
+    MatrixNd TR_FL_thigh2calf = MatrixNd::Zero(4, 4);
+    MatrixNd TR_FR_base2hp = MatrixNd::Zero(4, 4);
+    MatrixNd TR_FR_hp2thigh = MatrixNd::Zero(4, 4);
+    MatrixNd TR_FR_thigh2calf = MatrixNd::Zero(4, 4);
+
+    VectorNd p_RL_base2hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_RL_base2thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_RL_base2calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_RL_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_base2hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_base2thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_base2calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_RR_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_base2hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_base2thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_base2calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_FL_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_base2hp_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_base2thigh_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_base2calf_com = VectorNd::Zero(4, 1);
+    VectorNd p_FR_com = VectorNd::Zero(4, 1);
+
+    VectorNd p_robot_com_from_base = VectorNd::Zero(4, 1);
+    VectorNd p_robot_com_from_w = VectorNd::Zero(4, 1);
+    VectorNd p_robot_com = VectorNd::Zero(3, 1);
+    VectorNd base_offset = VectorNd::Zero(3, 1);
+    VectorNd target_com_pos = VectorNd::Zero(3, 1);
+
     int CP_PHASE;
     double tmp_t, tmp_t2, tmp_t3;
     int CP_move_step;
@@ -881,20 +913,20 @@ public:
 
     double kp_roll, kd_roll;
     double target_kp_roll, target_kd_roll;
-    
+
     double BOC_Kp_roll, BOC_Ki_roll, BOC_Kp_pitch, BOC_Ki_pitch;
     double cp_foot_offset_y;
     double Kp_cp;
     double ft_time, ft_step_time;
     double ft_time2;
-    int  ft_cnt, ft_step_cnt, ft_ready_cnt, ft_finish_cnt;
-    int  ft_cnt2;
-//    double des_theta;
+    int ft_cnt, ft_step_cnt, ft_ready_cnt, ft_finish_cnt;
+    int ft_cnt2;
+    //    double des_theta;
     int turn_mode, turn_cnt;
     double turn_xl_EP, turn_yl_EP, turn_xr_EP, turn_yr_EP;
-    
+
     int js_x_vel;
-    
+
     VectorNd tmp_zmp_ref = VectorNd::Zero(2);
     double init_zmp_ref_y, pre_zmp_ref_y, tmp_final_zmp_ref_y;
     double x_dist, y_dist;
@@ -903,57 +935,80 @@ public:
     double RL_init_z, RR_init_z, FL_init_z, FR_init_z;
     double tmp_test_time;
     int tmp_phase;
-    int RL_landing_cnt, RR_landing_cnt, FL_landing_cnt ,FR_landing_cnt;
-    int RL_landing_cnt2, RR_landing_cnt2, FL_landing_cnt2 ,FR_landing_cnt2;
+    int RL_landing_cnt, RR_landing_cnt, FL_landing_cnt, FR_landing_cnt;
+    int RL_landing_cnt2, RR_landing_cnt2, FL_landing_cnt2, FR_landing_cnt2;
     VectorNd com_acc = VectorNd::Zero(3);
     int test_phase = 0;
     double tmp_para[10];
     double global_jump_flight_cnt;
-    
+
     int tw_cnt;
     double tw_time;
-    
-    double des_pitch_deg;
+
+    //    double des_pitch_deg;
 
     double fc_weight = 0;
     int test_cnt = 0;
-    
-    int walk_ready_cnt = 2000;
+
+    unsigned int walk_ready_cnt = 2000;
     double walk_ready_time = 2;
-    
-    
-    VectorNd global_foot_center   = VectorNd::Zero(3,1);
-    
+
+    double alpha_act_com_x, alpha_act_com_y;
+//    double weight_cp_x, weight_cp_y;
+    double w_cp_y1, w_cp_y2;
+    double cp_x_max, cp_x_min, cp_y_max, cp_y_min;
+    double cp_x, cp_y;
+
+    MatrixNd Rot_Mat_XYZ = MatrixNd::Zero(3, 3);
+
+    double kp_dc, kd_dc;
+
+    //    int cp_x_case, cp_y_case;
+    //    double next_cp_x, next_cp_y;
+
+    //    VectorNd global_foot_center   = VectorNd::Zero(3,1);
+
 
     // Exitflag
+
+    // Workspace structures
+    OSQPWorkspace *work;
+    OSQPSettings *settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
+    OSQPData *data = (OSQPData *) c_malloc(sizeof (OSQPData));
+
     c_int exitflag = 0;
-	c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-	c_int A_nnz = 12;
-	c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-	c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-	c_float l[12];// = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
-	c_float u[12];// = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
-	c_int n = 12;
-	c_int m = 12;
+    c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    c_int A_nnz = 12;
+    c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    c_float l[12]; // = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
+    c_float u[12]; // = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
+    c_int n = 12;
+    c_int m = 12;
 
-//	c_float q[12];
+    //	c_float q[12];
 
-	c_int P_nnz = 78;
-	c_int P_i[78] = {0,
-		0, 1,
-		0, 1, 2,
-		0, 1, 2, 3,
-		0, 1, 2, 3, 4,
-		0, 1, 2, 3, 4, 5,
-		0, 1, 2, 3, 4, 5, 6,
-		0, 1, 2, 3, 4, 5, 6, 7,
-		0, 1, 2, 3, 4, 5, 6, 7, 8,
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int P_nnz = 78;
+    c_int P_i[78] = {0,
+        0, 1,
+        0, 1, 2,
+        0, 1, 2, 3,
+        0, 1, 2, 3, 4,
+        0, 1, 2, 3, 4, 5,
+        0, 1, 2, 3, 4, 5, 6,
+        0, 1, 2, 3, 4, 5, 6, 7,
+        0, 1, 2, 3, 4, 5, 6, 7, 8,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
-	c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
- 
+    c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
+    c_float P_x[78];
+    c_float q[12];
+
+    VectorNd tmp_P_x = VectorNd::Zero(78);
+    VectorNd new_c = VectorNd::Zero(12);
+
 private:
 };
 

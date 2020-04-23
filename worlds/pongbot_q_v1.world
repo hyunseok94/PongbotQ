@@ -3,9 +3,14 @@
   <world name="pongbot_q_v1">
     <physics name="default_physics" default="0" type="ode">
       <max_step_size>0.001</max_step_size>
-      <real_time_factor>1</real_time_factor>
+
+     <real_time_factor>1</real_time_factor>
       <real_time_update_rate>1000</real_time_update_rate>
-      <ode>
+<!--
+       <real_time_factor>0.5</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
+    --> 
+ 	<ode>
         <solver>
           <type>quick</type>
           <iters>100</iters>
