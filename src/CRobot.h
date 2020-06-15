@@ -519,7 +519,7 @@ public:
     // weight
     MatrixNd _S = MatrixNd::Identity(6, 6);
     MatrixNd _W = MatrixNd::Identity(12, 12);
-    double _alpha = 0.000001;
+    double _alpha = 0.00001;
 
     MatrixNd _P = MatrixNd::Zero(12, 12);
     VectorNd _q = VectorNd::Zero(12);

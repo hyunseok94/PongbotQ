@@ -253,59 +253,6 @@
       xyz="0 1 0" />
   </joint>
   <link
-    name="FL_TIP">
-    <inertial>
-      <origin
-        xyz="0.001059 0.000153 0.006135"
-        rpy="0 0 0" />
-      <mass
-        value="0.052" />
-      <inertia
-        ixx="5E-04"
-        ixy="0"
-        ixz="0"
-        iyy="5E-04"
-        iyz="0"
-        izz="5E-04" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/FL_TIP.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.25098 0.25098 0.25098 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/FL_TIP.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="FL_TIP_JOINT"
-    type="fixed">
-    <origin
-      xyz="0.11589 0 -0.27034"
-      rpy="0 0 0" />
-    <parent
-      link="FL_CALF" />
-    <child
-      link="FL_TIP" />
-    <axis
-      xyz="0.30902 0 0.95106" />
-  </joint>
-  <link
     name="FR_HIP">
     <inertial>
       <origin
@@ -463,59 +410,6 @@
       link="FR_CALF" />
     <axis
       xyz="0 1 0" />
-  </joint>
-  <link
-    name="FR_TIP">
-    <inertial>
-      <origin
-        xyz="0.001642 0.000859 0.005946"
-        rpy="0 0 0" />
-      <mass
-        value="0.052" />
-      <inertia
-        ixx="5E-04"
-        ixy="0"
-        ixz="0"
-        iyy="5E-04"
-        iyz="0"
-        izz="5E-04" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/FR_TIP.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.50196 0.50196 0.50196 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/FR_TIP.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="FR_TIP_JOINT"
-    type="fixed">
-    <origin
-      xyz="0.11589 0 -0.27034"
-      rpy="0 0 0" />
-    <parent
-      link="FR_CALF" />
-    <child
-      link="FR_TIP" />
-    <axis
-      xyz="0.30902 0 0.95106" />
   </joint>
   <link
     name="RL_HIP">
@@ -677,59 +571,6 @@
       xyz="0 1 0" />
   </joint>
   <link
-    name="RL_TIP">
-    <inertial>
-      <origin
-        xyz="0.001412 -0.000739 0.00602"
-        rpy="0 0 0" />
-      <mass
-        value="0.052" />
-      <inertia
-        ixx="5E-04"
-        ixy="0"
-        ixz="0"
-        iyy="5E-04"
-        iyz="0"
-        izz="5E-04" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/RL_TIP.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.25098 0.25098 0.25098 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/RL_TIP.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="RL_TIP_JOINT"
-    type="fixed">
-    <origin
-      xyz="0.11589 0 -0.27034"
-      rpy="0 0 0" />
-    <parent
-      link="RL_CALF" />
-    <child
-      link="RL_TIP" />
-    <axis
-      xyz="0.30902 0 0.95106" />
-  </joint>
-  <link
     name="RR_HIP">
     <inertial>
       <origin
@@ -887,58 +728,5 @@
       link="RR_CALF" />
     <axis
       xyz="0 1 0" />
-  </joint>
-  <link
-    name="RR_TIP">
-    <inertial>
-      <origin
-        xyz="-0.002536 0.000894 -0.007418"
-        rpy="0 0 0" />
-      <mass
-        value="0.052" />
-      <inertia
-        ixx="5E-04"
-        ixy="0"
-        ixz="0"
-        iyy="5E-04"
-        iyz="0"
-        izz="5E-04" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/RR_TIP.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.25098 0.25098 0.25098 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://PONGBOT_Q_V4/meshes/RR_TIP.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="RR_TIP_JOINT"
-    type="fixed">
-    <origin
-      xyz="0.11589 0 -0.27034"
-      rpy="0 0 0" />
-    <parent
-      link="RR_CALF" />
-    <child
-      link="RR_TIP" />
-    <axis
-      xyz="0.30902 0 0.95106" />
   </joint>
 </robot>
