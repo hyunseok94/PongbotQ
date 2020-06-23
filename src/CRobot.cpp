@@ -18,11 +18,11 @@ CRobot::~CRobot()
 void CRobot::setRobotModel(Model* getModel)
 {
     Mode = MODE_SIMULATION;
-    //	Mode = MODE_ACTUAL_ROBOT;
+//    Mode = MODE_ACTUAL_ROBOT;
 
     // ============== Controller OnOff ================ //
     Base_Ori_Con_onoff_flag = false; //false; //true; //true;
-    CP_con_onoff_flag = true; //true; //false;//true;
+    CP_con_onoff_flag = false; //true; //false;//true;
     // ============== Controller OnOff End ================ //
 
     RL_base2hip_pos << -0.350, 0.115, -0.053;
@@ -35,7 +35,7 @@ void CRobot::setRobotModel(Model* getModel)
     if (Mode == MODE_SIMULATION) {
         com_height = 0.40;
         foot_height = 0.06;
-        swing_foot_height = 0.05;
+        swing_foot_height = 0.06;
 
         // global init foot position
         tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
@@ -58,27 +58,70 @@ void CRobot::setRobotModel(Model* getModel)
         //        Kp_w << 400, 0, 0, 0, 200, 0, 0, 0, 0;
         //        Kd_w << 6, 0, 0, 0, 1.0, 0, 0, 0, 0;
 
-        Kp_t << 2000, 2000, 4000,
-                2000, 2000, 4000,
-                2000, 2000, 4000,
-                2000, 2000, 4000;
-        Kd_t << 100, 100, 150,
-                100, 100, 150,
-                100, 100, 150,
-                100, 100, 150;
+        // =========== Walking ============ //
+        //        Kp_t << 2000, 2000, 4000,
+        //                2000, 2000, 4000,
+        //                2000, 2000, 4000,
+        //                2000, 2000, 4000;
+        //        Kd_t << 100, 100, 150,
+        //                100, 100, 150,
+        //                100, 100, 150,
+        //                100, 100, 150;
+        //        
+        //        Kp_x << 10, 0, 0,
+        //                0, 10, 0,
+        //                0, 0, 10;
+        //        Kd_x << 0.1, 0, 0,
+        //                0, 0.1, 0,
+        //                0, 0, 0.1;
+        //        Kp_w << 400, 0, 0,
+        //                0, 400, 0,
+        //                0, 0, 0;
+        //        Kd_w << 2, 0, 0,
+        //                0, 2.0, 0,
+        //                0, 0, 0;
 
-        Kp_x << 10, 0, 0,
-                0, 10, 0,
-                0, 0, 10;
-        Kd_x << 0.1, 0, 0,
-                0, 0.1, 0,
-                0, 0, 0.1;
-        Kp_w << 400, 0, 0,
-                0, 400, 0,
+
+
+        // =========== Walking ============ // 
+        // 10000/472
+        //  2020.06.17
+        Kp_t << 4000, 4000, 4000,
+                4000, 4000, 4000,
+                4000, 4000, 4000,
+                4000, 4000, 4000;
+        Kd_t << 300, 300, 300,
+                300, 300, 300,
+                300, 300, 300,
+                300, 300, 300;
+
+        Kp_x << 0, 0, 0,
+                0, 0, 0,
                 0, 0, 0;
-        Kd_w << 2, 0, 0,
-                0, 2.0, 0,
+        Kd_x << 0, 0, 0,
+                0, 0, 0,
                 0, 0, 0;
+        Kp_w << 0, 0, 0,
+                0, 0, 0,
+                0, 0, 0;
+        Kd_w << 0, 0, 0,
+                0, 0, 0,
+                0, 0, 0;
+        
+//        Kp_x << 1, 0, 0,
+//                0, 1, 0,
+//                0, 0, 1;
+//        Kd_x << 0.01, 0, 0,
+//                0, 0.01, 0,
+//                0, 0, 0.01;
+//        Kp_w << 1000, 0, 0,
+//                0, 100, 0,
+//                0, 0, 0;
+//        Kd_w << 5, 0, 0,
+//                0, 1, 0,
+//                0, 0, 0;
+
+
 
         //        alpha_act_com_x = 0.1, alpha_act_com_y = 0.1;
 
@@ -96,7 +139,7 @@ void CRobot::setRobotModel(Model* getModel)
     else if (Mode == MODE_ACTUAL_ROBOT) {
         com_height = 0.40;
         foot_height = 0.06;
-        //        swing_foot_height = 0.050;
+        swing_foot_height = 0.05;
 
         // global init foot position
         //        tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 + 0.03, 0.0;
@@ -146,42 +189,73 @@ void CRobot::setRobotModel(Model* getModel)
         //				80, 90, 140,
         //				80, 90, 140;
 
-        Kp_t << 2000, 2500, 3500,
-                2000, 2500, 3500,
-                2000, 2500, 3500,
-                2000, 2500, 4500;
-        Kd_t << 80, 100, 120,
-                80, 100, 120,
-                80, 100, 120,
-                80, 100, 150;
+        // 2020.06.16
+        //        Kp_t << 2000, 2500, 3500,
+        //                2000, 2500, 3500,
+        //                2000, 2500, 3500,
+        //                2000, 2500, 4500;
+        //        Kd_t << 80, 100, 120,
+        //                80, 100, 120,
+        //                80, 100, 120,
+        //                80, 100, 150;
 
+        //        Kp_x << 1, 0, 0,
+        //                0, 1, 0,
+        //                0, 0, 1;
+        //        Kd_x << 0.01, 0, 0,
+        //                0, 0.02, 0,
+        //                0, 0, 0.01;
+        //        Kp_w << 300, 0, 0,
+        //                0, 100, 0,
+        //                0, 0, 0;
+        //        Kd_w << 0.30, 0, 0,
+        //                0, 0.10, 0,
+        //                0, 0, 0;
+
+        // 2020.06.22
+//        Kp_t << 4000, 4000, 4500,
+//                4000, 4000, 4500,
+//                4000, 4000, 4500,
+//                5000, 4000, 5500;
+//        Kd_t << 150, 150, 150,
+//                150, 150, 150,
+//                150, 150, 150,
+//                170, 150, 200;
+//        
         Kp_x << 1, 0, 0,
                 0, 1, 0,
-                0, 0, 1;
+                0, 0, 20;
         Kd_x << 0.01, 0, 0,
-                0, 0.02, 0,
-                0, 0, 0.01;
-        Kp_w << 300, 0, 0,
-                0, 100, 0,
+                0, 0.01, 0,
+                0, 0, 0.20;
+        Kp_w << 400, 0, 0,
+                0, 50, 0,
                 0, 0, 0;
-        Kd_w << 0.30, 0, 0,
-                0, 0.10, 0,
+        Kd_w << 0.40, 0, 0,
+                0, 0.05, 0,
                 0, 0, 0;
+        
+        Kp_t << 4000, 4000, 3000,
+                4000, 4000, 4000,
+                4000, 4000, 3000,
+                4000, 4000, 4000;
+        Kd_t << 100, 100, 50,
+                100, 100, 80,
+                100, 100, 50,
+                100, 100, 80;
 
-
-        //        Kp_x << 0, 0, 0,
-        //                 0, 0, 0,
-        //                 0, 0, 0;
-        //         Kd_x << 0.0, 0, 0,
-        //                 0, 0.0, 0,
-        //                 0, 0, 0.0;
-        //         Kp_w << 0, 0, 0,
-        //                 0, 0, 0,
-        //                 0, 0, 0;
-        //         Kd_w << 0.0, 0, 0,
-        //                 0, 0.0, 0,
-        //                 0, 0, 0;
-
+//        Kp_x << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
+//        Kd_x << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
+//        Kp_w << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
+//        Kd_w << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
 
         //        alpha_act_com_x = 0.01, alpha_act_com_y = 0.01;
         //        weight_cp_x = 0.5, weight_cp_y = 0.9;
@@ -241,8 +315,8 @@ void CRobot::setRobotModel(Model* getModel)
     base_offset = init_base_pos - init_com_pos;
 
     cout << "base_offset = " << base_offset << endl;
-    target_com_pos << 0.0, 0.0, com_height;
-    target_com_vel << 0.0, 0.0, 0.0;
+    tar_init_com_pos << 0.0, 0.0, com_height;
+    tar_init_com_vel << 0.0, 0.0, 0.0;
 
     contact_num = 4;
 
@@ -281,52 +355,41 @@ void CRobot::setRobotModel(Model* getModel)
 
     // =============== Flying trot parameters initialize =============== //
 
-    //    ts = 0.22; //0.22; //0.25;
-    //    tf = 0.07; //0.07;
-    //    ft_step_time = ts + tf;
-    //
-    //    ts_cnt = 220; //220;
-    //    tf_cnt = 70;
-    //    ft_step_cnt = ts_cnt + tf_cnt;
-    //
-    //    h_0 = init_com_pos(2);
-    //    v_0 = 0;
-    //    a_0 = 0;
-    //
-    //    v_1 = 0.15; //0.10; //0.15;
-    //    a_1 = -GRAVITY;
-    //
-    //    h_2 = init_com_pos(2);
-    //    v_2 = -0.0; //-0.05; // -0.3
-    //    a_2 = -GRAVITY;
-    //
-    //    h_3 = init_com_pos(2);
-    //    v_3 = 0;
-    //    a_3 = 0;
-    //
-    //    h_1 = 0.5 * GRAVITY * tf * tf - v_1 * tf + h_2;
-    //
-    //    flying_trot_final_flag = false;
-    //    flying_trot_init_flag = false;
-    //    // =============== Flying trot parameters initialize END =============== //
+    ts = 0.20; //0.22; //0.25;
+    tf = 0.07; //0.07;
+    ft_step_time = ts + tf;
 
+    ts_cnt = 200; //220;
+    tf_cnt = 70;
+    ft_step_cnt = ts_cnt + tf_cnt;
+
+    h_0 = tar_init_com_pos(2);
+    v_0 = 0;
+    a_0 = 0;
+
+    v_1 = 0.05; //0.10; //0.15;
+    a_1 = -GRAVITY;
+
+    h_2 = tar_init_com_pos(2);
+    v_2 = -0.00; //-0.05; // -0.3
+    a_2 = -GRAVITY;
+
+    h_3 = tar_init_com_pos(2);
+    v_3 = 0;
+    a_3 = 0;
+
+    h_1 = 0.5 * GRAVITY * tf * tf - v_1 * tf + h_2;
+
+    //    // =============== Flying trot parameters initialize END =============== //
     moving_done_flag = true;
     walk_ready_moving_done_flag = false;
-
-    //    init_cp_RL_foot_pos << 0, 0, 0;
-    //    init_cp_RR_foot_pos << 0, 0, 0;
-    //    init_cp_FL_foot_pos << 0, 0, 0;
-    //    init_cp_FR_foot_pos << 0, 0, 0;
-    //
-    //    ft_ready_flag = false;
-    //    ft_finish_flag = false;
 
     for (unsigned int i = 0; i < 6; ++i) {
         pd_con_joint[i] = 0;
         pd_con_task[i] = 0;
     }
-    pd_con_task[6] = 0;
 
+    pd_con_task[6] = 0;
     tmp_CTC_Torque = CTC_Torque;
 
     osqp_init();
@@ -351,6 +414,7 @@ void CRobot::StateUpdate(void)
     RobotStatedot(AXIS_Yaw) = base_ori_dot(2); //base.currentYawvel;
 
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
+//    	tar_RobotState(6 + nJoint) = target_pos[nJoint];
         RobotState(6 + nJoint) = actual_pos[nJoint];
         RobotStatedot(6 + nJoint) = actual_vel[nJoint];
         RobotState2dot(6 + nJoint) = actual_acc[nJoint];
@@ -371,6 +435,8 @@ void CRobot::StateUpdate(void)
 void CRobot::ComputeTorqueControl()
 {
     // ================= Cal Jacobian ================= //
+//	cout << "1" << endl;
+
     CalcPointJacobian6D(*m_pModel, RobotState, base.ID, Originbase, J_BASE, true);
     CalcPointJacobian6D(*m_pModel, RobotState, front_body.ID, Originbase, J_FRONT_BODY, true);
     CalcPointJacobian(*m_pModel, RobotState, RL.ID, EP_OFFSET_RL, J_RL, true);
@@ -378,12 +444,22 @@ void CRobot::ComputeTorqueControl()
     CalcPointJacobian(*m_pModel, RobotState, FL.ID, EP_OFFSET_FL, J_FL, true);
     CalcPointJacobian(*m_pModel, RobotState, FR.ID, EP_OFFSET_FR, J_FR, true);
 
+ //   cout << J_RL << endl;
     J_A.block<6, 19>(0, 0) = J_BASE;
     J_A.block<1, 19>(6, 0) = J_FRONT_BODY.block<1, 19>(2, 0); // only yaw
     J_A.block<3, 19>(7, 0) = J_RL;
     J_A.block<3, 19>(10, 0) = J_RR;
     J_A.block<3, 19>(13, 0) = J_FL;
     J_A.block<3, 19>(16, 0) = J_FR;
+
+//    cout << J_RL.block(0,6,3,3) << endl;
+
+    J_RL2 << J_RL.block(0,6,3,3);
+    J_RR2 << J_RR.block(0,9,3,3);
+    J_FL2 << J_FL.block(0,13,3,3);
+    J_FR2 << J_FR.block(0,16,3,3);
+
+//    cout << J_RL2 << endl;
 
     // ================= Cal Jacobian END ================= //
 
@@ -394,14 +470,39 @@ void CRobot::ComputeTorqueControl()
     tar_RR_foot_pos_local = (RR_foot_pos + RR_cp_foot_pos - base_pos) + RR_foot_pos_local_offset;
     tar_FL_foot_pos_local = (FL_foot_pos + FL_cp_foot_pos - base_pos) + FL_foot_pos_local_offset;
     tar_FR_foot_pos_local = (FR_foot_pos + FR_cp_foot_pos - base_pos) + FR_foot_pos_local_offset;
+    
+    base_vel = com_vel;
+    
+    tar_RL_foot_vel_local = RL_foot_vel + RL_cp_foot_vel - base_vel;
+    tar_RR_foot_vel_local = RR_foot_vel + RR_cp_foot_vel - base_vel;
+    tar_FL_foot_vel_local = FL_foot_vel + FL_cp_foot_vel - base_vel;
+    tar_FR_foot_vel_local = FR_foot_vel + FR_cp_foot_vel - base_vel;
 
     target_EP << tar_RL_foot_pos_local, tar_RR_foot_pos_local, tar_FL_foot_pos_local, tar_FR_foot_pos_local;
     actual_EP << act_RL_foot_pos_local, act_RR_foot_pos_local, act_FL_foot_pos_local, act_FR_foot_pos_local;
 
-    //    Damping_con2();
+
+    target_EP_vel << tar_RL_foot_vel_local, tar_RR_foot_vel_local, tar_FL_foot_vel_local, tar_FR_foot_vel_local;
+    
+//    cout << "2" << endl;
+	target_pos = IK1(target_EP);
+
+//	cout << J_RL.inverse() << endl;
+
+    tar_RL_q_dot_local = J_RL2.inverse()*tar_RL_foot_vel_local;
+    tar_RR_q_dot_local = J_RR2.inverse()*tar_RR_foot_vel_local;
+    tar_FL_q_dot_local = J_FL2.inverse()*tar_FL_foot_vel_local;
+    tar_FR_q_dot_local = J_FR2.inverse()*tar_FR_foot_vel_local;
+
+    target_vel << tar_RL_q_dot_local, tar_RR_q_dot_local, 0 ,tar_FL_q_dot_local, tar_FR_q_dot_local;
+
+//    cout << "target_vel = " << target_vel << endl;
 
     for (unsigned int i = 0; i < 12; ++i) {
-        pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(0 - actual_EP_vel[i]); // + target_EP_offset[i];
+
+//        target_EP_vel[i] = (target_EP[i] - pre_target_EP[i]) / dt;
+
+        pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(target_EP_vel[i] - actual_EP_vel[i]); // + target_EP_offset[i];
 
         //        tmp_data1[i] = target_EP[i] - actual_EP[i];
 
@@ -409,6 +510,7 @@ void CRobot::ComputeTorqueControl()
     }
 
 
+//    pre_target_EP = target_EP;
 
     CompositeRigidBodyAlgorithm(*m_pModel, RobotState, M_term, true);
     NonlinearEffects(*m_pModel, RobotState, RobotStatedot, hatNonLinearEffects);
@@ -424,53 +526,82 @@ void CRobot::ComputeTorqueControl()
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
 
-    tmp_data2[0] = com_pos(0);
-    tmp_data2[1] = com_pos(1);
-    tmp_data2[2] = com_pos(2);
-    tmp_data2[3] = act_com_pos(0);
-    tmp_data2[4] = act_com_pos(1);
-    tmp_data2[5] = act_com_pos(2);
-
-    tmp_data2[6] = base_ori(0) * R2D; //base_pos(0);
-    tmp_data2[7] = base_ori(1) * R2D; //base_pos(1);
-    tmp_data2[8] = base_ori(2) * R2D; //base_pos(2);
-    tmp_data2[9] = act_base_ori(0) * R2D; //act_base_pos(0);
-    tmp_data2[10] = act_base_ori(1) * R2D; //act_base_pos(1);
-    tmp_data2[11] = act_base_ori(2) * R2D; //act_base_pos(2);
-
-
-    tmp_data2[12] = tar_RL_foot_pos_local(0); //RL_foot_pos(0);
-    tmp_data2[13] = tar_RL_foot_pos_local(1); //RL_foot_pos(1);
-    tmp_data2[14] = tar_RL_foot_pos_local(2); //RL_foot_pos(2);
-    tmp_data2[15] = tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
-    tmp_data2[16] = tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
-    tmp_data2[17] = tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
-
-    tmp_data1[12] = tar_FL_foot_pos_local(0);
-    tmp_data1[13] = tar_FL_foot_pos_local(1);
-    tmp_data1[14] = tar_FL_foot_pos_local(2);
-    tmp_data1[15] = tar_FR_foot_pos_local(0);
-    tmp_data1[16] = tar_FR_foot_pos_local(1);
-    tmp_data1[17] = tar_FR_foot_pos_local(2);
-
-    tmp_data2[18] = joint[6].torque;
-    tmp_data2[19] = joint[7].torque;
-    tmp_data2[20] = joint[8].torque;
-
     static int tmp_cnt5 = 0;
-    tmp_data2[21] = (double) tmp_cnt5*dt;
+    tmp_data2[0] = (double) tmp_cnt5*dt;
 
     tmp_cnt5++;
+    
+    tmp_data2[1] = com_pos(0);
+    tmp_data2[2] = com_pos(1);
+    tmp_data2[3] = com_pos(2);
+    tmp_data2[4] = act_com_pos(0);
+    tmp_data2[5] = act_com_pos(1);
+    tmp_data2[6] = act_com_pos(2);
 
-    tmp_data2[22] = com_vel(0);
-    tmp_data2[23] = com_vel(1);
-    tmp_data2[24] = com_vel(2);
-    tmp_data2[25] = act_com_vel(0);
-    tmp_data2[26] = act_com_vel(1);
-    tmp_data2[27] = act_com_vel(2);
+    tmp_data2[7] = base_ori(0) * R2D; //base_pos(0);
+    tmp_data2[8] = base_ori(1) * R2D; //base_pos(1);
+    tmp_data2[9] = base_ori(2) * R2D; //base_pos(2);
+    tmp_data2[10] = act_base_ori(0) * R2D; //act_base_pos(0);
+    tmp_data2[11] = act_base_ori(1) * R2D; //act_base_pos(1);
+    tmp_data2[12] = act_base_ori(2) * R2D; //act_base_pos(2);
 
-    tmp_data2[28] = IMURoll * R2D;
-    tmp_data2[29] = IMUPitch * R2D;
+    tmp_data2[13] = RL_foot_pos(0);//tar_RL_foot_pos_local(0); //RL_foot_pos(0);
+    tmp_data2[14] = RL_foot_pos(1);//tar_RL_foot_pos_local(1); //RL_foot_pos(1);
+    tmp_data2[15] = RL_foot_pos(2);//tar_RL_foot_pos_local(2); //RL_foot_pos(2);
+    tmp_data2[16] = RR_foot_pos(0);//tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
+    tmp_data2[17] = RR_foot_pos(1);//tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
+    tmp_data2[18] = RR_foot_pos(2);//tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
+    tmp_data2[19] = FL_foot_pos(0);//tar_RL_foot_pos_local(0); //RL_foot_pos(0);
+    tmp_data2[20] = FL_foot_pos(1);//tar_RL_foot_pos_local(1); //RL_foot_pos(1);
+    tmp_data2[21] = FL_foot_pos(2);//tar_RL_foot_pos_local(2); //RL_foot_pos(2);
+    tmp_data2[22] = FR_foot_pos(0);//tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
+    tmp_data2[23] = FR_foot_pos(1);//tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
+    tmp_data2[24] = FR_foot_pos(2);//tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
+
+    tmp_data2[25] = joint[0].torque;
+    tmp_data2[26] = joint[1].torque;
+    tmp_data2[27] = joint[2].torque;
+    
+    tmp_data2[28] = ft_phase*0.1;
+
+    
+
+//    tmp_data2[22] = com_vel(0);
+//    tmp_data2[23] = com_vel(1);
+//    tmp_data2[24] = com_vel(2);
+//    tmp_data2[25] = act_com_vel(0);
+//    tmp_data2[26] = act_com_vel(1);
+//    tmp_data2[27] = act_com_vel(2);
+//
+//    tmp_data2[28] = IMURoll * R2D;
+//    tmp_data2[29] = IMUPitch * R2D;
+
+//    tmp_data1[12] = tar_FL_foot_pos_local(0);
+//    tmp_data1[13] = tar_FL_foot_pos_local(1);
+//    tmp_data1[14] = tar_FL_foot_pos_local(2);
+//    tmp_data1[15] = tar_FR_foot_pos_local(0);
+//    tmp_data1[16] = tar_FR_foot_pos_local(1);
+//    tmp_data1[17] = tar_FR_foot_pos_local(2);
+
+//    tmp_data1[18] = target_EP_vel[0];
+//    tmp_data1[19] = target_EP_vel[1];
+//    tmp_data1[20] = target_EP_vel[2];
+
+    tmp_data1[21] = RL_foot_vel[0];//base_pos[0];
+    tmp_data1[22] = RL_foot_vel[1];
+    tmp_data1[23] = RL_foot_vel[2];
+    tmp_data1[24] = RR_foot_vel[0];//base_pos[0];
+    tmp_data1[25] = RR_foot_vel[1];
+    tmp_data1[26] = RR_foot_vel[2];
+    tmp_data1[27] = FL_foot_vel[0];//base_pos[0];
+    tmp_data1[28] = FL_foot_vel[1];
+    tmp_data1[29] = FL_foot_vel[2];
+    tmp_data1[30] = FR_foot_vel[0];//base_pos[0];
+    tmp_data1[31] = FR_foot_vel[1];
+    tmp_data1[32] = FR_foot_vel[2];
+    
+    
+    //    tmp_data1[22] = target_EP_vel[2];
 
     //    tmp_data1[12] = base_ori_dot(0);
     //    tmp_data1[13] = base_ori_dot(1);
@@ -539,10 +670,14 @@ void CRobot::osqp_init(void)
     des_x_2dot << 0, 0, 0;
     des_w_dot << 0, 0, 0;
 
-    _m = 46; //kg
-    _I_g << 1.7214, -0.0038, -0.1540,
-            -0.0038, 4.9502, -0.0006,
-            -0.1540, -0.0006, 5.1152;
+    _m = 48.5; //kg
+    //    _I_g << 1.7214, -0.0038, -0.1540,
+    //            -0.0038, 4.9502, -0.0006,
+    //            -0.1540, -0.0006, 5.1152;
+
+    _I_g << 1.7214, 0, 0,
+            0, 4.9502, 0,
+            0, 0, 5.1152;
 
     _A.block<3, 3>(0, 0) = MatrixNd::Identity(3, 3);
     _A.block<3, 3>(0, 3) = MatrixNd::Identity(3, 3);
@@ -569,7 +704,7 @@ void CRobot::osqp_init(void)
     fx_min = -100;
     fy_max = 100;
     fy_min = -100;
-    fz_max = 500;
+    fz_max = 600;
     fz_min = 0;
 
     _d_u << fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max;
@@ -785,13 +920,13 @@ VectorNd CRobot::Get_COM(VectorNd base, VectorNd q)
 
 void CRobot::Get_Opt_F(void)
 {
-    //    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
-    //            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
-    //            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
+    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
+            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
+            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
 
-    p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
-            act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
-            -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
+    //    p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
+    //            act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
+    //            -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
 
 
     _A.block<3, 12>(3, 0) = p_com_oross_pro;
@@ -859,15 +994,25 @@ void CRobot::WalkReady_Pos_Traj(void)
         contact_num = 4;
 
         // Global
+        
         init_RL_foot_pos = act_RL_foot_pos;
         init_RR_foot_pos = act_RR_foot_pos;
         init_FL_foot_pos = act_FL_foot_pos;
         init_FR_foot_pos = act_FR_foot_pos;
 
+        com_pos = init_com_pos;
+        com_vel = init_com_vel;
+        
         RL_foot_pos = init_RL_foot_pos;
         RR_foot_pos = init_RR_foot_pos;
         FL_foot_pos = init_FL_foot_pos;
         FR_foot_pos = init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
+        
 
         // waist
         init_pos[6] = actual_pos[6];
@@ -887,13 +1032,19 @@ void CRobot::WalkReady_Pos_Traj(void)
     }
 
     else if (ctc_cnt <= walk_ready_cnt) {
-        com_pos = init_com_pos; // + (target_com_pos - init_com_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
+        com_pos = init_com_pos;
+        com_vel = init_com_vel;
 
         RL_foot_pos = init_RL_foot_pos + (tar_init_RL_foot_pos - init_RL_foot_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
         RR_foot_pos = init_RR_foot_pos + (tar_init_RR_foot_pos - init_RR_foot_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
         FL_foot_pos = init_FL_foot_pos + (tar_init_FL_foot_pos - init_FL_foot_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
         FR_foot_pos = init_FR_foot_pos + (tar_init_FR_foot_pos - init_FR_foot_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
 
+        RL_foot_vel = (tar_init_RL_foot_pos - init_RL_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
+        RR_foot_vel = (tar_init_RR_foot_pos - init_RR_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
+        FL_foot_vel = (tar_init_FL_foot_pos - init_FL_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
+        FR_foot_vel = (tar_init_FR_foot_pos - init_FR_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
+        
         // waist
         target_pos[6] = init_pos[6] + (0 - init_pos[6]) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt) * dt));
 
@@ -908,12 +1059,18 @@ void CRobot::WalkReady_Pos_Traj(void)
         ctc_cnt++;
     }
     else if (ctc_cnt <= walk_ready_cnt * 2) {
-        com_pos = init_com_pos + (target_com_pos - init_com_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt - walk_ready_cnt) * dt));
-
+        com_pos = init_com_pos + (tar_init_com_pos - init_com_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt - walk_ready_cnt) * dt));
+        com_vel = (tar_init_com_pos - init_com_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (ctc_cnt - walk_ready_cnt) * dt));
+        
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         // waist
         target_pos[6] = 0;
@@ -930,12 +1087,18 @@ void CRobot::WalkReady_Pos_Traj(void)
         }
     }
     else {
-        com_pos = target_com_pos;
+        com_pos = tar_init_com_pos;
+        com_vel = tar_init_com_vel;
 
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         // waist
         target_pos[6] = 0;
@@ -948,60 +1111,72 @@ void CRobot::WalkReady_Pos_Traj(void)
     }
 }
 
+void MPC_Init(void)
+{
+    int state_num = 3;
+    int output_num = 1;
+    int input_num = 1;
+
+    double Ts = 0.15;
+    int Nc = 10;
+    int Np = 10 + 0;
+
+}
+
 void CRobot::Test_Function(void)
 {
-    if (test_cnt == 0) {
-
-        moving_done_flag = false;
-
-        com_pos = target_com_pos;
-        base_pos = com_pos + base_offset;
-
-        RL_foot_pos = tar_init_RL_foot_pos;
-        RR_foot_pos = tar_init_RR_foot_pos;
-        FL_foot_pos = tar_init_FL_foot_pos;
-        FR_foot_pos = tar_init_FR_foot_pos;
-
-        test_cnt++;
-    }
-
-    else if (test_cnt <= (unsigned int) (0.5 * 3 / dt)) {
-
-        com_pos(2) = target_com_pos(2) + (0.03) * (sin(PI2 / (0.5 * 1)*(double) (test_cnt) * dt));
-        com_vel(2) = (0.03) * (cos(PI2 / (0.5 * 1)*(double) (test_cnt) * dt));
-
-        base_pos = com_pos + base_offset;
-        base_vel = com_vel;
-
-        RL_foot_pos = tar_init_RL_foot_pos;
-        RR_foot_pos = tar_init_RR_foot_pos;
-        FL_foot_pos = tar_init_FL_foot_pos;
-        FR_foot_pos = tar_init_FR_foot_pos;
-
-        test_cnt++;
-
-        if (test_cnt == (unsigned int) (0.5 * 3 / dt)) {
-            cout << "!! Up & Down Done !!" << endl;
-            moving_done_flag = true;
-        }
-    }
-
-    else {
-        com_pos = target_com_pos;
-        com_vel(2) = 0;
-        base_pos = com_pos + base_offset;
-        base_vel = com_vel;
-
-        RL_foot_pos = tar_init_RL_foot_pos;
-        RR_foot_pos = tar_init_RR_foot_pos;
-        FL_foot_pos = tar_init_FL_foot_pos;
-        FR_foot_pos = tar_init_FR_foot_pos;
-    }
-
-    //    // waist
-    //    target_pos[6] = 0;
 
 
+    //    if (test_cnt == 0) {
+    //
+    //        moving_done_flag = false;
+    //
+    //        com_pos = tar_init_com_pos;
+    //        base_pos = com_pos + base_offset;
+    //
+    //        RL_foot_pos = tar_init_RL_foot_pos;
+    //        RR_foot_pos = tar_init_RR_foot_pos;
+    //        FL_foot_pos = tar_init_FL_foot_pos;
+    //        FR_foot_pos = tar_init_FR_foot_pos;
+    //
+    //        test_cnt++;
+    //    }
+    //
+    //    else if (test_cnt <= (unsigned int) (0.5 * 3 / dt)) {
+    //
+    //        com_pos(2) = tar_init_com_pos(2) + (0.03) * (sin(PI2 / (0.5 * 1)*(double) (test_cnt) * dt));
+    //        com_vel(2) = (0.03) * (cos(PI2 / (0.5 * 1)*(double) (test_cnt) * dt));
+    //
+    //        base_pos = com_pos + base_offset;
+    //        base_vel = com_vel;
+    //
+    //        RL_foot_pos = tar_init_RL_foot_pos;
+    //        RR_foot_pos = tar_init_RR_foot_pos;
+    //        FL_foot_pos = tar_init_FL_foot_pos;
+    //        FR_foot_pos = tar_init_FR_foot_pos;
+    //
+    //        test_cnt++;
+    //
+    //        if (test_cnt == (unsigned int) (0.5 * 3 / dt)) {
+    //            cout << "!! Up & Down Done !!" << endl;
+    //            moving_done_flag = true;
+    //        }
+    //    }
+    //
+    //    else {
+    //        com_pos = tar_init_com_pos;
+    //        com_vel(2) = 0;
+    //        base_pos = com_pos + base_offset;
+    //        base_vel = com_vel;
+    //
+    //        RL_foot_pos = tar_init_RL_foot_pos;
+    //        RR_foot_pos = tar_init_RR_foot_pos;
+    //        FL_foot_pos = tar_init_FL_foot_pos;
+    //        FR_foot_pos = tar_init_FR_foot_pos;
+    //    }
+    //
+    //    //    // waist
+    //    //    target_pos[6] = 0;
 }
 
 void CRobot::FTsensorTransformation()
@@ -1234,8 +1409,8 @@ void CRobot::Get_CP(void)
 void CRobot::Trot_Walking4(void)
 {
     static double tar_cp_x = 0, tar_cp_x2 = 0, tar_cp_y = 0, tar_cp_y2 = 0, cp_x1 = 0, cp_x2 = 0, cp_y1 = 0, cp_y2 = 0;
-    static int walking_phase = 0;
-    static int cp_phase = 0;
+    //    static int walking_phase = 0;
+    //    static int cp_phase = 0;
     //    static int cp_step_num = 0;
 
     //    Get_CP();
@@ -1251,14 +1426,19 @@ void CRobot::Trot_Walking4(void)
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
         contact_num = 4;
-
-        com_pos = target_com_pos;
-        com_vel = target_com_vel;
+        
+        com_pos = tar_init_com_pos;
+        com_vel = tar_init_com_vel;
 
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         x_moving_speed = 0;
         y_moving_speed = 0;
@@ -1267,27 +1447,37 @@ void CRobot::Trot_Walking4(void)
     }
     else if (tw_cnt < dsp_cnt) {
         // ============ First Step (STANCE_RLFR) ============= //
-        walking_phase = 0;
+        walking_phase = 1;
         tmp_t = tw_time;
 
         _c << 1, 0, 0, 1;
         contact_num = 2;
 
-        com_pos = target_com_pos;
+        com_pos = tar_init_com_pos;
+        com_vel = tar_init_com_vel;
 
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         if (tmp_t <= dsp_time / 2) {
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
+            RR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+            FL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
         }
         else {
             tmp_t2 = tmp_t - dsp_time / 2.0;
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
+            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
+            FL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
         }
     }
     else if (tw_cnt < step_cnt) {
@@ -1298,12 +1488,18 @@ void CRobot::Trot_Walking4(void)
         _c << 1, 1, 1, 1;
         contact_num = 4;
 
-        com_pos = target_com_pos;
+        com_pos = tar_init_com_pos;
+        com_vel = tar_init_com_vel;
 
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         if (tw_cnt == step_cnt - 1) {
 
@@ -1335,12 +1531,18 @@ void CRobot::Trot_Walking4(void)
         _c << 0, 1, 1, 0;
         contact_num = 2;
 
-        com_pos = target_com_pos;
+        com_pos = tar_init_com_pos;
+        com_vel = tar_init_com_vel;
 
         RL_foot_pos = pre_RL_foot_pos;
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         // =============== CP =============== //
         if (cp_phase == 0) {
@@ -1391,20 +1593,30 @@ void CRobot::Trot_Walking4(void)
         com_pos[1] = c_com_y1[5] * pow(tmp_t, 5) + c_com_y1[4] * pow(tmp_t, 4) + c_com_y1[3] * pow(tmp_t, 3) + c_com_y1[2] * pow(tmp_t, 2) + c_com_y1[1] * pow(tmp_t, 1) + c_com_y1[0];
         com_vel[0] = 5 * c_com_x1[5] * pow(tmp_t, 4) + 4 * c_com_x1[4] * pow(tmp_t, 3) + 3 * c_com_x1[3] * pow(tmp_t, 2) + 2 * c_com_x1[2] * pow(tmp_t, 1) + c_com_x1[1];
         com_vel[1] = 5 * c_com_y1[5] * pow(tmp_t, 4) + 4 * c_com_y1[4] * pow(tmp_t, 3) + 3 * c_com_y1[3] * pow(tmp_t, 2) + 2 * c_com_y1[2] * pow(tmp_t, 1) + c_com_y1[1];
+        
         RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
         RL_foot_pos[1] = pre_RL_foot_pos[1] + c_sf_y1[5] * pow(tmp_t, 5) + c_sf_y1[4] * pow(tmp_t, 4) + c_sf_y1[3] * pow(tmp_t, 3) + c_sf_y1[2] * pow(tmp_t, 2) + c_sf_y1[1] * pow(tmp_t, 1) + c_sf_y1[0];
         FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
         FR_foot_pos[1] = pre_FR_foot_pos[1] + c_sf_y1[5] * pow(tmp_t, 5) + c_sf_y1[4] * pow(tmp_t, 4) + c_sf_y1[3] * pow(tmp_t, 3) + c_sf_y1[2] * pow(tmp_t, 2) + c_sf_y1[1] * pow(tmp_t, 1) + c_sf_y1[0];
-
+        
+        RL_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t, 4) + 4*c_sf_x1[4] * pow(tmp_t, 3) + 3*c_sf_x1[3] * pow(tmp_t, 2) + 2*c_sf_x1[2] * pow(tmp_t, 1) + 1*c_sf_x1[1];
+        RL_foot_vel[1] = 5*c_sf_y1[5] * pow(tmp_t, 4) + 4*c_sf_y1[4] * pow(tmp_t, 3) + 3*c_sf_y1[3] * pow(tmp_t, 2) + 2*c_sf_y1[2] * pow(tmp_t, 1) + 1*c_sf_y1[1];
+        FR_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t, 4) + 4*c_sf_x1[4] * pow(tmp_t, 3) + 3*c_sf_x1[3] * pow(tmp_t, 2) + 2*c_sf_x1[2] * pow(tmp_t, 1) + 1*c_sf_x1[1];
+        FR_foot_vel[1] = 5*c_sf_y1[5] * pow(tmp_t, 4) + 4*c_sf_y1[4] * pow(tmp_t, 3) + 3*c_sf_y1[3] * pow(tmp_t, 2) + 2*c_sf_y1[2] * pow(tmp_t, 1) + 1*c_sf_y1[1];
+        
         if (tmp_cnt <= dsp_cnt / 2) {
             RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
             FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
+            RL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+            FR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
         }
         else {
             tmp_t2 = tmp_t - dsp_time / 2.0;
             RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
             FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-
+            RL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
+            FR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
+            
             if (tmp_cnt == dsp_cnt - 1) {
                 pre_com_pos(0) = pre_com_pos[0] + pre_x_moving_speed * (dsp_time) / 2.0 + x_moving_speed * (dsp_time) / 2.0;
                 pre_com_pos(1) = pre_com_pos[1] + pre_y_moving_speed * (dsp_time) / 2.0 + y_moving_speed * (dsp_time) / 2.0;
@@ -1440,20 +1652,29 @@ void CRobot::Trot_Walking4(void)
         com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
         com_pos[1] = pre_com_pos(1) + y_moving_speed*tmp_t;
         com_pos[2] = pre_com_pos(2);
+        
+//        com_vel = tar_init_com_vel;
 
         com_vel[0] = x_moving_speed;
         com_vel[1] = y_moving_speed;
+        com_vel[2] = tar_init_com_vel[2];
 
         RL_foot_pos = pre_RL_foot_pos;
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         if (tw_cnt == step_cnt * 2 - 1) {
 
             pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
             pre_com_pos(1) = pre_com_pos(1) + y_moving_speed*fsp_time;
             pre_com_pos(2) = com_pos(2);
+            
             pre_RL_foot_pos = RL_foot_pos;
             pre_RR_foot_pos = RR_foot_pos;
             pre_FL_foot_pos = FL_foot_pos;
@@ -1493,11 +1714,20 @@ void CRobot::Trot_Walking4(void)
         contact_num = 2;
 
         com_pos = pre_com_pos;
+        
+        com_vel[0] = x_moving_speed;
+        com_vel[1] = y_moving_speed;
+        com_vel[2] = tar_init_com_vel[2];
 
         RL_foot_pos = pre_RL_foot_pos;
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         if (cp_phase == 0) {
             tar_cp_y2 = 0;
@@ -1540,20 +1770,30 @@ void CRobot::Trot_Walking4(void)
         com_pos[1] = pre_com_pos(1) + y_moving_speed*tmp_t;
         com_vel[0] = x_moving_speed;
         com_vel[1] = y_moving_speed;
+        
         RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
         RR_foot_pos[1] = pre_RR_foot_pos[1] + c_sf_y2[5] * pow(tmp_t, 5) + c_sf_y2[4] * pow(tmp_t, 4) + c_sf_y2[3] * pow(tmp_t, 3) + c_sf_y2[2] * pow(tmp_t, 2) + c_sf_y2[1] * pow(tmp_t, 1) + c_sf_y2[0];
         FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
         FL_foot_pos[1] = pre_FL_foot_pos[1] + c_sf_y2[5] * pow(tmp_t, 5) + c_sf_y2[4] * pow(tmp_t, 4) + c_sf_y2[3] * pow(tmp_t, 3) + c_sf_y2[2] * pow(tmp_t, 2) + c_sf_y2[1] * pow(tmp_t, 1) + c_sf_y2[0];
 
+        RR_foot_vel[0] = 5*c_sf_x2[5] * pow(tmp_t, 4) + 4*c_sf_x2[4] * pow(tmp_t, 3) + 3*c_sf_x2[3] * pow(tmp_t, 2) + 2*c_sf_x2[2] * pow(tmp_t, 1) + 1*c_sf_x2[1];
+        RR_foot_vel[1] = 5*c_sf_y2[5] * pow(tmp_t, 4) + 4*c_sf_y2[4] * pow(tmp_t, 3) + 3*c_sf_y2[3] * pow(tmp_t, 2) + 2*c_sf_y2[2] * pow(tmp_t, 1) + 1*c_sf_y2[1];
+        FL_foot_vel[0] = 5*c_sf_x2[5] * pow(tmp_t, 4) + 4*c_sf_x2[4] * pow(tmp_t, 3) + 3*c_sf_x2[3] * pow(tmp_t, 2) + 2*c_sf_x2[2] * pow(tmp_t, 1) + 1*c_sf_x2[1];
+        FL_foot_vel[1] = 5*c_sf_y2[5] * pow(tmp_t, 4) + 4*c_sf_y2[4] * pow(tmp_t, 3) + 3*c_sf_y2[3] * pow(tmp_t, 2) + 2*c_sf_y2[2] * pow(tmp_t, 1) + 1*c_sf_y2[1];
+        
         if (tmp_cnt <= dsp_cnt / 2) {
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
+            RR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+            FL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
         }
         else {
             tmp_t2 = tmp_t - dsp_time / 2.0;
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-
+            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
+            FL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
+            
             if (tmp_cnt == dsp_cnt - 1) {
                 pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*dsp_time;
                 pre_com_pos(1) = pre_com_pos(1) + y_moving_speed*dsp_time;
@@ -1584,17 +1824,24 @@ void CRobot::Trot_Walking4(void)
 
         com_vel[0] = x_moving_speed;
         com_vel[1] = y_moving_speed;
+        com_vel[2] = tar_init_com_vel[2];
 
         RL_foot_pos = pre_RL_foot_pos;
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
 
         if (tw_cnt == step_cnt * 3 - 1) {
 
             pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
             pre_com_pos(1) = pre_com_pos(1) + y_moving_speed*fsp_time;
             pre_com_pos(2) = com_pos(2);
+            
             pre_RL_foot_pos = RL_foot_pos;
             pre_RR_foot_pos = RR_foot_pos;
             pre_FL_foot_pos = FL_foot_pos;
@@ -1650,6 +1897,16 @@ void CRobot::Trot_Walking4(void)
         // ============ Continuous Walking End ============== //
     }
     else {
+    	_c << 1, 1, 1, 1;
+		contact_num = 4;
+
+        com_vel = tar_init_com_vel;
+                
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
+        
         if (tw_cnt == step_cnt * 3) {
             moving_done_flag = true;
             _c << 1, 1, 1, 1;
@@ -1670,10 +1927,10 @@ void CRobot::Trot_Walking4(void)
     //    tmp_data1[21] = RR_cp_foot_pos(0);
     //    tmp_data1[22] = cp_x;
 
-    tmp_data1[23] = RL_cp_foot_pos(1);
-    tmp_data1[24] = RR_cp_foot_pos(1);
-    tmp_data1[25] = FL_cp_foot_pos(1);
-    tmp_data1[26] = FR_cp_foot_pos(1);
+//    tmp_data1[23] = RL_cp_foot_pos(1);
+//    tmp_data1[24] = RR_cp_foot_pos(1);
+//    tmp_data1[25] = FL_cp_foot_pos(1);
+//    tmp_data1[26] = FR_cp_foot_pos(1);
     //    tmp_data1[27] = cp_y;
     tmp_data1[28] = walking_phase * 0.01;
 
@@ -1831,397 +2088,6 @@ void CRobot::TW_SF_Traj_Gen(void)
 
     coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_y4);
 }
-
-//void CRobot::TW_SF_Traj_Gen(void){
-//// ============ Swing Foot Pos. ============ //
-//    static double tmp_cp_x = 0, tmp_cp_y = 0;
-//    static double tmp_cp_x2 = 0, tmp_cp_y2 = 0;
-//    double w_n = sqrt(com_height/GRAVITY)*1.0;
-//    const double alpha_act_com_x = 0.5;
-//    
-//    lpf_act_com_vel(0) = (1 - alpha_act_com_x) * lpf_act_com_vel(0) + alpha_act_com_x*act_com_vel(0);
-//    
-//    tmp_cp_x2 =  w_n*(lpf_act_com_vel(0) - com_vel(0))*2;
-//    tmp_cp_y =  0;//w_n*(act_com_vel(1) - com_vel(1));
-//    
-//    if(tmp_cp_x2 < 0.01 && tmp_cp_x2 > -0.01){
-//        tmp_cp_x = 0;
-//    }
-//    else if(tmp_cp_x2 > 0.04){
-//        tmp_cp_x = 0.04;
-//    }
-//    else if(tmp_cp_x2 < -0.04){
-//        tmp_cp_x = -0.04;
-//    }
-//    else{
-//        tmp_cp_x = tmp_cp_x2;
-//        cout << "tmp_cp_x = " << tmp_cp_x << endl;
-//    }
-//// ================= X axis ================== //
-//    // Left (First)
-//    init_x[0] = 0;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + pre_x_moving_speed * step_time + x_moving_speed * step_time + tmp_cp_x;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_x1);
-//
-//    // Right (First)
-//    init_x[0] = 0;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + x_moving_speed * step_time * 2 + tmp_cp_x;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_x2);
-//
-//    // Left (Second)
-//    init_x[0] = 0 + pre_x_moving_speed * step_time + x_moving_speed * step_time + tmp_cp_x;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + pre_x_moving_speed * step_time + x_moving_speed * step_time * 3 + tmp_cp_x;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_x3);
-//
-//    // Right (Second)
-//    init_x[0] = 0 + x_moving_speed * step_time * 2 + tmp_cp_x;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + x_moving_speed * step_time * 4 + tmp_cp_x;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_x4);
-//    
-//    // ================= Y axis ================== //
-//    
-//    // Left (First)
-//    init_x[0] = 0;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + pre_y_moving_speed * step_time + y_moving_speed * step_time + tmp_cp_y;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_y1);
-//
-//    // Right (First)
-//    init_x[0] = 0;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + y_moving_speed * step_time * 2 + tmp_cp_y;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_y2);
-//
-//    // Left (Second)
-//    init_x[0] = 0 + pre_y_moving_speed * step_time + y_moving_speed * step_time + tmp_cp_y;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + pre_y_moving_speed * step_time + y_moving_speed * step_time * 3 + tmp_cp_y;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_y3);
-//
-//    // Right (Second)
-//    init_x[0] = 0 + y_moving_speed * step_time * 2 + tmp_cp_y;
-//    init_x[1] = 0;
-//    init_x[2] = 0;
-//
-//    final_x[0] = 0 + y_moving_speed * step_time * 4 + tmp_cp_y;
-//    final_x[1] = 0;
-//    final_x[2] = 0;
-//
-//    coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_y4);
-//}
-
-//// ====================== Normal trot walking trajectory generation ===================== //
-//
-//void CRobot::Trot_Walking3(void)
-//{
-//    tw_time = (double) tw_cnt*dt;
-//
-//    //    pre_base_ori(2) = base_ori(2);
-//    base_ori(2) = tmp_base_ori(2); //pre_base_ori(2) + tmp_base_ori_dot(2)*dt;
-//
-//    //    cout << "base_ori(2) = " << base_ori(2) << endl;    
-//
-//    if (tw_cnt == 0) {
-//        // ============ Initialize ============ //
-//        moving_done_flag = false;
-//        _c << 1, 1, 1, 1;
-//        contact_num = 4;
-//
-//        com_pos = target_com_pos;
-//        com_vel = target_com_vel;
-//
-//        RL_foot_pos = tar_init_RL_foot_pos;
-//        RR_foot_pos = tar_init_RR_foot_pos;
-//        FL_foot_pos = tar_init_FL_foot_pos;
-//        FR_foot_pos = tar_init_FR_foot_pos;
-//
-//        x_moving_speed = 0;
-//
-//        TW_SF_Z_Traj_Gen();
-//
-//    }
-//    else if (tw_cnt < dsp_cnt) {
-//        // ============ First Step (STANCE_RLFR) ============= //
-//        tmp_t = tw_time;
-//
-//        _c << 1, 0, 0, 1;
-//        contact_num = 2;
-//
-//        com_pos = target_com_pos;
-//
-//        RL_foot_pos = tar_init_RL_foot_pos;
-//        RR_foot_pos = tar_init_RR_foot_pos;
-//        FL_foot_pos = tar_init_FL_foot_pos;
-//        FR_foot_pos = tar_init_FR_foot_pos;
-//
-//        if (tmp_t <= dsp_time / 2) {
-//            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//        }
-//    }
-//    else if (tw_cnt < step_cnt) {
-//        // ============ First Step (FSP) ============= //
-//        tmp_t = tw_time - dsp_time;
-//
-//        _c << 1, 1, 1, 1;
-//        contact_num = 4;
-//
-//        com_pos = target_com_pos;
-//
-//        RL_foot_pos = tar_init_RL_foot_pos;
-//        RR_foot_pos = tar_init_RR_foot_pos;
-//        FL_foot_pos = tar_init_FL_foot_pos;
-//        FR_foot_pos = tar_init_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt - 1) {
-//
-//            pre_x_moving_speed = x_moving_speed;
-//            x_moving_speed = tmp_x_moving_speed;
-//
-//            pre_com_pos = com_pos;
-//            pre_RL_foot_pos = RL_foot_pos;
-//            pre_RR_foot_pos = RR_foot_pos;
-//            pre_FL_foot_pos = FL_foot_pos;
-//            pre_FR_foot_pos = FR_foot_pos;
-//
-//            TW_COM_SF_X_Traj_Gen();
-//
-//            cout << "======test=====" << endl;
-//        }
-//    }
-//    else if (tw_cnt < step_cnt + dsp_cnt) {
-//        // ============ Second Step (STANCE_RRFL) ============ //
-//        // ============ Continuous Walking Start ============= //
-//        tmp_t = tw_time - step_time;
-//        tmp_cnt = tw_cnt - step_cnt;
-//
-//        _c << 0, 1, 1, 0;
-//        contact_num = 2;
-//
-//        com_pos = target_com_pos;
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        com_pos[0] = c_com_x1[5] * pow(tmp_t, 5) + c_com_x1[4] * pow(tmp_t, 4) + c_com_x1[3] * pow(tmp_t, 3) + c_com_x1[2] * pow(tmp_t, 2) + c_com_x1[1] * pow(tmp_t, 1) + c_com_x1[0];
-//        com_vel[0] = 5 * c_com_x1[5] * pow(tmp_t, 4) + 4 * c_com_x1[4] * pow(tmp_t, 3) + 3 * c_com_x1[3] * pow(tmp_t, 2) + 2 * c_com_x1[2] * pow(tmp_t, 1) + c_com_x1[1];
-//        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
-//        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
-//
-//        if (tmp_cnt <= dsp_cnt / 2) {
-//            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//
-//            if (tmp_cnt == dsp_cnt - 1) {
-//                pre_com_pos(0) = pre_com_pos[0] + pre_x_moving_speed * (dsp_time) / 2.0 + x_moving_speed * (dsp_time) / 2.0;
-//                pre_com_pos(1) = com_pos(1);
-//                pre_com_pos(2) = com_pos(2);
-//
-//                pre_RL_foot_pos = RL_foot_pos;
-//                pre_RR_foot_pos = RR_foot_pos;
-//                pre_FL_foot_pos = FL_foot_pos;
-//                pre_FR_foot_pos = FR_foot_pos;
-//            }
-//        }
-//    }
-//    else if (tw_cnt < step_cnt * 2) {
-//        // ============ Second Step (FSP) ============= //
-//        _c << 1, 1, 1, 1;
-//        contact_num = 4;
-//
-//        tmp_t = tw_time - step_time - dsp_time;
-//
-//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-//        com_pos[1] = pre_com_pos(1);
-//        com_pos[2] = pre_com_pos(2);
-//
-//        com_vel[0] = x_moving_speed;
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt * 2 - 1) {
-//
-//            pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
-//            pre_com_pos(1) = com_pos(1);
-//            pre_com_pos(2) = com_pos(2);
-//            pre_RL_foot_pos = RL_foot_pos;
-//            pre_RR_foot_pos = RR_foot_pos;
-//            pre_FL_foot_pos = FL_foot_pos;
-//            pre_FR_foot_pos = FR_foot_pos;
-//        }
-//    }
-//    else if (tw_cnt < step_cnt * 2 + dsp_cnt) {
-//        // ============ Third Step (STANCE_RLFR) ============= //
-//        tmp_t = tw_time - step_time * 2;
-//        tmp_cnt = tw_cnt - step_cnt * 2;
-//
-//        _c << 1, 0, 0, 1;
-//        contact_num = 2;
-//
-//        com_pos = pre_com_pos;
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-//        com_vel[0] = x_moving_speed;
-//        RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
-//        FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
-//
-//        if (tmp_cnt <= dsp_cnt / 2) {
-//            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//
-//            if (tmp_cnt == dsp_cnt - 1) {
-//                pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*dsp_time;
-//                pre_com_pos(1) = com_pos(1);
-//                pre_com_pos(2) = com_pos(2);
-//                pre_RL_foot_pos = RL_foot_pos;
-//                pre_RR_foot_pos = RR_foot_pos;
-//                pre_FL_foot_pos = FL_foot_pos;
-//                pre_FR_foot_pos = FR_foot_pos;
-//            }
-//        }
-//    }
-//    else if (tw_cnt < step_cnt * 3) {
-//        // ============ Third Step (FSP) ============= //
-//        _c << 1, 1, 1, 1;
-//        contact_num = 4;
-//
-//        tmp_t = tw_time - step_time * 2 - dsp_time;
-//
-//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-//        com_pos[1] = pre_com_pos(1);
-//        com_pos[2] = pre_com_pos(2);
-//
-//        com_vel[0] = x_moving_speed;
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt * 3 - 1) {
-//
-//            pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
-//            pre_com_pos(1) = com_pos(1);
-//            pre_com_pos(2) = com_pos(2);
-//            pre_RL_foot_pos = RL_foot_pos;
-//            pre_RR_foot_pos = RR_foot_pos;
-//            pre_FL_foot_pos = FL_foot_pos;
-//            pre_FR_foot_pos = FR_foot_pos;
-//
-//            pre_x_moving_speed = x_moving_speed;
-//            x_moving_speed = tmp_x_moving_speed;
-//
-//            TW_COM_SF_X_Traj_Gen();
-//
-//            if (sub_ctrl_flag == false) {
-//                tw_cnt = step_cnt - 1;
-//            }
-//            else {
-//                // =============== COM =============== //
-//                init_x[0] = pre_com_pos[0];
-//                init_x[1] = x_moving_speed;
-//                init_x[2] = 0;
-//
-//                final_x[0] = pre_com_pos[0] + x_moving_speed * (dsp_time) / 2.0;
-//                final_x[1] = 0;
-//                final_x[2] = 0;
-//
-//                coefficient_5thPoly(init_x, final_x, dsp_time, c_com_x2);
-//
-//                // =============== Swing Foot =============== //
-//                // Left (Second)
-//                init_x[0] = 0;
-//                init_x[1] = 0;
-//                init_x[2] = 0;
-//
-//                final_x[0] = 0 + x_moving_speed * step_time;
-//                final_x[1] = 0;
-//                final_x[2] = 0;
-//
-//                coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_x5);
-//            }
-//        }
-//
-//        // ============ Continuous Walking End ============== //
-//    }
-//    else {
-//        if (tw_cnt == step_cnt * 3) {
-//            moving_done_flag = true;
-//        }
-//    }
-//
-//    base_pos = com_pos + base_offset;
-//
-//    TW_Turning_Traj_Gen();
-//
-//    target_pos[6] = 0; //goal_pos[6];
-//
-//    tw_cnt++;
-//}
 
 void CRobot::TW_Turning_Traj_Gen(void)
 {
@@ -2446,620 +2312,6 @@ void CRobot::TW_Turning_Traj_Gen(void)
     // ======= Turning trajectory generation  END ======= //
 }
 
-
-//void CRobot::TW_Turning_Traj_Gen(void)
-//{
-//    // ======= Turning trajectory generation ======= //
-//    //    printf("================= [TW] Turning trajectory generation ============== \n");
-//
-//    const double turn_l = 0.4134; // sqrt(0.35^2 + (0.115 + 0.105)^2)
-//    const double x1 = 0.35, y1 = 0.22, turn_theta1 = 57.8477 * D2R;
-//    static double x2 = 0.35, y2 = 0.22, turn_theta2 = 0;
-//    static double del_x = 0, del_y = 0;
-//    static double target_theta = turn_theta1;
-//    static double tmp_target_theta = 0;
-//
-//    // turn left
-//    if ((des_theta > 0.01) * D2R && (tw_cnt == 2 * step_cnt)) {
-//        if (turn_mode == 0) {
-//            turn_start_flag = true;
-//            turn_mode = 1;
-//
-//            target_theta = -des_theta / 2.0; // [rad]
-//
-//            printf("[left] target_theta = %f\n", target_theta);
-//        }
-//    }
-//    else if ((des_theta < -0.01) * D2R && (tw_cnt == step_cnt)) {
-//        if (turn_mode == 0) {
-//            turn_start_flag = true;
-//            turn_mode = 3;
-//
-//            target_theta = des_theta / 2.0; // [rad]
-//
-//            printf("[right] target_theta = %f\n", target_theta);
-//        }
-//    }
-//
-//    if (turn_start_flag == true) {
-//        if (turn_mode == 1) {
-//            if (turn_cnt <= dsp_cnt) {
-//
-//                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1 + target_theta;
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//
-//            if (FC_PHASE == STANCE_RRFL) {
-//                turn_mode = 2;
-//                turn_cnt = 0;
-//            }
-//        }
-//        else if (turn_mode == 2) {
-//            if (turn_cnt <= dsp_cnt) {
-//
-//                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//
-//            }
-//
-//            if (turn_cnt == step_cnt - 1) { //FC_PHASE == STOP
-//                // Initialization
-//                turn_mode = 0;
-//                turn_cnt = 0;
-//                turn_start_flag = false;
-//            }
-//        }
-//        else if (turn_mode == 3) {//) && (ctc_cnt2 < preview_cnt*2)){
-//            if (turn_cnt <= dsp_cnt) {
-//                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                //                            printf("[2] tmp_target_theta = %f\n",tmp_target_theta*R2D);
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1 + target_theta;
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//
-//            }
-//
-//            //            printf("FC_PHASE = %d\n",FC_PHASE);
-//            if (FC_PHASE == STANCE_RLFR) {
-//                turn_mode = 4;
-//                turn_cnt = 0;
-//            }
-//        }
-//        else if (turn_mode == 4) {
-//            if (turn_cnt <= dsp_cnt) {
-//
-//                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//
-//            if (turn_cnt == step_cnt - 1) { // FC_PHASE == STOP
-//                // Initialization
-//                turn_mode = 0;
-//                turn_cnt = 0;
-//                turn_start_flag = false;
-//            }
-//        }
-//    }
-//    else {
-//        turn_mode = 0;
-//        turn_cnt = 0;
-//
-//        turn_xl_EP = 0;
-//        turn_yl_EP = 0;
-//        turn_xr_EP = 0;
-//        turn_yr_EP = 0;
-//    }
-//
-//    // ======= Turning trajectory generation  END ======= //
-//}
-
-//void CRobot::Trot_Walking2(void)
-//{
-//    tw_time = (double) tw_cnt*dt;
-//
-//    //    tmp_x_moving_speed = 0.2;
-//
-//    if (tw_cnt == 0) {
-//        // ============ Initialize ============ //
-//        //        printf("[0] Initialize\n");
-//        FC_PHASE = STANCE_RLFR;
-//
-//        moving_done_flag = false;
-//
-//        com_acc[2] = 0;
-//
-//        com_pos = init_com_pos;
-//        RL_foot_pos = init_RL_foot_pos;
-//        RR_foot_pos = init_RR_foot_pos;
-//        FL_foot_pos = init_FL_foot_pos;
-//        FR_foot_pos = init_FR_foot_pos;
-//
-//        old_com_pos = init_com_pos;
-//
-//        x_moving_speed = 0;
-//
-//        SF_TW_Z_Traj_Gen();
-//
-//    }
-//    else if (tw_cnt < dsp_cnt) {
-//        //        printf("[1] First Step (STANCE_RLFR)\n");
-//        // ============ First Step (STANCE_RLFR) ============= //
-//        FC_PHASE = STANCE_RLFR;
-//        tmp_t = tw_time;
-//
-//        com_pos[0] = init_com_pos(0);
-//        com_pos[1] = init_com_pos(1);
-//        com_pos[2] = init_com_pos(2);
-//
-//        RL_foot_pos = init_RL_foot_pos;
-//
-//        RR_foot_pos[0] = init_RR_foot_pos[0];
-//        RR_foot_pos[1] = init_RR_foot_pos[1];
-//
-//        FL_foot_pos[0] = init_FL_foot_pos[0];
-//        FL_foot_pos[1] = init_FL_foot_pos[1];
-//
-//        FR_foot_pos = init_FR_foot_pos;
-//
-//        if (tw_cnt <= dsp_cnt / 2) {
-//            RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//        }
-//        //        printf("RR_foot_pos[2] = %f\n",RR_foot_pos[2]);
-//    }
-//    else if (tw_cnt < step_cnt) {
-//        //        printf("[2] First Step (FSP)\n");
-//        // ============ First Step (FSP) ============= //
-//        FC_PHASE = STOP;
-//        tmp_t = tw_time - dsp_time;
-//
-//        com_pos[0] = init_com_pos(0);
-//        com_pos[1] = init_com_pos(1);
-//        com_pos[2] = init_com_pos(2);
-//
-//        RL_foot_pos = init_RL_foot_pos;
-//        RR_foot_pos = init_RR_foot_pos;
-//        FL_foot_pos = init_FL_foot_pos;
-//        FR_foot_pos = init_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt - 1) {
-//
-//            pre_x_moving_speed = x_moving_speed;
-//            x_moving_speed = tmp_x_moving_speed;
-//
-//            pre_com_pos = com_pos;
-//            pre_RL_foot_pos = RL_foot_pos;
-//            pre_RR_foot_pos = RR_foot_pos;
-//            pre_FL_foot_pos = FL_foot_pos;
-//            pre_FR_foot_pos = FR_foot_pos;
-//
-//            COM_SF_TW_X_Traj_Gen();
-//        }
-//
-//    }
-//    else if (tw_cnt < step_cnt + dsp_cnt) {
-//        //        printf("[3] Second Step (STANCE_RRFL)\n");
-//        // ============ Second Step (STANCE_RRFL) ============= //
-//        // ============ Continuous Walking Start ============== //
-//        FC_PHASE = STANCE_RRFL;
-//        tmp_t = tw_time - step_time;
-//        tmp_cnt = tw_cnt - step_cnt;
-//
-//        com_pos[0] = c_com_x1[5] * pow(tmp_t, 5) + c_com_x1[4] * pow(tmp_t, 4) + c_com_x1[3] * pow(tmp_t, 3) + c_com_x1[2] * pow(tmp_t, 2) + c_com_x1[1] * pow(tmp_t, 1) + c_com_x1[0];
-//        com_pos[1] = init_com_pos(1);
-//        com_pos[2] = init_com_pos(2);
-//
-//        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0]; //init_RL_foot_pos[0];
-//        RL_foot_pos[1] = init_RL_foot_pos[1];
-//
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//
-//        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
-//        FR_foot_pos[1] = init_FR_foot_pos[1];
-//
-//        //        printf("tmp_t = %f, RL_foot_pos[2] = %f\n",tmp_t,RL_foot_pos[2]);
-//        if (tmp_cnt <= dsp_cnt / 2) {
-//            //            tmp_t2 = tmp_t;
-//            RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//
-//            if (tmp_cnt == dsp_cnt - 1) {
-//                //                cout << "test!!!!!!!!!!!!!!!!!!!!!!!!!1 " << endl;
-//
-//                pre_com_pos(0) = pre_com_pos[0] + pre_x_moving_speed * (dsp_time) / 2.0 + x_moving_speed * (dsp_time) / 2.0;
-//                pre_com_pos(1) = com_pos(1);
-//                pre_com_pos(2) = com_pos(2);
-//
-//                pre_RL_foot_pos = RL_foot_pos;
-//                pre_RR_foot_pos = RR_foot_pos;
-//                pre_FL_foot_pos = FL_foot_pos;
-//                pre_FR_foot_pos = FR_foot_pos;
-//            }
-//        }
-//
-//    }
-//    else if (tw_cnt < step_cnt * 2) {
-//        //        printf("[4] Second Step (FSP)\n");
-//        // ============ Second Step (FSP) ============= //
-//        FC_PHASE = STOP;
-//        tmp_t = tw_time - step_time - dsp_time;
-//
-//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-//        com_pos[1] = pre_com_pos(1);
-//        com_pos[2] = pre_com_pos(2);
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt * 2 - 1) {
-//
-//            pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
-//            pre_com_pos(1) = com_pos(1);
-//            pre_com_pos(2) = com_pos(2);
-//            pre_RL_foot_pos = RL_foot_pos;
-//            pre_RR_foot_pos = RR_foot_pos;
-//            pre_FL_foot_pos = FL_foot_pos;
-//            pre_FR_foot_pos = FR_foot_pos;
-//        }
-//
-//    }
-//    else if (tw_cnt < step_cnt * 2 + dsp_cnt) {
-//        //        printf("[5] Third Step (STANCE_RLFR)\n");
-//        // ============ Third Step (STANCE_RLFR) ============= //
-//        FC_PHASE = STANCE_RLFR;
-//        tmp_t = tw_time - step_time * 2;
-//        tmp_cnt = tw_cnt - step_cnt * 2;
-//
-//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-//        com_pos[1] = pre_com_pos(1);
-//        com_pos[2] = pre_com_pos(2);
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//
-//        RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
-//        RR_foot_pos[1] = init_RR_foot_pos[1];
-//
-//        FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
-//        FL_foot_pos[1] = init_FL_foot_pos[1];
-//
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        if (tmp_cnt <= dsp_cnt / 2) {
-//            RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//
-//            if (tmp_cnt == dsp_cnt - 1) {
-//                //                cout << "test!!!!!!!!!!!!!!!!!!!!!!!!!1 " << endl;
-//                pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*dsp_time;
-//                pre_com_pos(1) = com_pos(1);
-//                pre_com_pos(2) = com_pos(2);
-//                pre_RL_foot_pos = RL_foot_pos;
-//                pre_RR_foot_pos = RR_foot_pos;
-//                pre_FL_foot_pos = FL_foot_pos;
-//                pre_FR_foot_pos = FR_foot_pos;
-//            }
-//        }
-//
-//    }
-//    else if (tw_cnt < step_cnt * 3) {
-//        //        printf("[6] Third Step (FSP)\n");
-//        // ============ Third Step (FSP) ============= //
-//        FC_PHASE = STOP;
-//        tmp_t = tw_time - step_time * 2 - dsp_time;
-//
-//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-//        com_pos[1] = pre_com_pos(1);
-//        com_pos[2] = pre_com_pos(2);
-//
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt * 3 - 1) {
-//
-//            pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
-//            pre_com_pos(1) = com_pos(1);
-//            pre_com_pos(2) = com_pos(2);
-//            pre_RL_foot_pos = RL_foot_pos;
-//            pre_RR_foot_pos = RR_foot_pos;
-//            pre_FL_foot_pos = FL_foot_pos;
-//            pre_FR_foot_pos = FR_foot_pos;
-//
-//            pre_x_moving_speed = x_moving_speed;
-//            x_moving_speed = tmp_x_moving_speed;
-//
-//            COM_SF_TW_X_Traj_Gen();
-//
-//        }
-//
-//        if (tw_cnt == step_cnt * 3 - 1) {
-//            if (sub_ctrl_flag == false) {
-//                tw_cnt = step_cnt - 1;
-//            }
-//            else {
-//                // =============== COM =============== //
-//                init_x[0] = pre_com_pos[0];
-//                init_x[1] = x_moving_speed;
-//                init_x[2] = 0;
-//
-//                final_x[0] = pre_com_pos[0] + x_moving_speed * (dsp_time) / 2.0;
-//                final_x[1] = 0;
-//                final_x[2] = 0;
-//
-//                coefficient_5thPoly(init_x, final_x, dsp_time, c_com_x2);
-//
-//                // =============== Swing Foot =============== //
-//
-//                // Left (Second)
-//                init_x[0] = 0;
-//                init_x[1] = 0;
-//                init_x[2] = 0;
-//
-//                final_x[0] = 0 + x_moving_speed * step_time;
-//                final_x[1] = 0;
-//                final_x[2] = 0;
-//
-//                coefficient_5thPoly(init_x, final_x, dsp_time, c_sf_x5);
-//            }
-//        }
-//        // ============ Continuous Walking End ============== //
-//    }
-//    else if (tw_cnt < step_cnt * 3 + dsp_cnt) {
-//        //        printf("[7] Final step (STANCE_RR_FL)\n");
-//        // ============ Final step (STANCE_RR_FL)============== //
-//        FC_PHASE = STANCE_RRFL;
-//        tmp_t = tw_time - step_time * 3;
-//        tmp_cnt = tw_cnt - step_cnt * 3;
-//
-//        com_pos[0] = c_com_x2[5] * pow(tmp_t, 5) + c_com_x2[4] * pow(tmp_t, 4) + c_com_x2[3] * pow(tmp_t, 3) + c_com_x2[2] * pow(tmp_t, 2) + c_com_x2[1] * pow(tmp_t, 1) + c_com_x2[0]; //pre_com_pos(0);
-//        com_pos[1] = pre_com_pos(1);
-//        com_pos[2] = init_com_pos(2);
-//
-//        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x5[5] * pow(tmp_t, 5) + c_sf_x5[4] * pow(tmp_t, 4) + c_sf_x5[3] * pow(tmp_t, 3) + c_sf_x5[2] * pow(tmp_t, 2) + c_sf_x5[1] * pow(tmp_t, 1) + c_sf_x5[0];
-//        RL_foot_pos[1] = pre_RL_foot_pos[1];
-//
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//
-//        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x5[5] * pow(tmp_t, 5) + c_sf_x5[4] * pow(tmp_t, 4) + c_sf_x5[3] * pow(tmp_t, 3) + c_sf_x5[2] * pow(tmp_t, 2) + c_sf_x5[1] * pow(tmp_t, 1) + c_sf_x5[0];
-//        FR_foot_pos[1] = pre_FR_foot_pos[1];
-//
-//
-//        if (tmp_cnt <= dsp_cnt / 2) {
-//            //            tmp_t2 = tmp_t;
-//            RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//            FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-//        }
-//        else {
-//            tmp_t2 = tmp_t - dsp_time / 2.0;
-//            RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//            FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-//
-//            if (tmp_cnt == dsp_cnt - 1) {
-//                //                cout << "test!!!!!!!!!!!!!!!!!!!!!!!!!1 " << endl;
-//                //                pre_com_pos = com_pos;
-//                pre_com_pos(0) = pre_com_pos[0] + x_moving_speed * (dsp_time) / 2.0;
-//                pre_com_pos(1) = com_pos(1);
-//                pre_com_pos(2) = com_pos(2);
-//
-//                pre_RL_foot_pos = RL_foot_pos;
-//                pre_RR_foot_pos = RR_foot_pos;
-//                pre_FL_foot_pos = FL_foot_pos;
-//                pre_FR_foot_pos = FR_foot_pos;
-//            }
-//        }
-//
-//
-//    }
-//    else if (tw_cnt < step_cnt * 4) {
-//        // ============ Final step (FSP)============== //
-//        //        printf("[8] Final step (FSP)\n");
-//        FC_PHASE = STOP;
-//        tmp_t = tw_time - step_time * 3 - dsp_time;
-//
-//
-//        com_pos = pre_com_pos;
-//        RL_foot_pos = pre_RL_foot_pos;
-//        RR_foot_pos = pre_RR_foot_pos;
-//        FL_foot_pos = pre_FL_foot_pos;
-//        FR_foot_pos = pre_FR_foot_pos;
-//
-//        if (tw_cnt == step_cnt * 3 + dsp_cnt) {
-//            moving_done_flag = true;
-//        }
-//    }
-//
-//    if (tw_cnt > 0) {
-//        target_com_vel[0] = (com_pos[0] - old_com_pos[0]) / dt;
-//        old_com_pos[0] = com_pos[0];
-//        if (tw_cnt > 1) {
-//            target_com_acc[0] = (target_com_vel[0] - old_com_vel[0]) / dt;
-//            old_com_vel[0] = target_com_vel[0];
-//        }
-//    }
-//
-//
-//
-//    local_RL_foot_pos = RL_foot_pos - com_pos;
-//    local_RR_foot_pos = RR_foot_pos - com_pos;
-//    local_FL_foot_pos = FL_foot_pos - com_pos;
-//    local_FR_foot_pos = FR_foot_pos - com_pos;
-//
-//
-//    // =========================== Turning Pattern Generation ========================= //
-//
-//    TW_Turning_Traj_Gen();
-//
-//    // =========================== Turning Pattern Generation END ========================= //
-//
-//
-//    // ======================================= Cal CP ====================================== //
-//    if (CP_con_onoff_flag == true) {
-//        if (tw_cnt > step_cnt * 8) {
-//            CP_Con();
-//        }
-//        else {
-//            CP_Con_TW();
-//        }
-//    }
-//    else {
-//        cp_RL_foot_pos << 0, 0, 0;
-//        cp_RR_foot_pos << 0, 0, 0;
-//        cp_FL_foot_pos << 0, 0, 0;
-//        cp_FR_foot_pos << 0, 0, 0;
-//    }
-//
-//    // ======================================= Cal CP END ====================================== //
-//
-//    target_EP[0] = local_RL_foot_pos[0] - turn_xr_EP + cp_RL_foot_pos[0];
-//    target_EP[1] = local_RL_foot_pos[1] - turn_yr_EP + cp_RL_foot_pos[1];
-//    target_EP[2] = local_RL_foot_pos[2] + cp_RL_foot_pos[2];
-//    target_EP[3] = local_RR_foot_pos[0] - turn_xl_EP + cp_RR_foot_pos[0];
-//    target_EP[4] = local_RR_foot_pos[1] - turn_yl_EP + cp_RR_foot_pos[1];
-//    target_EP[5] = local_RR_foot_pos[2] + cp_RR_foot_pos[2];
-//    target_EP[6] = local_FL_foot_pos[0] + turn_xl_EP + cp_FL_foot_pos[0];
-//    target_EP[7] = local_FL_foot_pos[1] + turn_yl_EP + cp_FL_foot_pos[1];
-//    target_EP[8] = local_FL_foot_pos[2] + cp_FL_foot_pos[2];
-//    target_EP[9] = local_FR_foot_pos[0] + turn_xr_EP + cp_FR_foot_pos[0];
-//    target_EP[10] = local_FR_foot_pos[1] + turn_yr_EP + cp_FR_foot_pos[1];
-//    target_EP[11] = local_FR_foot_pos[2] + cp_FR_foot_pos[2];
-//
-//    target_pos[6] = 0; //goal_pos[6];
-//
-//    //    printf("tw_cnt = %d\n",tw_cnt);
-//    tw_cnt++;
-//}
-
 void CRobot::TW_COM_SF_X_Traj_Gen(void)
 {
     // ============ COM Pos. ========== //
@@ -3140,735 +2392,6 @@ void CRobot::TW_SF_Z_Traj_Gen(void)
     final_x[2] = 0;
 
     coefficient_5thPoly(init_x, final_x, dsp_time / 2.0, c_sf_z2);
-
-    //    init_x[0] = swing_foot_height;
-    //    init_x[1] = 0;
-    //    init_x[2] = 0;
-    //
-    //    final_x[0] = 0;
-    //    final_x[1] = 0;
-    //    final_x[2] = 0;
-    //
-    //    coefficient_5thPoly(init_x, final_x, tf, c_sf_z3);
-    //
-    //    init_x[0] = swing_foot_height;
-    //    init_x[1] = 0;
-    //    init_x[2] = 0;
-    //
-    //    final_x[0] = 0;
-    //    final_x[1] = 0;
-    //    final_x[2] = 0;
-    //
-    //    coefficient_5thPoly(init_x, final_x, ts, c_sf_z4);
-
-}
-
-//void CRobot::Trot_Walking(void)
-//{
-//    x_moving_speed = tmp_x_moving_speed; //0.0;//tmp_moving_speed;
-//    y_moving_speed = tmp_y_moving_speed; //0.1;
-//
-//    //    moving_speed = 1.0; // m/s
-//    //    y_moving_speed = 0;//tmp_moving_speed2;
-//
-//    //    printf("[1]\n");
-//
-//    if (ctc_cnt2 < preview_cnt) {
-//        if (ctc_cnt2 == 0) {
-//            moving_done_flag = false;
-//        }
-//        Trot_Walking_Traj_First(ctc_cnt2);
-//        stop_flag = false;
-//        //        printf("[1] done \n");
-//    }
-//    else if (ctc_cnt2 < preview_cnt * 2) {
-//
-//        if (ctc_cnt2 == preview_cnt) {
-//            pre_com_pos = com_pos;
-//        }
-//
-//        Trot_Walking_Traj(ctc_cnt2 - preview_cnt);
-//
-//        if (ctc_cnt2 == preview_cnt * 2 - 1) {
-//
-//            if (sub_ctrl_flag != true) {
-//                stop_flag = false;
-//                ctc_cnt2 = preview_cnt - 1;
-//            }
-//            else {
-//                stop_flag = true;
-//                if (traj_stop_flag == true) {
-//                    ctc_cnt2 = preview_cnt - 1;
-//                    traj_stop_flag = false;
-//                }
-//            }
-//        }
-//    }
-//
-//    else if (ctc_cnt2 < preview_cnt * 3) {
-//        stop_flag = true;
-//        x_moving_speed = 0;
-//        Trot_Walking_Traj_Final(ctc_cnt2 - preview_cnt * 2);
-//    }
-//    else {
-//        moving_done_flag = true;
-//    }
-//
-//    local_RL_foot_pos = RL_foot_pos - com_pos;
-//    local_RR_foot_pos = RR_foot_pos - com_pos;
-//    local_FL_foot_pos = FL_foot_pos - com_pos;
-//    local_FR_foot_pos = FR_foot_pos - com_pos;
-//
-//
-//    //    local_foot_l_pos = foot_l_pos - com_pos; // foot position from global to local
-//    //    local_foot_r_pos = foot_r_pos - com_pos;
-//
-//    //    // foot position from global to local
-//    //    local_foot_l_pos(0) = foot_l_pos(0) - com_pos(0) - init_com_pos(0); 
-//    //    local_foot_l_pos(1) = foot_l_pos(1) - com_pos(1) - init_com_pos(1);
-//    //    local_foot_l_pos(2) = foot_l_pos(2) - com_pos(2);
-//    //    
-//    //    local_foot_r_pos(0) = foot_r_pos(0) - com_pos(0) - init_com_pos(0);
-//    //    local_foot_r_pos(1) = foot_r_pos(1) - com_pos(1) - init_com_pos(1);
-//    //    local_foot_r_pos(2) = foot_r_pos(2) - com_pos(2); 
-//
-//    Turning_Traj_Gen();
-//
-//    target_EP[0] = local_RL_foot_pos[0] - turn_xr_EP; // - init_com_pos(0);
-//    target_EP[1] = local_RL_foot_pos[1] - turn_yr_EP + cp_RL_foot_pos[1]; // - init_com_pos(1); local_foot_l_pos[1] 
-//    target_EP[2] = local_RL_foot_pos[2];
-//    target_EP[3] = local_RR_foot_pos[0] - turn_xl_EP; // - init_com_pos(0); 
-//    target_EP[4] = local_RR_foot_pos[1] - turn_yl_EP + cp_RR_foot_pos[1]; // - init_com_pos(1); 
-//    target_EP[5] = local_RR_foot_pos[2];
-//    target_EP[6] = local_FL_foot_pos[0] + turn_xl_EP; // - init_com_pos(0); 
-//    target_EP[7] = local_FL_foot_pos[1] + turn_yl_EP + cp_FL_foot_pos[1]; // - init_com_pos(1); 
-//    target_EP[8] = local_FL_foot_pos[2];
-//    target_EP[9] = local_FR_foot_pos[0] + turn_xr_EP; // - init_com_pos(0); 
-//    target_EP[10] = local_FR_foot_pos[1] + turn_yr_EP + cp_FR_foot_pos[1]; // - init_com_pos(1); 
-//    target_EP[11] = local_FR_foot_pos[2];
-//
-//    ctc_cnt2++;
-//
-//    target_pos[6] = 0; //goal_pos[6];
-//
-//}
-
-//void CRobot::Turning_Traj_Gen(void)
-//{
-//    // ======= Turning trajectory generation ======= //
-//
-//    const double turn_l = 0.4134; // sqrt(0.35^2 + (0.115 + 0.105)^2)
-//    const double x1 = 0.35, y1 = 0.22, turn_theta1 = 57.8477 * D2R;
-//    static double x2 = 0.35, y2 = 0.22, turn_theta2 = 0;
-//    static double del_x = 0, del_y = 0;
-//    static double target_theta = turn_theta1;
-//    static double tmp_target_theta = 0;
-//
-//    // turn left
-//    if (des_theta > 0.01 * D2R && (ctc_cnt2 < preview_cnt * 3)) {
-//
-//        if (turn_mode == 0 && FC_PHASE == STANCE_RLFR) {
-//            turn_start_flag = true;
-//            turn_mode = 1;
-//
-//            target_theta = -des_theta / 2.0; // [rad]
-//
-//            //            printf("[1] target_theta = %f\n", target_theta * R2D);
-//        }
-//
-//
-//    }
-//    else if (des_theta < -0.01 * D2R && (ctc_cnt2 < preview_cnt * 2)) {
-//
-//        if (turn_mode == 0 && FC_PHASE == STANCE_RRFL) {
-//            turn_start_flag = true;
-//            turn_mode = 3;
-//
-//            target_theta = des_theta / 2.0; // [rad]
-//
-//            //            printf("[2] target_theta = %f\n", target_theta * R2D);
-//        }
-//    }
-//
-//    if (turn_start_flag == true) {
-//        if (turn_mode == 1) {
-//            if (turn_cnt <= dsp_cnt) {
-//
-//                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1 + target_theta;
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//            }
-//
-//            if (FC_PHASE == STANCE_RRFL) {
-//                turn_mode = 2;
-//                turn_cnt = 0;
-//            }
-//        }
-//        else if (turn_mode == 2) {
-//            if (turn_cnt <= dsp_cnt) {
-//
-//                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//            }
-//
-//            if (FC_PHASE == STOP) {
-//                // Initialization
-//                turn_mode = 0;
-//                turn_cnt = 0;
-//                turn_start_flag = false;
-//            }
-//        }
-//        else if (turn_mode == 3) {//) && (ctc_cnt2 < preview_cnt*2)){
-//            if (turn_cnt <= dsp_cnt) {
-//                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                //                            printf("[2] tmp_target_theta = %f\n",tmp_target_theta*R2D);
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1 + target_theta;
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//            }
-//
-//            if (FC_PHASE == STANCE_RLFR) {
-//                turn_mode = 4;
-//                turn_cnt = 0;
-//            }
-//        }
-//        else if (turn_mode == 4) {
-//            if (turn_cnt <= dsp_cnt) {
-//
-//                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * dsp_time) * (double) turn_cnt * dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//
-//                turn_cnt++;
-//            }
-//            else {
-//                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
-//
-//                x2 = turn_l * sin(tmp_target_theta);
-//                y2 = turn_l * cos(tmp_target_theta);
-//
-//                del_x = x2 - x1;
-//                del_y = y2 - y1;
-//
-//                turn_xl_EP = del_x;
-//                turn_yl_EP = del_y;
-//                turn_xr_EP = del_x;
-//                turn_yr_EP = -del_y;
-//            }
-//
-//            if (FC_PHASE == STOP) {
-//                // Initialization
-//                turn_mode = 0;
-//                turn_cnt = 0;
-//                turn_start_flag = false;
-//            }
-//        }
-//        
-////    target_EP[0] = local_RL_foot_pos[0] - turn_xr_EP; // - init_com_pos(0);
-////    target_EP[1] = local_RL_foot_pos[1] - turn_yr_EP + cp_RL_foot_pos[1]; // - init_com_pos(1); local_foot_l_pos[1] 
-////    target_EP[2] = local_RL_foot_pos[2];
-////    target_EP[3] = local_RR_foot_pos[0] - turn_xl_EP; // - init_com_pos(0); 
-////    target_EP[4] = local_RR_foot_pos[1] - turn_yl_EP + cp_RR_foot_pos[1]; // - init_com_pos(1); 
-////    target_EP[5] = local_RR_foot_pos[2];
-////    target_EP[6] = local_FL_foot_pos[0] + turn_xl_EP; // - init_com_pos(0); 
-////    target_EP[7] = local_FL_foot_pos[1] + turn_yl_EP + cp_FL_foot_pos[1]; // - init_com_pos(1); 
-////    target_EP[8] = local_FL_foot_pos[2];
-////    target_EP[9] = local_FR_foot_pos[0] + turn_xr_EP; // - init_com_pos(0); 
-////    target_EP[10] = local_FR_foot_pos[1] + turn_yr_EP + cp_FR_foot_pos[1]; // - init_com_pos(1); 
-////    target_EP[11] = local_FR_foot_pos[2];
-//        RL_foot_pos_local_offset << - turn_xr_EP, - turn_yr_EP, 0;
-//        RR_foot_pos_local_offset << - turn_xl_EP, - turn_yl_EP, 0;
-//        FL_foot_pos_local_offset << + turn_xl_EP, + turn_yl_EP, 0;
-//        FR_foot_pos_local_offset << + turn_xr_EP, + turn_yr_EP, 0;
-//        
-//    }
-//    else {
-//        turn_mode = 0;
-//        turn_cnt = 0;
-//        //        turn_start_flag = false;
-//
-//        turn_xl_EP = 0;
-//        turn_yl_EP = 0;
-//        turn_xr_EP = 0;
-//        turn_yr_EP = 0;
-//    }
-//
-//    // ======= Turning trajectory generation  END ======= //
-//}
-
-void CRobot::Trot_Walking_Traj_First(unsigned int i)
-{
-    //    if (i == 0) {
-    //
-    //        FC_PHASE = STOP;
-    //
-    //        sum_e << 0, 0;
-    //
-    //        init_foot_l_2d << init_foot_l_pos(0), init_foot_l_pos(1);
-    //        init_foot_r_2d << init_foot_r_pos(0), init_foot_r_pos(1);
-    //
-    //        Foot_step_planner_first(init_foot_l_2d, init_foot_r_2d);
-    //
-    //        final_foot_l_2d << foot_l_2d(4, 0), foot_l_2d(4, 1);
-    //        final_foot_r_2d << foot_r_2d(4, 0), foot_r_2d(4, 1);
-    //
-    //        pre_foot_l_2d = foot_l_2d;
-    //        pre_foot_r_2d = foot_r_2d;
-    //
-    //        X_new << 0, 0, 0;
-    //        Y_new << 0, 0, 0;
-    ////        X_new << init_com_pos(0), 0, 0;
-    ////        Y_new << init_com_pos(1), 0, 0;
-    //
-    //
-    //        RL_foot_pos(0) = init_RL_foot_pos(0);
-    //        RL_foot_pos(1) = init_RL_foot_pos(1);
-    //        RL_foot_pos(2) = init_RL_foot_pos(2);
-    //        
-    //        RR_foot_pos(0) = init_RR_foot_pos(0);
-    //        RR_foot_pos(1) = init_RR_foot_pos(1);
-    //        RR_foot_pos(2) = init_RR_foot_pos(2);
-    //        
-    //        FL_foot_pos(0) = init_FL_foot_pos(0);
-    //        FL_foot_pos(1) = init_FL_foot_pos(1);
-    //        FL_foot_pos(2) = init_FL_foot_pos(2);
-    //        
-    //        FR_foot_pos(0) = init_FR_foot_pos(0);
-    //        FR_foot_pos(1) = init_FR_foot_pos(1);
-    //        FR_foot_pos(2) = init_FR_foot_pos(2);
-    //
-    ////        foot_r_pos(0) = init_foot_r_pos(0);
-    ////        foot_r_pos(1) = init_foot_r_pos(1);
-    ////        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //
-    //    }
-    //    else {
-    //        RL_foot_pos(0) = init_RL_foot_pos(0);
-    //        RL_foot_pos(1) = init_RL_foot_pos(1);
-    //        RL_foot_pos(2) = init_RL_foot_pos(2);
-    //        
-    //        RR_foot_pos(0) = init_RR_foot_pos(0);
-    //        RR_foot_pos(1) = init_RR_foot_pos(1);
-    //        RR_foot_pos(2) = init_RR_foot_pos(2);
-    //        
-    //        FL_foot_pos(0) = init_FL_foot_pos(0);
-    //        FL_foot_pos(1) = init_FL_foot_pos(1);
-    //        FL_foot_pos(2) = init_FL_foot_pos(2);
-    //        
-    //        FR_foot_pos(0) = init_FR_foot_pos(0);
-    //        FR_foot_pos(1) = init_FR_foot_pos(1);
-    //        FR_foot_pos(2) = init_FR_foot_pos(2);
-    //
-    //        //        printf("[1.4]\n");
-    //    }
-    //
-    //    COM_X_Traj_Gen(i);
-    //
-    //    //    printf("[1.3]\n");
-    //
-    //    com_pos(0) = X_new(0);
-    //    com_pos(1) = Y_new(0);
-    //    com_pos(2) = com_height;
-    //    //    tmp_zmp_x_ref = zmp_ref(0);
-
-}
-
-void CRobot::Trot_Walking_Traj(unsigned int i)
-{
-    //    walk_time = i*dt;
-    //
-    //    if (i == 0) {
-    //        FC_PHASE = STANCE_RRFL;
-    //
-    //        Foot_step_planner(final_foot_l_2d, final_foot_r_2d);
-    //
-    //        final_foot_l_2d << foot_l_2d(4, 0), foot_l_2d(4, 1);
-    //        final_foot_r_2d << foot_r_2d(4, 0), foot_r_2d(4, 1);
-    //
-    //        //        cout << "pre_foot_l_2d = " << endl << pre_foot_l_2d << endl;
-    //        //        cout << "pre_foot_r_2d = " << endl << pre_foot_r_2d << endl;
-    //
-    //        SF_Z_Traj_Gen();
-    //        SF_X_Traj_Gen();
-    //
-    //        foot_l_pos(0) = pre_foot_l_2d(0, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(0, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(0, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(0, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        pre_zmp_ref_y = tmp_final_zmp_ref_y;
-    //
-    //
-    //        // y axis trajectory generation
-    //        init_x[0] = pre_foot_l_2d(0, 1);
-    //        init_x[1] = 0;
-    //        init_x[2] = 0;
-    //
-    //        final_x[0] = pre_foot_l_2d(1, 1);
-    //        final_x[1] = 0;
-    //        final_x[2] = 0;
-    //
-    //        coefficient_5thPoly(init_x, final_x, dsp_time, y1);
-    //
-    //        init_x[0] = pre_foot_r_2d(1, 1);
-    //        init_x[1] = 0;
-    //        init_x[2] = 0;
-    //
-    //        final_x[0] = pre_foot_r_2d(2, 1);
-    //        final_x[1] = 0;
-    //        final_x[2] = 0;
-    //
-    //        coefficient_5thPoly(init_x, final_x, dsp_time, y2);
-    //
-    //        init_x[0] = pre_foot_l_2d(2, 1);
-    //        init_x[1] = 0;
-    //        init_x[2] = 0;
-    //
-    //        final_x[0] = pre_foot_l_2d(3, 1);
-    //        final_x[1] = 0;
-    //        final_x[2] = 0;
-    //
-    //        coefficient_5thPoly(init_x, final_x, dsp_time, y3);
-    //
-    //        init_x[0] = pre_foot_r_2d(3, 1);
-    //        init_x[1] = 0;
-    //        init_x[2] = 0;
-    //
-    //        final_x[0] = pre_foot_r_2d(4, 1);
-    //        final_x[1] = 0;
-    //        final_x[2] = 0;
-    //
-    //        coefficient_5thPoly(init_x, final_x, dsp_time, y4);
-    //
-    //
-    //    }
-    //    else if (i < dsp_cnt) {
-    //        FC_PHASE = STANCE_RRFL;
-    //
-    //        t2 = walk_time;
-    //        foot_l_pos(0) = x1[5] * pow(t2, 5) + x1[4] * pow(t2, 4) + x1[3] * pow(t2, 3) + x1[2] * pow(t2, 2) + x1[1] * pow(t2, 1) + x1[0];
-    //        foot_l_pos(1) = y1[5] * pow(t2, 5) + y1[4] * pow(t2, 4) + y1[3] * pow(t2, 3) + y1[2] * pow(t2, 2) + y1[1] * pow(t2, 1) + y1[0];
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(0, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(0, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        if (i < dsp_t1 / dt) {
-    //            t1 = t2;
-    //            foot_l_pos(2) = init_foot_l_pos(2) + z1[5] * pow(t1, 5) + z1[4] * pow(t1, 4) + z1[3] * pow(t1, 3) + z1[2] * pow(t1, 2) + z1[1] * pow(t1, 1) + z1[0];
-    //        }
-    //        else {
-    //            t1 = t2 - dsp_t1;
-    //            foot_l_pos(2) = init_foot_l_pos(2) + z2[5] * pow(t1, 5) + z2[4] * pow(t1, 4) + z2[3] * pow(t1, 3) + z2[2] * pow(t1, 2) + z2[1] * pow(t1, 1) + z2[0];
-    //        }
-    //    }
-    //    else if (i < step_cnt) {
-    //        FC_PHASE = STOP;
-    //        foot_l_pos(0) = pre_foot_l_2d(1, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(1, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(1, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(1, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //    }
-    //    else if (i < step_cnt + dsp_cnt) {
-    //        FC_PHASE = STANCE_RLFR;
-    //
-    //        t2 = walk_time - step_time;
-    //
-    //        foot_l_pos(0) = pre_foot_l_2d(1, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(1, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = x2[5] * pow(t2, 5) + x2[4] * pow(t2, 4) + x2[3] * pow(t2, 3) + x2[2] * pow(t2, 2) + x2[1] * pow(t2, 1) + x2[0];
-    //        foot_r_pos(1) = y2[5] * pow(t2, 5) + y2[4] * pow(t2, 4) + y2[3] * pow(t2, 3) + y2[2] * pow(t2, 2) + y2[1] * pow(t2, 1) + y2[0]; //pre_foot_r_2d(1, 1); //init_foot_r_pos(1);
-    //
-    //        if (i < step_cnt + dsp_t1 / dt) {
-    //            t1 = t2;
-    //            foot_r_pos(2) = init_foot_r_pos(2) + z1[5] * pow(t1, 5) + z1[4] * pow(t1, 4) + z1[3] * pow(t1, 3) + z1[2] * pow(t1, 2) + z1[1] * pow(t1, 1) + z1[0];
-    //        }
-    //        else {
-    //            t1 = t2 - dsp_t1;
-    //            foot_r_pos(2) = init_foot_r_pos(2) + z2[5] * pow(t1, 5) + z2[4] * pow(t1, 4) + z2[3] * pow(t1, 3) + z2[2] * pow(t1, 2) + z2[1] * pow(t1, 1) + z2[0];
-    //        }
-    //
-    //    }
-    //
-    //    else if (i < step_cnt * 2) {
-    //        FC_PHASE = STOP;
-    //
-    //        foot_l_pos(0) = pre_foot_l_2d(2, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(2, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(2, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(2, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //    }
-    //    else if (i < step_cnt * 2 + dsp_cnt) {
-    //        FC_PHASE = STANCE_RRFL;
-    //
-    //        t2 = walk_time - step_time * 2;
-    //
-    //        foot_l_pos(0) = x3[5] * pow(t2, 5) + x3[4] * pow(t2, 4) + x3[3] * pow(t2, 3) + x3[2] * pow(t2, 2) + x3[1] * pow(t2, 1) + x3[0];
-    //        foot_l_pos(1) = y3[5] * pow(t2, 5) + y3[4] * pow(t2, 4) + y3[3] * pow(t2, 3) + y3[2] * pow(t2, 2) + y3[1] * pow(t2, 1) + y3[0]; //pre_foot_l_2d(2, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(2, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(2, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        if (i < step_cnt * 2 + dsp_t1 / dt) {
-    //            t1 = t2;
-    //            foot_l_pos(2) = init_foot_l_pos(2) + z1[5] * pow(t1, 5) + z1[4] * pow(t1, 4) + z1[3] * pow(t1, 3) + z1[2] * pow(t1, 2) + z1[1] * pow(t1, 1) + z1[0];
-    //        }
-    //        else {
-    //            t1 = t2 - dsp_t1;
-    //            foot_l_pos(2) = init_foot_l_pos(2) + z2[5] * pow(t1, 5) + z2[4] * pow(t1, 4) + z2[3] * pow(t1, 3) + z2[2] * pow(t1, 2) + z2[1] * pow(t1, 1) + z2[0];
-    //        }
-    //
-    //    }
-    //    else if (i < step_cnt * 3) {
-    //        FC_PHASE = STOP;
-    //        foot_l_pos(0) = pre_foot_l_2d(3, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(3, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(3, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(3, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //    }
-    //    else if (i < step_cnt * 3 + dsp_cnt) {
-    //        FC_PHASE = STANCE_RLFR;
-    //
-    //        t2 = walk_time - step_time * 3;
-    //
-    //        foot_l_pos(0) = pre_foot_l_2d(3, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(3, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = x4[5] * pow(t2, 5) + x4[4] * pow(t2, 4) + x4[3] * pow(t2, 3) + x4[2] * pow(t2, 2) + x4[1] * pow(t2, 1) + x4[0];
-    //        foot_r_pos(1) = y4[5] * pow(t2, 5) + y4[4] * pow(t2, 4) + y4[3] * pow(t2, 3) + y4[2] * pow(t2, 2) + y4[1] * pow(t2, 1) + y4[0]; //init_foot_r_pos(1);
-    //
-    //        if (i < step_cnt * 3 + dsp_t1 / dt) {
-    //            t1 = t2;
-    //            foot_r_pos(2) = init_foot_r_pos(2) + z1[5] * pow(t1, 5) + z1[4] * pow(t1, 4) + z1[3] * pow(t1, 3) + z1[2] * pow(t1, 2) + z1[1] * pow(t1, 1) + z1[0];
-    //        }
-    //        else {
-    //            t1 = t2 - dsp_t1;
-    //            foot_r_pos(2) = init_foot_r_pos(2) + z2[5] * pow(t1, 5) + z2[4] * pow(t1, 4) + z2[3] * pow(t1, 3) + z2[2] * pow(t1, 2) + z2[1] * pow(t1, 1) + z2[0];
-    //        }
-    //
-    //    }
-    //
-    //    else {
-    //        FC_PHASE = STOP;
-    //        foot_l_pos(0) = pre_foot_l_2d(4, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(4, 1); //init_foot_l_pos(1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(4, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(4, 1); //init_foot_r_pos(1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        if (i == step_cnt * 4 - 1) {
-    //            pre_foot_l_2d = foot_l_2d;
-    //            pre_foot_r_2d = foot_r_2d;
-    //        }
-    //    }
-    //
-    //    if (CP_con_onoff_flag == true) {
-    //        CP_Con_trot(i);
-    //    }
-    //    else {
-    //        cp_foot_l_3d << 0, 0, 0;
-    //        cp_foot_r_3d << 0, 0, 0;
-    //    }
-    //
-    //
-    //    COM_X_Traj_Gen(i);
-    //
-    //    com_pos(0) = X_new(0);
-    //    com_pos(1) = Y_new(0);
-    //    com_pos(2) = com_height;
-    //    //    zmp_ref2 = zmp_ref;
-
-}
-
-void CRobot::Trot_Walking_Traj_Final(unsigned int i)
-{
-    //    walk_time = i*dt;
-    //
-    //    if (i == 0) {
-    //        FC_PHASE = STANCE_RRFL;
-    //
-    //        Foot_step_planner(final_foot_l_2d, final_foot_r_2d);
-    //
-    //        //        cout << "[3]foot_l_2d = " << foot_l_2d << endl;
-    //        //        cout << "[3]foot_r_2d = " << foot_r_2d << endl;
-    //
-    //        SF_X_Traj_Gen_Final();
-    //
-    //        foot_l_pos(0) = pre_foot_l_2d(0, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(0, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(0, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(0, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        pre_zmp_ref_y = tmp_final_zmp_ref_y;
-    //
-    //        // y axis trajectory generation
-    //        init_x[0] = pre_foot_l_2d(0, 1);
-    //        init_x[1] = 0;
-    //        init_x[2] = 0;
-    //
-    //        final_x[0] = pre_foot_l_2d(1, 1);
-    //        final_x[1] = 0;
-    //        final_x[2] = 0;
-    //
-    //        coefficient_5thPoly(init_x, final_x, dsp_time, y5);
-    //
-    //    }
-    //    else if (i < dsp_cnt) {
-    //        FC_PHASE = STANCE_RRFL;
-    //        t2 = walk_time;
-    //        foot_l_pos(0) = x5[5] * pow(t2, 5) + x5[4] * pow(t2, 4) + x5[3] * pow(t2, 3) + x5[2] * pow(t2, 2) + x5[1] * pow(t2, 1) + x5[0];
-    //        foot_l_pos(1) = y5[5] * pow(t2, 5) + y5[4] * pow(t2, 4) + y5[3] * pow(t2, 3) + y5[2] * pow(t2, 2) + y5[1] * pow(t2, 1) + y5[0];
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(0, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(0, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        if (i < dsp_t1 / dt) {
-    //            t1 = t2;
-    //            foot_l_pos(2) = init_foot_l_pos(2) + z1[5] * pow(t1, 5) + z1[4] * pow(t1, 4) + z1[3] * pow(t1, 3) + z1[2] * pow(t1, 2) + z1[1] * pow(t1, 1) + z1[0];
-    //        }
-    //        else {
-    //            t1 = t2 - dsp_t1;
-    //            foot_l_pos(2) = init_foot_l_pos(2) + z2[5] * pow(t1, 5) + z2[4] * pow(t1, 4) + z2[3] * pow(t1, 3) + z2[2] * pow(t1, 2) + z2[1] * pow(t1, 1) + z2[0];
-    //        }
-    //    }
-    //
-    //    else {
-    //        FC_PHASE = STOP;
-    //        foot_l_pos(0) = pre_foot_l_2d(4, 0);
-    //        foot_l_pos(1) = pre_foot_l_2d(4, 1);
-    //        foot_l_pos(2) = init_foot_l_pos(2);
-    //
-    //        foot_r_pos(0) = pre_foot_r_2d(4, 0);
-    //        foot_r_pos(1) = pre_foot_r_2d(4, 1);
-    //        foot_r_pos(2) = init_foot_r_pos(2);
-    //
-    //        if (i == step_cnt * 4) {
-    //            pre_foot_l_2d = foot_l_2d;
-    //            pre_foot_r_2d = foot_r_2d;
-    //        }
-    //    }
-    //
-    //    COM_X_Traj_Gen(i);
-    //
-    //    com_pos(0) = X_new(0); //zmp_x_ref;//com_x_array(i,0);
-    //    com_pos(1) = Y_new(0);
-    //    com_pos(2) = com_height;
-    //    //    tmp_zmp_x_ref = zmp_ref(0); //zmp_x_array(i);
-
 }
 
 void CRobot::Base_Ori_Con2(void)
@@ -4177,26 +2700,26 @@ void CRobot::COM_X_Traj_Gen(unsigned int i)
 
 void CRobot::Preview_con_2d(void)
 {
-    static double u_x = 0, u_y = 0;
-
-    zmp_ref_old(0) = CC.transpose() * X_new;
-    zmp_ref_old(1) = CC.transpose() * Y_new;
-
-    pre_err = zmp_ref_old - zmp_ref_array.block<1, 2>(0, 0).transpose();
-    sum_e = sum_e + pre_err;
-    pre_sum_p << 0, 0;
-
-    for (unsigned int j = 0; j < 2; ++j) {
-        for (unsigned int k = 0; k < preview_cnt - 1; ++k) {
-            pre_sum_p[j] = pre_sum_p[j] + Gp(k) * zmp_ref_array(k, j);
-        }
-    }
-
-    u_x = -Gi * sum_e(0) - Gx.transpose() * X_new - pre_sum_p(0);
-    u_y = -Gi * sum_e(1) - Gx.transpose() * Y_new - pre_sum_p(1);
-
-    X_new = AA * X_new + BB*u_x;
-    Y_new = AA * Y_new + BB*u_y;
+    //    static double u_x = 0, u_y = 0;
+    //
+    //    zmp_ref_old(0) = CC.transpose() * X_new;
+    //    zmp_ref_old(1) = CC.transpose() * Y_new;
+    //
+    //    pre_err = zmp_ref_old - zmp_ref_array.block<1, 2>(0, 0).transpose();
+    //    sum_e = sum_e + pre_err;
+    //    pre_sum_p << 0, 0;
+    //
+    //    for (unsigned int j = 0; j < 2; ++j) {
+    //        for (unsigned int k = 0; k < preview_cnt - 1; ++k) {
+    //            pre_sum_p[j] = pre_sum_p[j] + Gp(k) * zmp_ref_array(k, j);
+    //        }
+    //    }
+    //
+    //    u_x = -Gi * sum_e(0) - Gx.transpose() * X_new - pre_sum_p(0);
+    //    u_y = -Gi * sum_e(1) - Gx.transpose() * Y_new - pre_sum_p(1);
+    //
+    //    X_new = AA * X_new + BB*u_x;
+    //    Y_new = AA * Y_new + BB*u_y;
 }
 
 void CRobot::coefficient_5thPoly(double *init_x, double *final_x, double tf, double *output)
@@ -4223,211 +2746,6 @@ void CRobot::coefficient_5thPoly(double *init_x, double *final_x, double tf, dou
     output[5] = P(5, 0);
 }
 
-void CRobot::Cal_Fc(void)
-{
-    //    static double fc_cnt = 0;
-    //
-    //    static double tmp_fc_time = 0.01;
-    //    static int tmp_fc_cnt = 10;
-    //    static double tmp_Fc_RL_z = 0, tmp_Fc_RR_z = 0, tmp_Fc_FL_z = 0, tmp_Fc_FR_z = 0;
-    //    //    static int pr_cnt = 0;
-    //    //    static double init_Fc_RL_z = 0, init_Fc_RR_z = 0, init_Fc_FL_z = 0, init_Fc_FR_z = 0;
-    //
-    //    if (FC_PHASE == STOP) {
-    //
-    //        if (CommandFlag != PRONK_JUMP) {
-    //            Fc_RL_z = tar_Fc_RL;
-    //            Fc_RR_z = tar_Fc_RR;
-    //            Fc_FL_z = tar_Fc_FL;
-    //            Fc_FR_z = tar_Fc_FR;
-    //        }
-    //        else {
-    //            Fc_RL_z = tar_Fc_RL + 12 * com_acc[2];
-    //            Fc_RR_z = tar_Fc_RR + 12 * com_acc[2];
-    //            Fc_FL_z = tar_Fc_FL + 12 * com_acc[2];
-    //            Fc_FR_z = tar_Fc_FR + 12 * com_acc[2];
-    //        }
-    //
-    //        fc_cnt = 0;
-    //    }
-    //    else if (FC_PHASE == INIT_Fc) { // walk ready
-    //        Fc_RL_z = tar_Fc_RL / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-    //        Fc_RR_z = tar_Fc_RR / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-    //        Fc_FL_z = tar_Fc_FL / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-    //        Fc_FR_z = tar_Fc_FR / 2.0 * (1 - cos(PI2 / (home_pos_time * 2)*(double) (ctc_cnt) * dt));
-    //
-    //    }
-    //    else if (FC_PHASE == STANCE_RLFR) {
-    //
-    //        if (CommandFlag == FLYING_TROT_RUNNING) {
-    //
-    //            if (flying_trot_init_flag == true) {
-    //                if (fc_cnt <= tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = tar_Fc_RL + (tar_Fc_RL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_RR_z = tar_Fc_RR - tar_Fc_RR * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_FL_z = tar_Fc_FL - tar_Fc_FL * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_FR_z = tar_Fc_FR + (tar_Fc_FR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                }
-    //                else if (fc_cnt >= ts_cnt - tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = tar_Fc_RL * 2 + (0 - tar_Fc_RL * 2)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_RR_z = 0;
-    //                    tmp_Fc_FL_z = 0;
-    //                    tmp_Fc_FR_z = tar_Fc_FR * 2 + (0 - tar_Fc_FR * 2)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                }
-    //            }
-    //            else {
-    //                if (fc_cnt <= tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = tar_Fc_RL * 2 * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_RR_z = 0;
-    //                    tmp_Fc_FL_z = 0;
-    //                    tmp_Fc_FR_z = tar_Fc_FR * 2 * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                }
-    //                else if (fc_cnt >= ts_cnt - tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = tar_Fc_RL * 2 - tar_Fc_RL * 2 * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_RR_z = 0;
-    //                    tmp_Fc_FL_z = 0;
-    //                    tmp_Fc_FR_z = tar_Fc_FR * 2 - tar_Fc_FR * 2 * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                }
-    //            }
-    //
-    //            Fc_RL_z = tmp_Fc_RL_z + 20 * com_acc[2];
-    //            Fc_RR_z = tmp_Fc_RR_z;
-    //            Fc_FL_z = tmp_Fc_FL_z;
-    //            Fc_FR_z = tmp_Fc_FR_z + 20 * com_acc[2];
-    //
-    //        }
-    //        else if (CommandFlag == NOMAL_TROT_WALKING) {
-    //
-    //            if (fc_cnt <= tmp_fc_cnt) {
-    //                Fc_RL_z = tar_Fc_RL + (tar_Fc_RL * 2 - tar_Fc_RL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                Fc_RR_z = tar_Fc_RR - (tar_Fc_RR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                Fc_FL_z = tar_Fc_FL - (tar_Fc_FL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                Fc_FR_z = tar_Fc_FR + (tar_Fc_FR * 2 - tar_Fc_FR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //            }
-    //            else if (fc_cnt >= dsp_cnt - tmp_fc_cnt) {
-    //                Fc_RL_z = tar_Fc_RL * 2 + (tar_Fc_RL - tar_Fc_RL * 2)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //                Fc_RR_z = (tar_Fc_RR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //                Fc_FL_z = (tar_Fc_FL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //                Fc_FR_z = tar_Fc_FR * 2 + (tar_Fc_FR - tar_Fc_FR * 2)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //            }
-    //            else {
-    //                Fc_RL_z = tar_Fc_RL * 2;
-    //                Fc_RR_z = 0;
-    //                Fc_FL_z = 0;
-    //                Fc_FR_z = tar_Fc_FR * 2;
-    //            }
-    //        }
-    //
-    //        else {
-    //            Fc_RL_z = tar_Fc_RL * 2;
-    //            Fc_RR_z = 0;
-    //            Fc_FL_z = 0;
-    //            Fc_FR_z = tar_Fc_FR * 2;
-    //        }
-    //
-    //        fc_cnt++;
-    //    }
-    //    else if (FC_PHASE == STANCE_RRFL) {
-    //
-    //        if (CommandFlag == FLYING_TROT_RUNNING) {
-    //            if (flying_trot_final_flag == true) {
-    //                if (fc_cnt <= tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = 0;
-    //                    tmp_Fc_RR_z = 0 + (tar_Fc_RR * 2 - 0)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_FL_z = 0 + (tar_Fc_FL * 2 - 0)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_FR_z = 0;
-    //                }
-    //                else if (fc_cnt >= ts_cnt - tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = tar_Fc_RL * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_RR_z = tar_Fc_RR * 2 + (tar_Fc_RR - tar_Fc_RR * 2) * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_FL_z = tar_Fc_FL * 2 + (tar_Fc_FL - tar_Fc_FL * 2) * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_FR_z = tar_Fc_FR * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                }
-    //            }
-    //            else {
-    //                if (fc_cnt <= tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = 0;
-    //                    tmp_Fc_RR_z = tar_Fc_RR * 2 * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_FL_z = tar_Fc_FL * 2 * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                    tmp_Fc_FR_z = 0;
-    //                }
-    //                else if (fc_cnt >= ts_cnt - tmp_fc_cnt) {
-    //                    tmp_Fc_RL_z = 0;
-    //                    tmp_Fc_RR_z = tar_Fc_RR * 2 + (0 - tar_Fc_RR * 2) * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_FL_z = tar_Fc_FL * 2 + (0 - tar_Fc_FL * 2) * 0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (ts_cnt - tmp_fc_cnt)) * dt));
-    //                    tmp_Fc_FR_z = 0;
-    //                }
-    //            }
-    //
-    //            Fc_RL_z = tmp_Fc_RL_z;
-    //            Fc_RR_z = tmp_Fc_RR_z + 20 * com_acc[2];
-    //            Fc_FL_z = tmp_Fc_FL_z + 20 * com_acc[2];
-    //            Fc_FR_z = tmp_Fc_FR_z;
-    //        }
-    //        else if (CommandFlag == NOMAL_TROT_WALKING) {
-    //            if (fc_cnt <= tmp_fc_cnt) {
-    //                Fc_RL_z = tar_Fc_RL + (0 - tar_Fc_RL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                Fc_RR_z = tar_Fc_RR + (tar_Fc_RR * 2 - tar_Fc_RR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                Fc_FL_z = tar_Fc_FL + (tar_Fc_FL * 2 - tar_Fc_FL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //                Fc_FR_z = tar_Fc_FR + (0 - tar_Fc_FR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt) * dt));
-    //            }
-    //            else if (fc_cnt >= dsp_cnt - tmp_fc_cnt) {
-    //                Fc_RL_z = (tar_Fc_RL)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //                Fc_RR_z = tar_Fc_RR * 2 + (tar_Fc_RR - tar_Fc_RR * 2)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //                Fc_FL_z = tar_Fc_FL * 2 + (tar_Fc_FL - tar_Fc_FL * 2)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //                Fc_FR_z = (tar_Fc_FR)*0.5 * (1 - cos(PI2 / (tmp_fc_time * 2)*(double) (fc_cnt - (dsp_cnt - tmp_fc_cnt)) * dt));
-    //            }
-    //            else {
-    //                Fc_RL_z = 0;
-    //                Fc_RR_z = tar_Fc_RR * 2;
-    //                Fc_FL_z = tar_Fc_FL * 2;
-    //                Fc_FR_z = 0;
-    //            }
-    //        }
-    //        else {
-    //            Fc_RL_z = 0;
-    //            Fc_RR_z = tar_Fc_RR * 2;
-    //            Fc_FL_z = tar_Fc_FL * 2;
-    //            Fc_FR_z = 0;
-    //        }
-    //
-    //        fc_cnt++;
-    //    }
-    //    else if (FC_PHASE == ZERO) {
-    //        Fc_RL_z = 0;
-    //        Fc_RR_z = 0;
-    //        Fc_FL_z = 0;
-    //        Fc_FR_z = 0;
-    //
-    //        fc_cnt = 0;
-    //    }
-    //
-    //    if (Fc_RL_z < 0) {
-    //        Fc_RL_z = 0;
-    //    }
-    //    if (Fc_RR_z < 0) {
-    //        Fc_RR_z = 0;
-    //    }
-    //    if (Fc_FL_z < 0) {
-    //        Fc_FL_z = 0;
-    //    }
-    //    if (Fc_FR_z < 0) {
-    //        Fc_FR_z = 0;
-    //    }
-    //
-    //    //    printf("Fc_RL_z = %f\n",Fc_RL_z);
-    //    //    Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, Fc_RL_z, 0, 0, Fc_RR_z, 0, 0, Fc_FL_z, 0, 0, Fc_FR_z;
-    //    //     For friction modeling
-    //    Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-
-
-}
-
-void CRobot::Cal_Fc2(void)
-{
-    //    Fc << 0, 0, 0, 0, 0, 0, 0, 0, 0, Fc_RL_z, 0, 0, Fc_RR_z, 0, 0, Fc_FL_z, 0, 0, Fc_FR_z;
-}
-
 void CRobot::Torque_off(void)
 {
     for (int i = 0; i < nDOF; ++i) {
@@ -4435,189 +2753,7 @@ void CRobot::Torque_off(void)
         target_vel[i] = 0;
         target_acc[i] = 0;
     }
-
 }
-
-void CRobot::Cal_CP(void)
-{
-
-    //    static double CP_x_alpha = 0.05, CP_x_dot_alpha = 0.003;
-    //    static double CP_y_alpha = 0.03, CP_y_dot_alpha = 0.001;
-    //
-    //    natural_freq = sqrt(com_height / GRAVITY);
-    //
-    //    // roll
-    //    COM_y = -com_height * IMURoll * PI / 180;
-    //    COM_y_dot = -com_height * IMURoll_dot * PI / 180;
-    //
-    //    lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha*COM_y;
-    //    lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha*COM_y_dot;
-    //
-    //    CP_y = lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot;
-    //
-    ////    printf("IMURoll=%f\n",IMURoll);
-    //    
-    //    // pitch
-    //    COM_x = com_height * IMUPitch * PI / 180;
-    //    COM_x_dot = com_height * IMUPitch_dot * PI / 180;
-    //
-    //    lpf_COM_x = (1 - CP_x_alpha) * lpf_COM_x + CP_x_alpha*COM_x;
-    //    lpf_COM_x_dot = (1 - CP_x_dot_alpha) * lpf_COM_x_dot + CP_x_dot_alpha*COM_x_dot;
-    //
-    //    CP_x = lpf_COM_x + 1 / natural_freq * lpf_COM_x_dot;
-
-}
-
-void CRobot::Cal_CP2(void)
-{
-    //    static double CP_y_alpha = 0.07, CP_y_dot_alpha = 0.03;
-    //
-    //    natural_freq = sqrt(com_height / GRAVITY);
-    //
-    //    lpf_COM_y = (1 - CP_y_alpha) * lpf_COM_y + CP_y_alpha * actual_com_pos[1];
-    //    lpf_COM_y_dot = (1 - CP_y_dot_alpha) * lpf_COM_y_dot + CP_y_dot_alpha * actual_com_vel[1];
-    //
-    //    if (Mode == MODE_SIMULATION) {
-    //        CP_y = (lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot) / 15.0; // weighted CP_y
-    //    }
-    //    else {
-    //        CP_y = (lpf_COM_y + 1 / natural_freq * lpf_COM_y_dot) / 5.0; // weighted CP_y
-    //    }
-
-}
-
-//void CRobot::Get_gain(void)
-//{
-//    double z_c = com_height;
-//    int nCount = 0;
-//    double temp_Gp_gain, temp_Gx_gain, temp_Gi_gain;
-//
-//    AA << 1, dt, dt * dt / 2.0f,
-//            0, 1, dt,
-//            0, 0, 1;
-//
-//    //    cout << "AA = " << AA << endl;
-//
-//    BB << dt * dt * dt / 6.0f, dt * dt / 2.0f, dt;
-//    //    cout << "BB = " << BB << endl;
-//
-//    CC << 1, 0, -z_c / GRAVITY;
-//    //    cout << "CC = " << CC << endl;
-//
-//    FILE *fp1;
-//    FILE *fp2;
-//    FILE *fp3;
-//
-//    if (Mode == MODE_ACTUAL_ROBOT) {
-//        fp1 = fopen("/home/user/Desktop/RcLab-PongBotQ2/src/gain/dh_Gp.txt", "r");
-//
-//        if (fp1 == NULL)printf("CAN NOT OPEN Gp TEXT FILE \n");
-//        while (fscanf(fp1, "%lf", &temp_Gp_gain) == 1) {
-//            pv_Gp[nCount] = temp_Gp_gain;
-//            nCount++;
-//        }
-//        fclose(fp1);
-//        nCount = 0;
-//
-//        fp2 = fopen("/home/user/Desktop/RcLab-PongBotQ2/src/gain/dh_Gx.txt", "r");
-//        if (fp2 == NULL)printf("CAN NOT OPEN Gx TEXT FILE \n");
-//        while (fscanf(fp2, "%lf", &temp_Gx_gain) == 1) {
-//            pv_Gx[nCount] = temp_Gx_gain;
-//            nCount++;
-//        }
-//        fclose(fp2);
-//        nCount = 0;
-//
-//        fp3 = fopen("/home/user/Desktop/RcLab-PongBotQ2/src/gain/dh_Gi.txt", "r");
-//        if (fp3 == NULL)printf("CAN NOT OPEN Gi TEXT FILE \n");
-//        while (fscanf(fp3, "%lf", &temp_Gi_gain) == 1) {
-//            pv_Gi[nCount] = temp_Gi_gain;
-//            nCount++;
-//        }
-//        fclose(fp3);
-//    }
-//    else { // simulation
-//        fp1 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/dh_Gp.txt", "r");
-//        if (fp1 == NULL)printf("CAN NOT OPEN Gp TEXT FILE \n");
-//        while (fscanf(fp1, "%lf", &temp_Gp_gain) == 1) {
-//            pv_Gp[nCount] = temp_Gp_gain;
-//            nCount++;
-//        }
-//        fclose(fp1);
-//        nCount = 0;
-//
-//        fp2 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/dh_Gx.txt", "r");
-//        if (fp2 == NULL)printf("CAN NOT OPEN Gx TEXT FILE \n");
-//        while (fscanf(fp2, "%lf", &temp_Gx_gain) == 1) {
-//            pv_Gx[nCount] = temp_Gx_gain;
-//            nCount++;
-//        }
-//        fclose(fp2);
-//        nCount = 0;
-//
-//        fp3 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/dh_Gi.txt", "r");
-//        if (fp3 == NULL)printf("CAN NOT OPEN Gi TEXT FILE \n");
-//        while (fscanf(fp3, "%lf", &temp_Gi_gain) == 1) {
-//            pv_Gi[nCount] = temp_Gi_gain;
-//            nCount++;
-//        }
-//        fclose(fp3);
-//    }
-//
-//
-//    Gi = pv_Gi[0];
-//    //        cout << pv_Gi[0] << endl;
-//
-//    Gx(0) = pv_Gx[0];
-//    Gx(1) = pv_Gx[1];
-//    Gx(2) = pv_Gx[2];
-//
-//    //    cout << pv_Gx[0] << endl << pv_Gx[1] << endl << pv_Gx[2] << endl;
-//
-//    for (unsigned int i = 0; i < preview_cnt - 1; ++i) {
-//        Gp(i) = pv_Gp[i];
-//    }
-//
-//    //    cout << pv_Gp[0] << endl << pv_Gp[1] << endl;
-//}
-//
-//void CRobot::get_zmp(void)
-//{
-//    static double sum_F, sum_Mx, sum_My;
-//    static double l_RL_x, l_RL_y, l_RR_x, l_RR_y, l_FL_x, l_FL_y, l_FR_x, l_FR_y;
-//    const double alpha = 0.08;
-//
-//    l_RL_x = -0.35 + target_EP[0];
-//    l_RR_x = -0.35 + target_EP[3];
-//    l_FL_x = 0.35 - target_EP[6];
-//    l_FR_x = 0.35 - target_EP[9];
-//
-//    //    cout << "l_RL_x="<<l_RL_x  << "l_RR_x="<< l_RR_x << "l_FL_x=" << l_FL_x << "l_FR_x=" << l_FR_x << endl;
-//
-//    l_RL_y = 0; // 0.115 + target_EP[1];
-//    l_RR_y = 0; //-0.115 + target_EP[4];
-//    l_FL_y = 0; // 0.115 + target_EP[7];
-//    l_FR_y = 0; //-0.115 + target_EP[10];
-//
-//
-//    sum_Mx = 0;
-//    sum_My = l_RL_x * RL.ftSensor.Fz + l_RR_x * RR.ftSensor.Fz + l_FL_x * FL.ftSensor.Fz + l_FR_x * FR.ftSensor.Fz;
-//    sum_F = RL.ftSensor.Fz + RR.ftSensor.Fz + FL.ftSensor.Fz + FR.ftSensor.Fz;
-//
-//    if (sum_F > 50) {
-//        zmp_x = com_pos(0) + (sum_My) / (sum_F); // from local to global
-//        zmp_y = (sum_Mx) / (sum_F);
-//    }
-//    else {
-//        zmp_x = 0;
-//        zmp_y = 0;
-//    }
-//
-//    lpf_zmp_x = (1 - alpha) * old_lpf_zmp_x + alpha*zmp_x;
-//
-//    old_lpf_zmp_x = lpf_zmp_x;
-//
-//}
 
 void CRobot::Get_act_com(void)
 {
@@ -4646,13 +2782,28 @@ void CRobot::Get_act_com(void)
     //    act_base_vel[2] = -(_c(0) * actual_EP_vel[2] + _c(1) * actual_EP_vel[5] + _c(2) * actual_EP_vel[8] + _c(3) * actual_EP_vel[11]) / contact_num;
 
 
-    act_base_pos(0) = (_c(0) * (RL_foot_pos[0] - act_RL_foot_pos_local[0]) + _c(1) * (RR_foot_pos[0] - act_RR_foot_pos_local[0]) + _c(2) * (FL_foot_pos[0] - act_FL_foot_pos_local[0]) + _c(3) * (FR_foot_pos[0] - act_FR_foot_pos_local[0])) / contact_num;
-    act_base_pos(1) = (_c(0) * (RL_foot_pos[1] - act_RL_foot_pos_local[1]) + _c(1) * (RR_foot_pos[1] - act_RR_foot_pos_local[1]) + _c(2) * (FL_foot_pos[1] - act_FL_foot_pos_local[1]) + _c(3) * (FR_foot_pos[1] - act_FR_foot_pos_local[1])) / contact_num;
-    act_base_pos(2) = (_c(0) * (RL_foot_pos[2] - act_RL_foot_pos_local[2]) + _c(1) * (RR_foot_pos[2] - act_RR_foot_pos_local[2]) + _c(2) * (FL_foot_pos[2] - act_FL_foot_pos_local[2]) + _c(3) * (FR_foot_pos[2] - act_FR_foot_pos_local[2])) / contact_num;
 
-    act_base_vel(0) = -(_c(0) * actual_EP_vel[0] + _c(1) * actual_EP_vel[3] + _c(2) * actual_EP_vel[6] + _c(3) * actual_EP_vel[9]) / contact_num;
-    act_base_vel(1) = -(_c(0) * actual_EP_vel[1] + _c(1) * actual_EP_vel[4] + _c(2) * actual_EP_vel[7] + _c(3) * actual_EP_vel[10]) / contact_num;
-    act_base_vel(2) = -(_c(0) * actual_EP_vel[2] + _c(1) * actual_EP_vel[5] + _c(2) * actual_EP_vel[8] + _c(3) * actual_EP_vel[11]) / contact_num;
+    if(contact_num != 0){
+        act_base_pos(0) = (_c(0) * (RL_foot_pos[0] - act_RL_foot_pos_local[0]) + _c(1) * (RR_foot_pos[0] - act_RR_foot_pos_local[0]) + _c(2) * (FL_foot_pos[0] - act_FL_foot_pos_local[0]) + _c(3) * (FR_foot_pos[0] - act_FR_foot_pos_local[0])) / contact_num;
+        act_base_pos(1) = (_c(0) * (RL_foot_pos[1] - act_RL_foot_pos_local[1]) + _c(1) * (RR_foot_pos[1] - act_RR_foot_pos_local[1]) + _c(2) * (FL_foot_pos[1] - act_FL_foot_pos_local[1]) + _c(3) * (FR_foot_pos[1] - act_FR_foot_pos_local[1])) / contact_num;
+        act_base_pos(2) = (_c(0) * (RL_foot_pos[2] - act_RL_foot_pos_local[2]) + _c(1) * (RR_foot_pos[2] - act_RR_foot_pos_local[2]) + _c(2) * (FL_foot_pos[2] - act_FL_foot_pos_local[2]) + _c(3) * (FR_foot_pos[2] - act_FR_foot_pos_local[2])) / contact_num;
+
+        act_base_vel(0) = -(_c(0) * actual_EP_vel[0] + _c(1) * actual_EP_vel[3] + _c(2) * actual_EP_vel[6] + _c(3) * actual_EP_vel[9]) / contact_num;
+        act_base_vel(1) = -(_c(0) * actual_EP_vel[1] + _c(1) * actual_EP_vel[4] + _c(2) * actual_EP_vel[7] + _c(3) * actual_EP_vel[10]) / contact_num;
+        act_base_vel(2) = -(_c(0) * actual_EP_vel[2] + _c(1) * actual_EP_vel[5] + _c(2) * actual_EP_vel[8] + _c(3) * actual_EP_vel[11]) / contact_num;
+
+    }
+    else{
+        act_base_pos(0) = ((RL_foot_pos[0] - act_RL_foot_pos_local[0]) + (RR_foot_pos[0] - act_RR_foot_pos_local[0]) + (FL_foot_pos[0] - act_FL_foot_pos_local[0]) + (FR_foot_pos[0] - act_FR_foot_pos_local[0])) / 4;
+        act_base_pos(1) = ((RL_foot_pos[1] - act_RL_foot_pos_local[1]) + (RR_foot_pos[1] - act_RR_foot_pos_local[1]) + (FL_foot_pos[1] - act_FL_foot_pos_local[1]) + (FR_foot_pos[1] - act_FR_foot_pos_local[1])) / 4;
+        act_base_pos(2) = ((RL_foot_pos[2] - act_RL_foot_pos_local[2]) + (RR_foot_pos[2] - act_RR_foot_pos_local[2]) + (FL_foot_pos[2] - act_FL_foot_pos_local[2]) + (FR_foot_pos[2] - act_FR_foot_pos_local[2])) / 4;
+
+        act_base_vel(0) = -(actual_EP_vel[0] + actual_EP_vel[3] + actual_EP_vel[6] + actual_EP_vel[9]) / 4;
+        act_base_vel(1) = -(actual_EP_vel[1] + actual_EP_vel[4] + actual_EP_vel[7] + actual_EP_vel[10]) / 4;
+        act_base_vel(2) = -(actual_EP_vel[2] + actual_EP_vel[5] + actual_EP_vel[8] + actual_EP_vel[11]) / 4;
+
+    }
+    
 
     //    cout << "act_base_pos(0) = " << act_base_pos(0) << ", act_base_pos(1) = " << act_base_pos(1) << ", act_base_pos(2) = " << act_base_pos(2) << endl;
     //    cout << "act_base_pos2(0) = " << act_base_pos2(0) << ", act_base_pos2(1) = " << act_base_pos2(1) << ", act_base_pos2(2) = " << act_base_pos2(2) << endl;
@@ -4696,462 +2847,6 @@ void CRobot::Get_act_com(void)
     //    }
 }
 
-void CRobot::Damping_con2(void)
-{
-    //    static double front_foot_err = 0, rear_foot_err = 0;
-    //    static double target_front_foot_err = 0, target_rear_foot_err = 0;
-    //    static double front_foot_err_dot = 0, rear_foot_err_dot = 0;
-    //
-    //    target_front_foot_err = target_EP[7] - target_EP[10];
-    //    target_rear_foot_err = target_EP[1] - target_EP[4];
-    //
-    //    front_foot_err = actual_EP[7] - actual_EP[10];
-    //    rear_foot_err = actual_EP[1] - actual_EP[4];
-    //
-    //    front_foot_err_dot = actual_EP_vel[7] - actual_EP_vel[10];
-    //    rear_foot_err_dot = actual_EP_vel[1] - actual_EP_vel[4];
-    //
-    //
-    //    // hip roll error compensation
-    //    target_EP_offset[7] = +kp_dc * (target_front_foot_err - front_foot_err) + kd_dc * (0 - front_foot_err_dot);
-    //    target_EP_offset[10] = -kp_dc * (target_front_foot_err - front_foot_err) - kd_dc * (0 - front_foot_err_dot);
-    //    target_EP_offset[1] = +kp_dc * (target_rear_foot_err - rear_foot_err) + kd_dc * (0 - rear_foot_err_dot);
-    //    target_EP_offset[4] = -kp_dc * (target_rear_foot_err - rear_foot_err) - kd_dc * (0 - rear_foot_err_dot);
-    //
-    //
-    //    cout << "RL = " << target_EP_offset[1] << ", RR = " << target_EP_offset[4] << endl;
-    //    cout << "FL = " << target_EP_offset[7] << ", FR = " << target_EP_offset[10] << endl;
-    //    cout << "-----------------------------" << endl;
-
-
-}
-
-//void CRobot::Damping_con(void)
-//{
-//    static double front_hip_roll_err = 0, rear_hip_roll_err = 0;
-//    static double target_front_hip_roll_err = 0, target_rear_hip_roll_err = 0;
-//    static double front_hip_roll_err_dot = 0, rear_hip_roll_err_dot = 0;
-//
-//    target_front_hip_roll_err = target_pos[7] - target_pos[10];
-//    target_rear_hip_roll_err = target_pos[0] - target_pos[3];
-//
-//    front_hip_roll_err = actual_pos[7] - actual_pos[10];
-//    rear_hip_roll_err = actual_pos[0] - actual_pos[3];
-//
-//    front_hip_roll_err_dot = actual_vel[7] - actual_vel[10];
-//    rear_hip_roll_err_dot = actual_vel[0] - actual_vel[3];
-//
-//
-//    // hip roll error compensation
-//    target_pos_offset[7] = +kp_roll * (target_front_hip_roll_err - front_hip_roll_err) + kd_roll * (0 - front_hip_roll_err_dot);
-//    target_pos_offset[10] = -kp_roll * (target_front_hip_roll_err - front_hip_roll_err) - kd_roll * (0 - front_hip_roll_err_dot);
-//    target_pos_offset[0] = +kp_roll * (target_rear_hip_roll_err - rear_hip_roll_err) + kd_roll * (0 - rear_hip_roll_err_dot);
-//    target_pos_offset[3] = -kp_roll * (target_rear_hip_roll_err - rear_hip_roll_err) - kd_roll * (0 - rear_hip_roll_err_dot);
-//
-//    //	printf("target_front_hip_roll_err - front_hip_roll_err = %f\n",(target_front_hip_roll_err - front_hip_roll_err)*R2D);
-//    //	printf("target_pos_offset[7] = %f, target_pos_offset[0] = %f\n",target_pos_offset[7],target_pos_offset[0]);
-//    //    printf("kp_roll = %f, kd_roll = %f\n",kp_roll,kd_roll);
-//
-//    target_pos_with_con = target_pos + target_pos_offset;
-//}
-
-void CRobot::Cal_JFc(void)
-{
-    //    const double alpha = 0.002;
-    //    tmp_CTC_Torque = (1 - alpha) * tmp_CTC_Torque + (alpha) * CTC_Torque;
-    //
-    //    Fc2 = (J_A * M_term.inverse() * J_A.transpose()).inverse()*(J_A * M_term.inverse()*(S_mat.transpose() * tmp_CTC_Torque - C_term - G_term) + dJdQ);
-    //
-    //    const double max_Fc_z = -20;
-    //    const double min_Fc_z = -800;
-    //
-    //    if (Fc2(7) > abs(Fc2(9))*0.6 / sqrt(2)) {
-    //        Fc2(7) = abs(Fc2(9))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(7) < -abs(Fc2(9))*0.6 / sqrt(2)) {
-    //        Fc2(7) = -abs(Fc2(9))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(8) > abs(Fc2(9))*0.6 / sqrt(2)) {
-    //        Fc2(8) = abs(Fc2(9))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(8) < -abs(Fc2(9))*0.6 / sqrt(2)) {
-    //        Fc2(8) = -abs(Fc2(9))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(9) > max_Fc_z) {
-    //        Fc2(9) = max_Fc_z;
-    //    }
-    //    else if (Fc2(9) < min_Fc_z) {
-    //        Fc2(9) = min_Fc_z;
-    //    }
-    //
-    //    if (Fc2(10) > abs(Fc2(12))*0.6 / sqrt(2)) {
-    //        Fc2(10) = abs(Fc2(12))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(10) < -abs(Fc2(12))*0.6 / sqrt(2)) {
-    //        Fc2(10) = -abs(Fc2(12))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(11) > abs(Fc2(12))*0.6 / sqrt(2)) {
-    //        Fc2(11) = abs(Fc2(12))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(11) < -abs(Fc2(12))*0.6 / sqrt(2)) {
-    //        Fc2(11) = -abs(Fc2(12))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(12) > max_Fc_z) {
-    //        Fc2(12) = max_Fc_z;
-    //    }
-    //    else if (Fc2(12) < min_Fc_z) {
-    //        Fc2(12) = min_Fc_z;
-    //    }
-    //
-    //    if (Fc2(13) > abs(Fc2(15))*0.6 / sqrt(2)) {
-    //        Fc2(13) = abs(Fc2(15))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(13) < -abs(Fc2(15))*0.6 / sqrt(2)) {
-    //        Fc2(13) = -abs(Fc2(15))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(14) > abs(Fc2(15))*0.6 / sqrt(2)) {
-    //        Fc2(14) = abs(Fc2(15))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(14) < -abs(Fc2(15))*0.6 / sqrt(2)) {
-    //        Fc2(14) = -abs(Fc2(15))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(15) > max_Fc_z) {
-    //        Fc2(15) = max_Fc_z;
-    //    }
-    //    else if (Fc2(15) < min_Fc_z) {
-    //        Fc2(15) = min_Fc_z;
-    //    }
-    //
-    //    if (Fc2(16) > abs(Fc2(18))*0.6 / sqrt(2)) {
-    //        Fc2(16) = abs(Fc2(18))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(16) < -abs(Fc2(18))*0.6 / sqrt(2)) {
-    //        Fc2(16) = -abs(Fc2(18))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(17) > abs(Fc2(18))*0.6 / sqrt(2)) {
-    //        Fc2(17) = abs(Fc2(18))*0.6 / sqrt(2);
-    //    }
-    //    else if (Fc2(17) < -abs(Fc2(18))*0.6 / sqrt(2)) {
-    //        Fc2(17) = -abs(Fc2(18))*0.6 / sqrt(2);
-    //    }
-    //
-    //    if (Fc2(18) > max_Fc_z) {
-    //        Fc2(18) = max_Fc_z;
-    //    }
-    //    else if (Fc2(18) < min_Fc_z) {
-    //        Fc2(18) = min_Fc_z;
-    //    }
-    //
-    //    cout << "Fc2 = " << Fc2.transpose() << endl << endl;
-    //
-    //    JFc = J_A.transpose() * (Fc2);
-}
-
-void CRobot::Pronk_Jump(void)
-{
-    //    // =============== Pronk Initialize =============== //
-    //
-    //    const double jump_ready_height = com_height;
-    //
-    //    const double jump_ready_time = 1.0;
-    //    const int jump_ready_cnt = 1000;
-    //    const double jump_stance_time = 0.300;
-    //    const int jump_stance_cnt = 300;
-    //    const double jump_flight_time = 0.20;
-    //    const int jump_flight_cnt = 200;
-    //    const double jump_landing_time = 0.3;
-    //    const int jump_landing_cnt = 300;
-    //
-    //    // =============== Pronk Initialize END =============== //
-    //
-    //    const double tmp_t1 = jump_ready_cnt;
-    //    const double tmp_t2 = tmp_t1 + jump_stance_cnt;
-    //    const double tmp_t3 = tmp_t2 + jump_flight_cnt;
-    //    const double tmp_t4 = tmp_t3 + jump_landing_cnt;
-    //    const double tmp_t5 = tmp_t4 + jump_ready_cnt;
-    //    static int tmp_jump_cnt = 0;
-    //    static double tmp_jump_time = 0;
-    //
-    //    static double tmp_t[4];
-    //    const double tmp_flight_time = 0.10;
-    //    const int tmp_flight_cnt = 100;
-    //
-    //    if (moving_cnt < tmp_t1) {
-    //        FC_PHASE = STOP;
-    //        JUMP_PHASE = 1;
-    //
-    //        if (moving_cnt == 0) {
-    //            first_jump_flag = true;
-    //            moving_done_flag = false;
-    //            global_jump_flight_cnt = jump_flight_cnt;
-    //        }
-    //    }
-    //    else if (moving_cnt < tmp_t2) {
-    //        FC_PHASE = STOP;
-    //        JUMP_PHASE = 2;
-    //    }
-    //    else if (moving_cnt < tmp_t3) {
-    //        FC_PHASE = ZERO;
-    //        JUMP_PHASE = 3;
-    //    }
-    //    else if (moving_cnt < tmp_t4) {
-    //        FC_PHASE = STOP;
-    //        JUMP_PHASE = 4;
-    //    }
-    //    else if (moving_cnt < tmp_t5) {
-    //        FC_PHASE = STOP;
-    //        JUMP_PHASE = 5;
-    //    }
-    //    else {
-    //        FC_PHASE = STOP;
-    //        JUMP_PHASE = 6;
-    //
-    //        if (moving_cnt == tmp_t5) {
-    //            moving_done_flag = true;
-    //        }
-    //    }
-    //
-    //    switch (JUMP_PHASE) {
-    //    case 1: // Jump Ready
-    //        tmp_jump_cnt = moving_cnt;
-    //        tmp_jump_time = (double) tmp_jump_cnt*dt;
-    //        com_acc[2] = 0;
-    //
-    //        if (tmp_jump_cnt == 0) {
-    //            RL_foot_pos = init_RL_foot_pos;
-    //            RR_foot_pos = init_RR_foot_pos;
-    //            FL_foot_pos = init_FL_foot_pos;
-    //            FR_foot_pos = init_FR_foot_pos;
-    //
-    //            com_pos = init_com_pos;
-    //
-    //
-    //            tmp_t[0] = jump_stance_time;
-    //            tmp_t[1] = jump_flight_time; //jump_flight_time;
-    //            tmp_t[2] = tmp_flight_time;
-    //            tmp_t[3] = jump_landing_time;
-    //
-    //            Jump_COM_Z_Traj_Gen(jump_ready_height, tmp_t);
-    //        }
-    //        else {
-    //            com_pos[2] = init_com_pos[2] + (jump_ready_height - init_com_pos[2]) / 2.0 * (1 - cos(PI2 / (jump_ready_time * 2) * tmp_jump_time));
-    //        }
-    //        break;
-    //
-    //    case 2: // Take-off
-    //        tmp_jump_cnt = moving_cnt - tmp_t1;
-    //        tmp_jump_time = (double) tmp_jump_cnt*dt;
-    //
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        com_pos = init_com_pos;
-    //
-    //        if (first_jump_flag == true) {
-    //            com_pos[2] = jump_z1[5] * pow(tmp_jump_time, 5) + jump_z1[4] * pow(tmp_jump_time, 4) + jump_z1[3] * pow(tmp_jump_time, 3) + jump_z1[2] * pow(tmp_jump_time, 2) + jump_z1[1] * pow(tmp_jump_time, 1) + jump_z1[0];
-    //            com_acc[2] = 20 * jump_z1[5] * pow(tmp_jump_time, 3) + 12 * jump_z1[4] * pow(tmp_jump_time, 2) + 6 * jump_z1[3] * pow(tmp_jump_time, 1) + 2 * jump_z1[2];
-    //
-    //            if (tmp_jump_cnt == jump_stance_cnt - 1) {
-    //                first_jump_flag = false;
-    //            }
-    //        }
-    //        else {
-    //            com_pos[2] = jump_z1[5] * pow(tmp_jump_time, 5) + jump_z1[4] * pow(tmp_jump_time, 4) + jump_z1[3] * pow(tmp_jump_time, 3) + jump_z1[2] * pow(tmp_jump_time, 2) + jump_z1[1] * pow(tmp_jump_time, 1) + jump_z1[0];
-    //            com_acc[2] = 20 * jump_z1[5] * pow(tmp_jump_time, 3) + 12 * jump_z1[4] * pow(tmp_jump_time, 2) + 6 * jump_z1[3] * pow(tmp_jump_time, 1) + 2 * jump_z1[2];
-    //        }
-    //        break;
-    //
-    //    case 3: // Flight
-    //        tmp_jump_cnt = moving_cnt - tmp_t2;
-    //        tmp_jump_time = (double) tmp_jump_cnt*dt;
-    //
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        if (tmp_jump_cnt < tmp_flight_cnt) {
-    //            com_pos[2] = jump_z2[5] * pow(tmp_jump_time, 5) + jump_z2[4] * pow(tmp_jump_time, 4) + jump_z2[3] * pow(tmp_jump_time, 3) + jump_z2[2] * pow(tmp_jump_time, 2) + jump_z2[1] * pow(tmp_jump_time, 1) + jump_z2[0];
-    //        }
-    //        else {
-    //            com_pos[2] = jump_z5[5] * pow(tmp_jump_time - tmp_flight_time, 5) + jump_z5[4] * pow(tmp_jump_time - tmp_flight_time, 4) + jump_z5[3] * pow(tmp_jump_time - tmp_flight_time, 3) + jump_z5[2] * pow(tmp_jump_time - tmp_flight_time, 2) + jump_z5[1] * pow(tmp_jump_time - tmp_flight_time, 1) + jump_z5[0];
-    //        }
-    //
-    //        com_acc[2] = 0;
-    //        break;
-    //
-    //    case 4: // Landing
-    //        tmp_jump_cnt = moving_cnt - tmp_t3;
-    //        tmp_jump_time = (double) tmp_jump_cnt*dt;
-    //
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        com_pos = init_com_pos;
-    //
-    //        com_pos[2] = jump_z4[5] * pow(tmp_jump_time, 5) + jump_z4[4] * pow(tmp_jump_time, 4) + jump_z4[3] * pow(tmp_jump_time, 3) + jump_z4[2] * pow(tmp_jump_time, 2) + jump_z4[1] * pow(tmp_jump_time, 1) + jump_z4[0];
-    //        com_acc[2] = 20 * jump_z4[5] * pow(tmp_jump_time, 3) + 12 * jump_z4[4] * pow(tmp_jump_time, 2) + 6 * jump_z4[3] * pow(tmp_jump_time, 1) + 2 * jump_z4[2];
-    //        break;
-    //
-    //
-    //    case 5: // Walk Ready
-    //        tmp_jump_cnt = moving_cnt - tmp_t4;
-    //        tmp_jump_time = (double) tmp_jump_cnt*dt;
-    //
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        com_pos = init_com_pos;
-    //
-    //        com_pos[2] = jump_ready_height + (init_com_pos[2] - jump_ready_height) / 2.0 * (1 - cos(PI2 / (jump_ready_time * 2)*(double) (tmp_jump_cnt) * dt));
-    //        com_acc[2] = 0;
-    //
-    //        break;
-    //    }
-    //    moving_cnt++;
-    //
-    //    if (moving_cnt == tmp_t4) {
-    //        if (sub_ctrl_flag == false) { //jump_stop_flag
-    //
-    //            if (T_RL == true || T_RR == true || T_FL == true || T_FR == true) {
-    //                moving_cnt = tmp_t1;
-    //
-    //                jump_num++;
-    //
-    //                printf("jump_num = %d\n", jump_num);
-    //            }
-    //            else {
-    //                printf("Not land\n");
-    //                moving_cnt--;
-    //            }
-    //        }
-    //    }
-    //
-    //    // ============================ target_EP ========================== //
-    //    // foot position from global to local
-    //    local_RL_foot_pos = RL_foot_pos - com_pos;
-    //    local_RR_foot_pos = RR_foot_pos - com_pos;
-    //    local_FL_foot_pos = FL_foot_pos - com_pos;
-    //    local_FR_foot_pos = FR_foot_pos - com_pos;
-    //
-    ////    if (CP_con_onoff_flag == true) {
-    ////        if (moving_cnt > tmp_t5 + 1000) {
-    ////            CP_Con();
-    ////        }
-    ////    }
-    ////    else {
-    ////        cp_RL_foot_pos << 0, 0, 0;
-    ////        cp_RR_foot_pos << 0, 0, 0;
-    ////        cp_FL_foot_pos << 0, 0, 0;
-    ////        cp_FR_foot_pos << 0, 0, 0;
-    ////    }
-    //
-    //    target_EP[0] = local_RL_foot_pos[0] + cp_RL_foot_pos[0];
-    //    target_EP[1] = local_RL_foot_pos[1] + cp_RL_foot_pos[1];
-    //    target_EP[2] = local_RL_foot_pos[2] + cp_RL_foot_pos[2];
-    //    target_EP[3] = local_RR_foot_pos[0] + cp_RR_foot_pos[0];
-    //    target_EP[4] = local_RR_foot_pos[1] + cp_RR_foot_pos[1];
-    //    target_EP[5] = local_RR_foot_pos[2] + cp_RR_foot_pos[2];
-    //    target_EP[6] = local_FL_foot_pos[0] + cp_FL_foot_pos[0];
-    //    target_EP[7] = local_FL_foot_pos[1] + cp_FL_foot_pos[1];
-    //    target_EP[8] = local_FL_foot_pos[2] + cp_FL_foot_pos[2];
-    //    target_EP[9] = local_FR_foot_pos[0] + cp_FR_foot_pos[0];
-    //    target_EP[10] = local_FR_foot_pos[1] + cp_FR_foot_pos[1];
-    //    target_EP[11] = local_FR_foot_pos[2] + cp_FR_foot_pos[2];
-    //
-    //    ctc_cnt2++;
-    //
-    //    target_pos[6] = 0; //goal_pos[6];
-}
-
-void CRobot::Jump_COM_Z_Traj_Gen(double h0, double t[4])
-{
-    const double jump_h_0 = h0;
-    const double jump_v_0 = 0;
-    const double jump_a_0 = 0;
-
-    const double jump_v_1 = 0.6; //1.2;
-    const double jump_a_1 = -GRAVITY;
-
-    const double jump_h_2 = jump_h_0;
-    const double jump_v_2 = -0.10; //-0.05;
-    const double jump_a_2 = -GRAVITY;
-
-    const double jump_h_3 = jump_h_0;
-    const double jump_v_3 = 0;
-    const double jump_a_3 = 0;
-
-    const double jump_h_1 = 0.5 * GRAVITY * t[1] * t[1] - jump_v_1 * t[1] + jump_h_2;
-
-    // =============== Stance phase (First) =============== //
-    init_x[0] = jump_h_0;
-    init_x[1] = jump_v_0;
-    init_x[2] = jump_a_0;
-
-    final_x[0] = jump_h_1;
-    final_x[1] = jump_v_1;
-    final_x[2] = jump_a_1;
-
-    coefficient_5thPoly(init_x, final_x, t[0], jump_z1);
-
-    // =============== Flight phase (First) =============== //
-    init_x[0] = jump_h_1;
-    init_x[1] = jump_v_1;
-    init_x[2] = jump_a_1;
-
-    final_x[0] = jump_h_0;
-    final_x[1] = jump_v_0;
-    final_x[2] = jump_a_0;
-
-    coefficient_5thPoly(init_x, final_x, t[2], jump_z2);
-
-    // =============== Flight phase (Second) =============== //
-    init_x[0] = jump_h_0;
-    init_x[1] = jump_v_0;
-    init_x[2] = jump_a_0;
-
-    final_x[0] = jump_h_2;
-    final_x[1] = jump_v_2;
-    final_x[2] = jump_a_2;
-
-    coefficient_5thPoly(init_x, final_x, t[1] - t[2], jump_z5);
-
-    // =============== Stance phase (Second) =============== //
-    init_x[0] = jump_h_2;
-    init_x[1] = jump_v_2;
-    init_x[2] = jump_a_2;
-
-    final_x[0] = jump_h_1;
-    final_x[1] = jump_v_1;
-    final_x[2] = jump_a_1;
-
-    coefficient_5thPoly(init_x, final_x, t[0], jump_z3);
-
-    // =============== Landing phase =============== //
-    init_x[0] = jump_h_2;
-    init_x[1] = jump_v_2;
-    init_x[2] = jump_a_2;
-
-    final_x[0] = jump_h_3;
-    final_x[1] = jump_v_3;
-    final_x[2] = jump_a_3;
-
-    coefficient_5thPoly(init_x, final_x, t[3], jump_z4);
-}
-
 
 
 
@@ -5173,1329 +2868,1084 @@ void CRobot::Jump_COM_Z_Traj_Gen(double h0, double t[4])
 
 
 // ====================== flying trot trajectory generation ===================== //
-
-void CRobot::Flying_Trot_Running(void)
+void CRobot::Flying_Trot_Running3(void)
 {
-    //    //    ft_time2 = (double) ft_cnt2*dt; // for graph
-    //    //    ft_cnt2++;
-    //
-    //    if (ft_ready_flag == true) {
-    //        //        cout << "[1] FT ready !" << endl;
-    //        //        gain up!!
-    //        FC_PHASE = STOP;
-    //
-    //        com_acc[2] = 0;
-    //
-    //        com_pos = init_com_pos;
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        if (ft_ready_cnt <= 1000) {
-    //            for (unsigned int i = 0; i < 13; ++i) {
-    //                Kp_q[i] = init_Kp_q[i] + (FT_Kp_q[i] - init_Kp_q[i]) / 2.0 * (1 - cos(PI2 / (2 * 1.0)*(double) ft_ready_cnt * dt));
-    //                Kd_q[i] = init_Kd_q[i] + (FT_Kd_q[i] - init_Kd_q[i]) / 2.0 * (1 - cos(PI2 / (2 * 1.0)*(double) ft_ready_cnt * dt));
-    //            }
-    //        }
-    //        else {
-    //            ft_ready_flag = false;
-    //        }
-    //
-    //        if (CP_con_onoff_flag == true) {
-    //            CP_Con();
-    //        }
-    //
-    //        ft_ready_cnt++;
-    //    }
-    //    else if (ft_ready_flag == false && ft_finish_flag == false) {
-    //        //        cout << "[2] FT Working !" << endl;
-    //        FT_Traj_Gen();
-    //
-    //        if (CP_con_onoff_flag == true) {
-    //
-    //            if (ft_cnt < 4 * ft_step_cnt + 1) {
-    //                CP_Con_FT();
-    //            }
-    //            else if (ft_cnt < 5 * ft_step_cnt + 1) {
-    //                if (ft_cnt == 4 * ft_step_cnt + 1) {
-    //                    tmp_cp_RL_foot_pos = cp_RL_foot_pos;
-    //                    tmp_cp_RR_foot_pos = cp_RR_foot_pos;
-    //                    tmp_cp_FL_foot_pos = cp_FL_foot_pos;
-    //                    tmp_cp_FR_foot_pos = cp_FR_foot_pos;
-    //                }
-    //                else {
-    //                    for (unsigned int i = 0; i < 3; i++) {
-    //                        tmp_t = ft_time - 4 * ft_step_time;
-    //                        cp_RL_foot_pos[i] = tmp_cp_RL_foot_pos[i] + (init_cp_RL_foot_pos[i] - tmp_cp_RL_foot_pos[i]) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-    //                        cp_RR_foot_pos[i] = tmp_cp_RR_foot_pos[i] + (init_cp_RR_foot_pos[i] - tmp_cp_RR_foot_pos[i]) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-    //                        cp_FL_foot_pos[i] = tmp_cp_FL_foot_pos[i] + (init_cp_FL_foot_pos[i] - tmp_cp_FL_foot_pos[i]) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-    //                        cp_FR_foot_pos[i] = tmp_cp_FR_foot_pos[i] + (init_cp_FR_foot_pos[i] - tmp_cp_FR_foot_pos[i]) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-    //                    }
-    //                }
-    //            }
-    //            else {
-    //                ft_finish_flag = true;
-    //
-    //                if (CP_con_onoff_flag == true) {
-    //                    CP_Con();
-    //                }
-    //            }
-    //        }
-    //        else {
-    //            cp_RL_foot_pos << 0, 0, 0;
-    //            cp_RR_foot_pos << 0, 0, 0;
-    //            cp_FL_foot_pos << 0, 0, 0;
-    //            cp_FR_foot_pos << 0, 0, 0;
-    //        }
-    //
-    //        FT_Turning_Traj_Gen();
-    //
-    //        ft_cnt++;
-    //    }
-    //    else if (ft_finish_flag == true) {
-    //        //        cout << "[3] Finish !" << endl;
-    //
-    //        com_acc[2] = 0;
-    //
-    //        com_pos = init_com_pos;
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        if (ft_finish_cnt <= 1000) {
-    //            for (unsigned int i = 0; i < 13; ++i) {
-    //                Kp_q[i] = FT_Kp_q[i] + (init_Kp_q[i] - FT_Kp_q[i]) / 2.0 * (1 - cos(PI2 / (2 * 1.0)*(double) ft_finish_cnt * dt));
-    //                Kd_q[i] = FT_Kd_q[i] + (init_Kd_q[i] - FT_Kd_q[i]) / 2.0 * (1 - cos(PI2 / (2 * 1.0)*(double) ft_finish_cnt * dt));
-    //            }
-    //        }
-    //        if (CP_con_onoff_flag == true) {
-    //            CP_Con();
-    //        }
-    //
-    //        ft_finish_cnt++;
-    //
-    //    }
-    //
-    //    //    printf("Kp_q[0] = %f\n",Kp_q[0]);
-    //
-    //    // ============================ target_EP ========================== //
-    //
-    //    local_RL_foot_pos = RL_foot_pos - com_pos;
-    //    local_RR_foot_pos = RR_foot_pos - com_pos;
-    //    local_FL_foot_pos = FL_foot_pos - com_pos;
-    //    local_FR_foot_pos = FR_foot_pos - com_pos;
-    //
-    //    target_EP[0] = local_RL_foot_pos[0] - turn_xr_EP + cp_RL_foot_pos[0];
-    //    target_EP[1] = local_RL_foot_pos[1] - turn_yr_EP + cp_RL_foot_pos[1];
-    //    target_EP[2] = local_RL_foot_pos[2] + cp_RL_foot_pos[2];
-    //    target_EP[3] = local_RR_foot_pos[0] - turn_xl_EP + cp_RR_foot_pos[0];
-    //    target_EP[4] = local_RR_foot_pos[1] - turn_yl_EP + cp_RR_foot_pos[1];
-    //    target_EP[5] = local_RR_foot_pos[2] + cp_RR_foot_pos[2];
-    //    target_EP[6] = local_FL_foot_pos[0] + turn_xl_EP + cp_FL_foot_pos[0];
-    //    target_EP[7] = local_FL_foot_pos[1] + turn_yl_EP + cp_FL_foot_pos[1];
-    //    target_EP[8] = local_FL_foot_pos[2] + cp_FL_foot_pos[2];
-    //    target_EP[9] = local_FR_foot_pos[0] + turn_xr_EP + cp_FR_foot_pos[0];
-    //    target_EP[10] = local_FR_foot_pos[1] + turn_yr_EP + cp_FR_foot_pos[1];
-    //    target_EP[11] = local_FR_foot_pos[2] + cp_FR_foot_pos[2];
-    //
-    //
-    //
-    //    target_pos[6] = 0; //goal_pos[6];
-    //
-    //    //    printf("FC_PHASE = %d, ft_cnt = %d, x_moving_speed = %f\n",FC_PHASE,ft_cnt,x_moving_speed);
-    //
-    //}
-    //
-    //void CRobot::FT_Traj_Gen(void)
-    //{
-    //    ft_time = (double) ft_cnt*dt;
-    //
-    //    if (ft_cnt == 0) {
-    //        // ============ Initialize ============ //
-    //        FC_PHASE = STANCE_RLFR;
-    //
-    //        moving_done_flag = false;
-    //
-    //        com_acc[2] = 0;
-    //
-    //        com_pos = init_com_pos;
-    //        RL_foot_pos = init_RL_foot_pos;
-    //        RR_foot_pos = init_RR_foot_pos;
-    //        FL_foot_pos = init_FL_foot_pos;
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        old_com_pos = init_com_pos;
-    //
-    //        x_moving_speed = 0; // initial moving speed
-    //
-    //        flying_trot_init_flag = true;
-    //        flying_trot_final_flag = false;
-    //
-    //        COM_SF_FT_Z_Traj_Gen();
-    //
-    //    }
-    //    else if (ft_cnt < ts_cnt) {
-    //        //        printf("[1] First Step (STANCE_RLFR)\n");
-    //        // ============ First Step (STANCE_RLFR) ============= //
-    //        FC_PHASE = STANCE_RLFR;
-    //        tmp_t = ft_time;
-    //
-    //        com_pos[0] = init_com_pos(0);
-    //        com_pos[1] = init_com_pos(1);
-    //        com_pos[2] = c_com_z1[5] * pow(tmp_t, 5) + c_com_z1[4] * pow(tmp_t, 4) + c_com_z1[3] * pow(tmp_t, 3) + c_com_z1[2] * pow(tmp_t, 2) + c_com_z1[1] * pow(tmp_t, 1) + c_com_z1[0];
-    //
-    //        RL_foot_pos = init_RL_foot_pos;
-    //
-    //        RR_foot_pos[0] = init_RR_foot_pos[0];
-    //        RR_foot_pos[1] = init_RR_foot_pos[1];
-    //        RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-    //
-    //        FL_foot_pos[0] = init_FL_foot_pos[0];
-    //        FL_foot_pos[1] = init_FL_foot_pos[1];
-    //        FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-    //
-    //        FR_foot_pos = init_FR_foot_pos;
-    //
-    //        com_acc[2] = 20 * c_com_z1[5] * pow(tmp_t, 3) + 12 * c_com_z1[4] * pow(tmp_t, 2) + 6 * c_com_z1[3] * pow(tmp_t, 1) + 2 * c_com_z1[2];
-    //
-    //        if (ft_cnt == ts_cnt - 1) {
-    //            flying_trot_init_flag = false;
-    //        }
-    //        //        printf("RR_foot_pos[2] = %f\n",RR_foot_pos[2]);
-    //    }
-    //    else if (ft_cnt < ft_step_cnt) {
-    //        //        printf("[2] First Step (FP)\n");
-    //        // ============ First Step (FP) ============= //
-    //        FC_PHASE = ZERO;
-    //        tmp_t = ft_time - ts;
-    //
-    //        com_pos[0] = init_com_pos(0);
-    //        com_pos[1] = init_com_pos(1);
-    //        com_pos[2] = c_com_z2[5] * pow(tmp_t, 5) + c_com_z2[4] * pow(tmp_t, 4) + c_com_z2[3] * pow(tmp_t, 3) + c_com_z2[2] * pow(tmp_t, 2) + c_com_z2[1] * pow(tmp_t, 1) + c_com_z2[0];
-    //
-    //        RL_foot_pos[0] = init_RL_foot_pos[0];
-    //        RL_foot_pos[1] = init_RL_foot_pos[1];
-    //        RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
-    //        //        RL_foot_pos[2] = init_RL_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
-    //
-    //        RR_foot_pos[0] = init_RR_foot_pos[0];
-    //        RR_foot_pos[1] = init_RR_foot_pos[1];
-    //        RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
-    //
-    //        FL_foot_pos[0] = init_FL_foot_pos[0];
-    //        FL_foot_pos[1] = init_FL_foot_pos[1];
-    //        FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
-    //
-    //        FR_foot_pos[0] = init_FR_foot_pos[0];
-    //        FR_foot_pos[1] = init_FR_foot_pos[1];
-    //        FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
-    //        //        FR_foot_pos[2] = init_FR_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
-    //
-    //        com_acc[2] = 0;
-    //
-    //        if (ft_cnt == ft_step_cnt - 1) {
-    //            pre_x_moving_speed = x_moving_speed;
-    //            x_moving_speed = tmp_x_moving_speed;
-    //
-    //            pre_com_pos[0] = com_pos[0];
-    //            pre_com_pos[1] = com_pos[1];
-    //            pre_com_pos[2] = h_2;
-    //
-    //            pre_RL_foot_pos[0] = RL_foot_pos[0];
-    //            pre_RL_foot_pos[1] = RL_foot_pos[1];
-    //            pre_RL_foot_pos[2] = init_RL_foot_pos[2] + swing_foot_height;
-    //
-    //            pre_RR_foot_pos[0] = RR_foot_pos[0];
-    //            pre_RR_foot_pos[1] = RR_foot_pos[1];
-    //            pre_RR_foot_pos[2] = init_RR_foot_pos[2];
-    //
-    //            pre_FL_foot_pos[0] = FL_foot_pos[0];
-    //            pre_FL_foot_pos[1] = FL_foot_pos[1];
-    //            pre_FL_foot_pos[2] = init_FL_foot_pos[2];
-    //
-    //            pre_FR_foot_pos[0] = FR_foot_pos[0];
-    //            pre_FR_foot_pos[1] = FR_foot_pos[1];
-    //            pre_FR_foot_pos[2] = init_FR_foot_pos[2] + swing_foot_height;
-    //
-    //            COM_SF_FT_X_Traj_Gen();
-    //        }
-    //    }
-    //
-    //    else if (ft_cnt < ft_step_cnt + ts_cnt) {
-    //        //        printf("[3] Second Step (STANCE_RRFL)\n");
-    //        // ============ Second Step (STANCE_RRFL) ============= //
-    //        // ============ Continuous Walking Start ============== //
-    //        FC_PHASE = STANCE_RRFL;
-    //        tmp_t = ft_time - ft_step_time;
-    //        tmp_t2 = ft_time - ft_step_time;
-    //
-    //        com_pos[0] = c_com_x1[5] * pow(tmp_t, 5) + c_com_x1[4] * pow(tmp_t, 4) + c_com_x1[3] * pow(tmp_t, 3) + c_com_x1[2] * pow(tmp_t, 2) + c_com_x1[1] * pow(tmp_t, 1) + c_com_x1[0]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
-    //        com_pos[1] = pre_com_pos(1);
-    //        com_pos[2] = c_com_z3[5] * pow(tmp_t, 5) + c_com_z3[4] * pow(tmp_t, 4) + c_com_z3[3] * pow(tmp_t, 3) + c_com_z3[2] * pow(tmp_t, 2) + c_com_z3[1] * pow(tmp_t, 1) + c_com_z3[0];
-    //
-    //        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
-    //        RL_foot_pos[1] = pre_RL_foot_pos[1];
-    //        RL_foot_pos[2] = pre_RL_foot_pos[2];
-    //
-    //        //        printf("RL_foot_pos[0] = %f\n",RL_foot_pos[0]);
-    //        RR_foot_pos[0] = pre_RR_foot_pos[0];
-    //        RR_foot_pos[1] = pre_RR_foot_pos[1];
-    //        RR_foot_pos[2] = pre_RR_foot_pos[2];
-    //
-    //        FL_foot_pos[0] = pre_FL_foot_pos[0];
-    //        FL_foot_pos[1] = pre_FL_foot_pos[1];
-    //        FL_foot_pos[2] = pre_FL_foot_pos[2];
-    //
-    //        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
-    //        FR_foot_pos[1] = pre_FR_foot_pos[1];
-    //        FR_foot_pos[2] = pre_FR_foot_pos[2];
-    //
-    //        com_acc[2] = 20 * c_com_z3[5] * pow(tmp_t, 3) + 12 * c_com_z3[4] * pow(tmp_t, 2) + 6 * c_com_z3[3] * pow(tmp_t, 1) + 2 * c_com_z3[2];
-    //
-    //        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
-    //            pre_com_pos(0) = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
-    //            pre_com_pos(1) = com_pos(1);
-    //            pre_com_pos(2) = h_1; //com_pos(2);
-    //
-    //            //            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;//RL_foot_pos[0];//x_moving_speed * (ft_step_time);
-    //            pre_RL_foot_pos[1] = RL_foot_pos[1];
-    //            pre_RL_foot_pos[2] = RL_foot_pos[2];
-    //
-    //            pre_RR_foot_pos[0] = RR_foot_pos[0];
-    //            pre_RR_foot_pos[1] = RR_foot_pos[1];
-    //            pre_RR_foot_pos[2] = RR_foot_pos[2];
-    //
-    //            pre_FL_foot_pos[0] = FL_foot_pos[0];
-    //            pre_FL_foot_pos[1] = FL_foot_pos[1];
-    //            pre_FL_foot_pos[2] = FL_foot_pos[2];
-    //
-    //            //            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;//FR_foot_pos[0];
-    //            pre_FR_foot_pos[1] = FR_foot_pos[1];
-    //            pre_FR_foot_pos[2] = FR_foot_pos[2];
-    //
-    //            //            printf("[final] FR_foot_pos[0] = %f, pre_FR_foot_pos[0] = %f\n",FR_foot_pos[0],pre_FR_foot_pos[0]);
-    //        }
-    //
-    //        //        printf("FR_foot_pos[0] = %f\n",FR_foot_pos[0]);
-    //
-    //    }
-    //    else if (ft_cnt < 2 * ft_step_cnt) {
-    //        //        printf("[4] Second Step (FP)\n");
-    //        // ============ Second Step (FP) ============= //
-    //        FC_PHASE = ZERO;
-    //        tmp_t = ft_time - ft_step_time - ts;
-    //        tmp_t2 = ft_time - ft_step_time;
-    //
-    //        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-    //        com_pos[1] = pre_com_pos(1);
-    //        com_pos[2] = c_com_z2[5] * pow(tmp_t, 5) + c_com_z2[4] * pow(tmp_t, 4) + c_com_z2[3] * pow(tmp_t, 3) + c_com_z2[2] * pow(tmp_t, 2) + c_com_z2[1] * pow(tmp_t, 1) + c_com_z2[0];
-    //
-    //        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
-    //        RL_foot_pos[1] = pre_RL_foot_pos[1];
-    //        RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
-    //
-    //        RR_foot_pos[0] = pre_RR_foot_pos[0];
-    //        RR_foot_pos[1] = pre_RR_foot_pos[1];
-    //        RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
-    //        //        RR_foot_pos[2] = init_RR_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
-    //
-    //        FL_foot_pos[0] = pre_FL_foot_pos[0];
-    //        FL_foot_pos[1] = pre_FL_foot_pos[1];
-    //        FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
-    //        //        FL_foot_pos[2] = init_FL_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
-    //
-    //        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
-    //        FR_foot_pos[1] = pre_FR_foot_pos[1];
-    //        FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
-    //
-    //        //        printf("FR_foot_pos[0] = %f\n",FR_foot_pos[0]);
-    //
-    //        com_acc[2] = 0;
-    //
-    //        if (ft_cnt == 2 * ft_step_cnt - 1) {
-    //            tmp_t2 = ts + tf;
-    //
-    //            pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*tf;
-    //            pre_com_pos(1) = com_pos(1);
-    //            pre_com_pos(2) = h_2; //com_pos(2);
-    //
-    //            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0]; //RL_foot_pos[0];//pre_RL_foot_pos(0) + pre_x_moving_speed * step_time + x_moving_speed * step_time;//RL_foot_pos[0];//x_moving_speed * (ft_step_time);
-    //            pre_RL_foot_pos[1] = RL_foot_pos[1];
-    //            pre_RL_foot_pos[2] = init_RL_foot_pos[2];
-    //
-    //            pre_RR_foot_pos[0] = RR_foot_pos[0];
-    //            pre_RR_foot_pos[1] = RR_foot_pos[1];
-    //            pre_RR_foot_pos[2] = init_RR_foot_pos[2] + swing_foot_height;
-    //
-    //            pre_FL_foot_pos[0] = FL_foot_pos[0];
-    //            pre_FL_foot_pos[1] = FL_foot_pos[1];
-    //            pre_FL_foot_pos[2] = init_FL_foot_pos[2] + swing_foot_height;
-    //
-    //            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
-    //            pre_FR_foot_pos[1] = FR_foot_pos[1];
-    //            pre_FR_foot_pos[2] = init_FR_foot_pos[2];
-    //        }
-    //    }
-    //    else if (ft_cnt < 2 * ft_step_cnt + ts_cnt) {
-    //        //        printf("[5] Third Step (STANCE_RLFR)\n");
-    //        // ============ Third Step (STANCE_RLFR) ============= //
-    //        FC_PHASE = STANCE_RLFR;
-    //        tmp_t = ft_time - 2 * ft_step_time;
-    //        tmp_t2 = ft_time - 2 * ft_step_time;
-    //
-    //        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-    //        com_pos[1] = pre_com_pos(1);
-    //        com_pos[2] = c_com_z3[5] * pow(tmp_t, 5) + c_com_z3[4] * pow(tmp_t, 4) + c_com_z3[3] * pow(tmp_t, 3) + c_com_z3[2] * pow(tmp_t, 2) + c_com_z3[1] * pow(tmp_t, 1) + c_com_z3[0];
-    //
-    //        RL_foot_pos[0] = pre_RL_foot_pos[0];
-    //        RL_foot_pos[1] = pre_RL_foot_pos[1];
-    //        RL_foot_pos[2] = pre_RL_foot_pos[2];
-    //
-    //        RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
-    //        RR_foot_pos[1] = pre_RR_foot_pos[1];
-    //        RR_foot_pos[2] = pre_RR_foot_pos[2];
-    //
-    //        FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
-    //        FL_foot_pos[1] = pre_FL_foot_pos[1];
-    //        FL_foot_pos[2] = pre_FL_foot_pos[2];
-    //
-    //        FR_foot_pos[0] = pre_FR_foot_pos[0];
-    //        FR_foot_pos[1] = pre_FR_foot_pos[1];
-    //        FR_foot_pos[2] = pre_FR_foot_pos[2];
-    //
-    //        com_acc[2] = 20 * c_com_z3[5] * pow(tmp_t, 3) + 12 * c_com_z3[4] * pow(tmp_t, 2) + 6 * c_com_z3[3] * pow(tmp_t, 1) + 2 * c_com_z3[2];
-    //
-    //        //        printf("pre_RL_foot_pos[0] = %f, pre_RR_foot_pos[0] = %f\n",pre_RL_foot_pos[0],pre_RR_foot_pos[0]);   
-    //
-    //        if (ft_cnt == 2 * ft_step_cnt + ts_cnt - 1) {
-    //            //            cout << "test!!!!!!!!!!!!!!!!!!!!!!!!! " << endl;
-    //
-    //            pre_com_pos[0] = pre_com_pos[0] + x_moving_speed * (ts);
-    //            pre_com_pos[1] = com_pos(1);
-    //            pre_com_pos[2] = h_1; //com_pos(2);
-    //
-    //            pre_RL_foot_pos[0] = RL_foot_pos[0];
-    //            pre_RL_foot_pos[1] = RL_foot_pos[1];
-    //            pre_RL_foot_pos[2] = RL_foot_pos[2];
-    //
-    //            //            pre_RR_foot_pos[0] = pre_RR_foot_pos(0) + x_moving_speed * ft_step_time*2;//RR_foot_pos[0];
-    //            pre_RR_foot_pos[1] = RR_foot_pos[1];
-    //            pre_RR_foot_pos[2] = RR_foot_pos[2];
-    //
-    //            //            pre_FL_foot_pos[0] = pre_FL_foot_pos(0) + x_moving_speed * ft_step_time*2;//FL_foot_pos[0];
-    //            pre_FL_foot_pos[1] = FL_foot_pos[1];
-    //            pre_FL_foot_pos[2] = FL_foot_pos[2];
-    //
-    //            pre_FR_foot_pos[0] = FR_foot_pos[0];
-    //            pre_FR_foot_pos[1] = FR_foot_pos[1];
-    //            pre_FR_foot_pos[2] = FR_foot_pos[2];
-    //
-    //            //            printf("pre_RL_foot_pos[0] = %f, pre_RR_foot_pos[0] = %f\n",pre_RL_foot_pos[0],pre_RR_foot_pos[0]);   
-    //        }
-    //
-    //    }
-    //    else if (ft_cnt < 3 * ft_step_cnt) {
-    //        //        printf("[6] Third Step (FP)\n");
-    //        // ============ Third Step (FP) ============= //
-    //        FC_PHASE = ZERO;
-    //        tmp_t = ft_time - 2 * ft_step_time - ts;
-    //        tmp_t2 = ft_time - 2 * ft_step_time;
-    //
-    //        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
-    //        com_pos[1] = pre_com_pos(1);
-    //        com_pos[2] = c_com_z2[5] * pow(tmp_t, 5) + c_com_z2[4] * pow(tmp_t, 4) + c_com_z2[3] * pow(tmp_t, 3) + c_com_z2[2] * pow(tmp_t, 2) + c_com_z2[1] * pow(tmp_t, 1) + c_com_z2[0];
-    //
-    //
-    //        RL_foot_pos[0] = pre_RL_foot_pos[0];
-    //        RL_foot_pos[1] = pre_RL_foot_pos[1];
-    //        RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
-    //        //        RL_foot_pos[2] = init_RL_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
-    //
-    //        RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
-    //        RR_foot_pos[1] = pre_RR_foot_pos[1];
-    //        RR_foot_pos[2] = init_RR_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
-    //
-    //        FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
-    //        FL_foot_pos[1] = pre_FL_foot_pos[1];
-    //        FL_foot_pos[2] = init_FL_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
-    //
-    //        FR_foot_pos[0] = pre_FR_foot_pos[0];
-    //        FR_foot_pos[1] = pre_FR_foot_pos[1];
-    //        FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
-    //        //        FR_foot_pos[2] = init_FR_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
-    //
-    //        com_acc[2] = 0;
-    //
-    //        if (ft_cnt == 3 * ft_step_cnt - 1) {
-    //
-    //            pre_com_pos(0) = pre_com_pos[0] + x_moving_speed * tf;
-    //            pre_com_pos(1) = pre_com_pos[1];
-    //            pre_com_pos(2) = h_1;
-    //
-    //            pre_RL_foot_pos[0] = RL_foot_pos[0];
-    //            pre_RL_foot_pos[1] = RL_foot_pos[1];
-    //            pre_RL_foot_pos[2] = init_RL_foot_pos[2] + swing_foot_height;
-    //
-    //            pre_RR_foot_pos[0] = RR_foot_pos[0];
-    //            pre_RR_foot_pos[1] = RR_foot_pos[1];
-    //            pre_RR_foot_pos[2] = init_RR_foot_pos[2];
-    //
-    //            pre_FL_foot_pos[0] = FL_foot_pos[0];
-    //            pre_FL_foot_pos[1] = FL_foot_pos[1];
-    //            pre_FL_foot_pos[2] = init_FL_foot_pos[2];
-    //
-    //            pre_FR_foot_pos[0] = FR_foot_pos[0];
-    //            pre_FR_foot_pos[1] = FR_foot_pos[1];
-    //            pre_FR_foot_pos[2] = init_FR_foot_pos[2] + swing_foot_height;
-    //
-    //
-    //            if (sub_ctrl_flag == false) {
-    //                pre_x_moving_speed = x_moving_speed;
-    //                x_moving_speed = tmp_x_moving_speed;
-    //
-    //                COM_SF_FT_X_Traj_Gen();
-    //                ft_cnt = ft_step_cnt - 1;
-    //            }
-    //            else {
-    //                // =============== COM =============== //                
-    //                init_x[0] = pre_com_pos[0];
-    //                init_x[1] = x_moving_speed;
-    //                init_x[2] = 0;
-    //
-    //                final_x[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
-    //                final_x[1] = 0;
-    //                final_x[2] = 0;
-    //
-    //                coefficient_5thPoly(init_x, final_x, ts, c_com_x2);
-    //
-    //                // =============== Swing Foot =============== //
-    //
-    //                // Left (Second)
-    //                init_x[0] = 0;
-    //                init_x[1] = 0;
-    //                init_x[2] = 0;
-    //
-    //                final_x[0] = 0 + x_moving_speed * ft_step_time;
-    //                final_x[1] = 0;
-    //                final_x[2] = 0;
-    //
-    //                coefficient_5thPoly(init_x, final_x, ts, c_sf_x5);
-    //            }
-    //        }
-    //    }
-    //
-    //    else if (ft_cnt < 3 * ft_step_cnt + ts_cnt) {
-    //        //        printf("[7] Final step (STANCE_RR_FL)\n");
-    //        // ============ Final step (STANCE_RR_FL)============== //
-    //        // =========== [FT] Final Step ========== //
-    //        FC_PHASE = STANCE_RRFL;
-    //        tmp_t = ft_time - 3 * ft_step_time;
-    //
-    //        if (ft_cnt == 3 * ft_step_cnt) {
-    //            flying_trot_final_flag = true;
-    //        }
-    //
-    //        com_pos[0] = c_com_x2[5] * pow(tmp_t, 5) + c_com_x2[4] * pow(tmp_t, 4) + c_com_x2[3] * pow(tmp_t, 3) + c_com_x2[2] * pow(tmp_t, 2) + c_com_x2[1] * pow(tmp_t, 1) + c_com_x2[0];
-    //        com_pos[1] = init_com_pos(1);
-    //        com_pos[2] = c_com_z4[5] * pow(tmp_t, 5) + c_com_z4[4] * pow(tmp_t, 4) + c_com_z4[3] * pow(tmp_t, 3) + c_com_z4[2] * pow(tmp_t, 2) + c_com_z4[1] * pow(tmp_t, 1) + c_com_z4[0];
-    //
-    //        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x5[5] * pow(tmp_t, 5) + c_sf_x5[4] * pow(tmp_t, 4) + c_sf_x5[3] * pow(tmp_t, 3) + c_sf_x5[2] * pow(tmp_t, 2) + c_sf_x5[1] * pow(tmp_t, 1) + c_sf_x5[0];
-    //        RL_foot_pos[1] = pre_RL_foot_pos[1];
-    //        RL_foot_pos[2] = init_RL_foot_pos[2] + c_sf_z4[5] * pow(tmp_t, 5) + c_sf_z4[4] * pow(tmp_t, 4) + c_sf_z4[3] * pow(tmp_t, 3) + c_sf_z4[2] * pow(tmp_t, 2) + c_sf_z4[1] * pow(tmp_t, 1) + c_sf_z4[0];
-    //
-    //        RR_foot_pos[0] = pre_RR_foot_pos[0];
-    //        RR_foot_pos[1] = pre_RR_foot_pos[1];
-    //        RR_foot_pos[2] = pre_RR_foot_pos[2];
-    //
-    //        FL_foot_pos[0] = pre_FL_foot_pos[0];
-    //        FL_foot_pos[1] = pre_FL_foot_pos[1];
-    //        FL_foot_pos[2] = pre_FL_foot_pos[2];
-    //
-    //        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x5[5] * pow(tmp_t, 5) + c_sf_x5[4] * pow(tmp_t, 4) + c_sf_x5[3] * pow(tmp_t, 3) + c_sf_x5[2] * pow(tmp_t, 2) + c_sf_x5[1] * pow(tmp_t, 1) + c_sf_x5[0];
-    //        FR_foot_pos[1] = pre_FR_foot_pos[1];
-    //        FR_foot_pos[2] = init_FR_foot_pos[2] + c_sf_z4[5] * pow(tmp_t, 5) + c_sf_z4[4] * pow(tmp_t, 4) + c_sf_z4[3] * pow(tmp_t, 3) + c_sf_z4[2] * pow(tmp_t, 2) + c_sf_z4[1] * pow(tmp_t, 1) + c_sf_z4[0];
-    //
-    //        com_acc[2] = 20 * c_com_z4[5] * pow(tmp_t, 3) + 12 * c_com_z4[4] * pow(tmp_t, 2) + 6 * c_com_z4[3] * pow(tmp_t, 1) + 2 * c_com_z4[2];
-    //
-    //        if (ft_cnt == 3 * ft_step_cnt + ts_cnt - 1) {
-    //            pre_com_pos[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
-    //            pre_com_pos[1] = com_pos(1);
-    //            pre_com_pos[2] = h_0; //com_pos(2);
-    //
-    //            pre_RL_foot_pos[0] = pre_RL_foot_pos(0) + x_moving_speed * ft_step_time; //init_RL_foot_pos[0];// + pre_x_moving_speed * step_time + x_moving_speed * step_time;//RL_foot_pos[0];//x_moving_speed * (ft_step_time);
-    //            pre_RL_foot_pos[1] = pre_RL_foot_pos[1];
-    //            pre_RL_foot_pos[2] = init_RL_foot_pos[2];
-    //
-    //            pre_RR_foot_pos[0] = pre_RR_foot_pos[0]; //pre_RL_foot_pos(0) + pre_x_moving_speed * step_time + x_moving_speed * step_time;//RR_foot_pos[0];
-    //            pre_RR_foot_pos[1] = pre_RR_foot_pos[1];
-    //            pre_RR_foot_pos[2] = pre_RR_foot_pos[2];
-    //
-    //            pre_FL_foot_pos[0] = pre_FL_foot_pos[0]; //pre_RL_foot_pos(0) + pre_x_moving_speed * step_time + x_moving_speed * step_time;//FL_foot_pos[0];
-    //            pre_FL_foot_pos[1] = pre_FL_foot_pos[1];
-    //            pre_FL_foot_pos[2] = pre_FL_foot_pos[2];
-    //
-    //            pre_FR_foot_pos[0] = pre_FR_foot_pos(0) + x_moving_speed * ft_step_time; //init_FR_foot_pos[0];// + pre_x_moving_speed * step_time + x_moving_speed * step_time;//FR_foot_pos[0];
-    //            pre_FR_foot_pos[1] = pre_FR_foot_pos[1];
-    //            pre_FR_foot_pos[2] = init_FR_foot_pos[2];
-    //        }
-    //    }
-    //    else if (ft_cnt < 4 * ft_step_cnt) {
-    //        // ============ Final step (FSP)============== //
-    //        //        printf("[8] Final step (FSP)\n");
-    //        FC_PHASE = STOP;
-    //
-    //
-    //        if (ft_cnt == 3 * ft_step_cnt + ts_cnt) {
-    //            moving_done_flag = true;
-    //        }
-    //
-    //
-    //        com_pos = pre_com_pos;
-    //        RL_foot_pos = pre_RL_foot_pos;
-    //        RR_foot_pos = pre_RR_foot_pos;
-    //        FL_foot_pos = pre_FL_foot_pos;
-    //        FR_foot_pos = pre_FR_foot_pos;
-    //
-    //        com_acc[2] = 0;
-    //    }
-    //
-    //    if (ft_cnt > 0) {
-    //        target_com_vel[0] = (com_pos[0] - old_com_pos[0]) / dt;
-    //        old_com_pos[0] = com_pos[0];
-    //        if (ft_cnt > 1) {
-    //            target_com_acc[0] = (target_com_vel[0] - old_com_vel[0]) / dt;
-    //            old_com_vel[0] = target_com_vel[0];
-    //        }
-    //    }
-    //}
-    //
-    //void CRobot::check_CP_FT(void)
-    //{
-    //    static double tmp_cp_y_lower_limit = 0.08;
-    //    static double tmp_cp_y_upper_limit = 0.20;
-    //
-    //    if (CP_y > tmp_cp_y_lower_limit) {
-    //        //        cout << "CP_y = " << CP_y << endl;
-    //
-    //        if (CP_y < tmp_cp_y_upper_limit) {
-    //            tmp_cp_foot_pos_y = CP_y;
-    //        }
-    //        else {
-    //            tmp_cp_foot_pos_y = tmp_cp_y_upper_limit;
-    //        }
-    //
-    //        get_cp_done_flag = true;
-    //    }
-    //    else if (CP_y < -tmp_cp_y_lower_limit) {
-    //        //        cout << "CP_y = " << CP_y << endl;
-    //
-    //        if (CP_y > -tmp_cp_y_upper_limit) {
-    //            tmp_cp_foot_pos_y = CP_y;
-    //        }
-    //        else {
-    //            tmp_cp_foot_pos_y = -tmp_cp_y_upper_limit;
-    //        }
-    //
-    //        get_cp_done_flag = true;
-    //    }
-    //    else if (get_cp_done_flag == false) {
-    //        tmp_cp_foot_pos_y = 0;
-    //    }
-    //}
-    //
-    //void CRobot::CP_Con_FT(void)
-    //{
-    //    const double tmp_kp_roll = 0.01;
-    //    const double tmp_kd_roll = 0.00001; //0.00002;
-    //    const double tmp_kp_pitch = 0.005;
-    //    const double tmp_kd_pitch = 0.000005;
-    //    const double max_cp_foot_pos[3] = {0.05, 0.08, 0.05};
-    //    const double IMURoll_alpha = 0.03, IMURoll_dot_alpha = 0.02, IMUPitch_alpha = 0.02, IMUPitch_dot_alpha = 0.01;
-    //    static double lpf_IMURoll = 0, lpf_IMURoll_dot = 0, lpf_IMUPitch = 0, lpf_IMUPitch_dot = 0;
-    //    static double tmp_u_r = 0, tmp_u_p = 0;
-    //    static double cp_weight = 0;
-    //
-    //    if (ft_cnt <= ft_step_cnt) {
-    //        cp_weight = 0.5 * (1 - cos(PI2 / (ft_step_time * 2)*(double) ft_cnt * dt));
-    //    }
-    //
-    //    //    cout << "cp_weight = " << cp_weight << endl;
-    //
-    //    lpf_IMURoll = (1 - IMURoll_alpha) * lpf_IMURoll + IMURoll_alpha*IMURoll;
-    //    lpf_IMURoll_dot = (1 - IMURoll_dot_alpha) * lpf_IMURoll_dot + IMURoll_dot_alpha*IMURoll_dot;
-    //
-    //    lpf_IMUPitch = (1 - IMUPitch_alpha) * lpf_IMUPitch + IMUPitch_alpha*IMUPitch;
-    //    lpf_IMUPitch_dot = (1 - IMUPitch_dot_alpha) * lpf_IMUPitch_dot + IMUPitch_dot_alpha*IMUPitch_dot;
-    //
-    //    // Roll
-    //    tmp_u_r = cp_weight * (tmp_kp_roll * (0 - lpf_IMURoll) + tmp_kd_roll * (0 - lpf_IMURoll_dot));
-    //
-    //    if (tmp_u_r > 0) {
-    //        cp_RL_foot_pos[1] = tmp_u_r;
-    //        cp_RR_foot_pos[1] = -tmp_u_r * 0.2;
-    //        cp_FL_foot_pos[1] = tmp_u_r;
-    //        cp_FR_foot_pos[1] = -tmp_u_r * 0.2;
-    //    }
-    //    else {
-    //        cp_RL_foot_pos[1] = -tmp_u_r * 0.2;
-    //        cp_RR_foot_pos[1] = tmp_u_r;
-    //        cp_FL_foot_pos[1] = -tmp_u_r * 0.2;
-    //        cp_FR_foot_pos[1] = tmp_u_r;
-    //    }
-    //
-    //    if (cp_RL_foot_pos[1] > max_cp_foot_pos[1]) {
-    //        cp_RL_foot_pos[1] = max_cp_foot_pos[1];
-    //    }
-    //    else if (cp_RL_foot_pos[1] < -max_cp_foot_pos[1]) {
-    //        cp_RL_foot_pos[1] = -max_cp_foot_pos[1];
-    //    }
-    //    if (cp_RR_foot_pos[1] > max_cp_foot_pos[1]) {
-    //        cp_RR_foot_pos[1] = max_cp_foot_pos[1];
-    //    }
-    //    else if (cp_RR_foot_pos[1] < -max_cp_foot_pos[1]) {
-    //        cp_RR_foot_pos[1] = -max_cp_foot_pos[1];
-    //    }
-    //    if (cp_FL_foot_pos[1] > max_cp_foot_pos[1]) {
-    //        cp_FL_foot_pos[1] = max_cp_foot_pos[1];
-    //    }
-    //    else if (cp_FL_foot_pos[1] < -max_cp_foot_pos[1]) {
-    //        cp_FL_foot_pos[1] = -max_cp_foot_pos[1];
-    //    }
-    //    if (cp_FR_foot_pos[1] > max_cp_foot_pos[1]) {
-    //        cp_FR_foot_pos[1] = max_cp_foot_pos[1];
-    //    }
-    //    else if (cp_FR_foot_pos[1] < -max_cp_foot_pos[1]) {
-    //        cp_FR_foot_pos[1] = -max_cp_foot_pos[1];
-    //    }
-    //
-    //    // Pitch
-    //    tmp_u_p = 0; //cp_weight * (-tmp_kp_pitch * (des_pitch_deg - lpf_IMUPitch) - tmp_kd_pitch * (0 - lpf_IMUPitch_dot));
-    //
-    //
-    //
-    //    if (tmp_u_p > 0) {
-    //        cp_RL_foot_pos[0] = -tmp_u_p * 0.3;
-    //        cp_RR_foot_pos[0] = -tmp_u_p * 0.3;
-    //        cp_FL_foot_pos[0] = tmp_u_p;
-    //        cp_FR_foot_pos[0] = tmp_u_p;
-    //    }
-    //    else {
-    //        cp_RL_foot_pos[0] = tmp_u_p;
-    //        cp_RR_foot_pos[0] = tmp_u_p;
-    //        cp_FL_foot_pos[0] = -tmp_u_p * 0.3;
-    //        cp_FR_foot_pos[0] = -tmp_u_p * 0.3;
-    //    }
-    //
-    //
-    //    if (cp_RL_foot_pos[0] > max_cp_foot_pos[0]) {
-    //        cp_RL_foot_pos[0] = max_cp_foot_pos[0];
-    //    }
-    //    else if (cp_RL_foot_pos[0] < -max_cp_foot_pos[0]) {
-    //        cp_RL_foot_pos[0] = -max_cp_foot_pos[0];
-    //    }
-    //    if (cp_RR_foot_pos[0] > max_cp_foot_pos[0]) {
-    //        cp_RR_foot_pos[0] = max_cp_foot_pos[0];
-    //    }
-    //    else if (cp_RR_foot_pos[0] < -max_cp_foot_pos[0]) {
-    //        cp_RR_foot_pos[0] = -max_cp_foot_pos[0];
-    //    }
-    //    if (cp_FL_foot_pos[0] > max_cp_foot_pos[0]) {
-    //        cp_FL_foot_pos[0] = max_cp_foot_pos[0];
-    //    }
-    //    else if (cp_FL_foot_pos[0] < -max_cp_foot_pos[0]) {
-    //        cp_FL_foot_pos[0] = -max_cp_foot_pos[0];
-    //    }
-    //    if (cp_FR_foot_pos[0] > max_cp_foot_pos[0]) {
-    //        cp_FR_foot_pos[0] = max_cp_foot_pos[0];
-    //    }
-    //    else if (cp_FR_foot_pos[0] < -max_cp_foot_pos[0]) {
-    //        cp_FR_foot_pos[0] = -max_cp_foot_pos[0];
-    //    }
-    //
-    //    //    cout << "[P] cp_RL_foot_pos[0] = " << cp_RL_foot_pos[0] << ", cp_FL_foot_pos[0] = " << cp_FL_foot_pos[0] << endl;
-    //    //    cout << "[R] cp_RL_foot_pos[1] = " << cp_RL_foot_pos[1] << ", cp_RR_foot_pos[1] = " << cp_RR_foot_pos[1] << endl;
-    //
-    //    //    cout << "cp_RL_foot_pos[1] = " << cp_RL_foot_pos[1] << ",cp_RR_foot_pos[1] = " << cp_RR_foot_pos[1] << endl;
+    static double com_t = 0;
+    static double sf_rl_t = 0, sf_rl_t2 = 0;
+    static double sf_rr_t = 0, sf_rr_t2 = 0;
+    static double tar_rl_foot_pos = 0, tar_rr_foot_pos = 0;
+    static bool init_flag = false;
+    
+    ft_time = (double) ft_cnt*dt;
+    base_ori(2) = tmp_base_ori(2);
 
-}
+//    if (CP_con_onoff_flag == true) Get_CP();
 
-//void CRobot::check_CP_FT(void)
-//{
-//    static double tmp_cp_y_lower_limit = 0.08;
-//    static double tmp_cp_y_upper_limit = 0.20;
+    if (ft_cnt == 0) {
+        //        cout << "=========== ft_phase = 0 ===========" << endl;
+        ft_phase = 0;
+        moving_done_flag = false;
+        _c << 1, 1, 1, 1;
+        contact_num = 4;
+
+        com_t = 0;
+        sf_rl_t = 0; 
+        sf_rl_t2 = 0;
+        sf_rr_t = 0;
+        sf_rr_t2 = 0;
+        tar_rl_foot_pos = 0;
+        tar_rr_foot_pos = 0;
+        init_flag = false;
+        
+        com_pos = tar_init_com_pos;
+        com_vel = tar_init_com_vel;
+
+        RL_foot_pos = tar_init_RL_foot_pos;
+        RR_foot_pos = tar_init_RR_foot_pos;
+        FL_foot_pos = tar_init_FL_foot_pos;
+        FR_foot_pos = tar_init_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
+        
+        pre_com_pos = com_pos;
+        pre_com_vel = com_vel;
+        
+        pre_RL_foot_pos = RL_foot_pos;
+        pre_RR_foot_pos = RR_foot_pos;
+        pre_FL_foot_pos = FL_foot_pos;
+        pre_FR_foot_pos = FR_foot_pos;
+        
+
+        x_moving_speed = 0;
+//        y_moving_speed = 0;
+
+        FT_COM_SF_Z_Traj_Gen();
+    }
+    else if (ft_cnt < ts_cnt) {
+        //        cout << "=========== ft_phase = 1 ===========" << endl;
+        ft_phase = 1;
+        _c << 1, 0, 0, 1;
+        contact_num = 2;
+        com_t = ft_time;
+        sf_rr_t = sf_rr_t + dt;
+
+        com_pos[2] = c_com_z1[5] * pow(com_t, 5) + c_com_z1[4] * pow(com_t, 4) + c_com_z1[3] * pow(com_t, 3) + c_com_z1[2] * pow(com_t, 2) + c_com_z1[1] * pow(com_t, 1) + c_com_z1[0];
+        com_vel[2] = 5 * c_com_z1[5] * pow(com_t, 4) + 4 * c_com_z1[4] * pow(com_t, 3) + 3 * c_com_z1[3] * pow(com_t, 2) + 2 * c_com_z1[2] * pow(com_t, 1) + 1 * c_com_z1[1];
+
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2];
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2];
+        RL_foot_vel[2] = tar_init_RL_foot_vel[2];
+                
+        if(sf_rr_t < (ts+tf)/2.0){
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(sf_rr_t, 5) + c_sf_z1[4] * pow(sf_rr_t, 4) + c_sf_z1[3] * pow(sf_rr_t, 3) + c_sf_z1[2] * pow(sf_rr_t, 2) + c_sf_z1[1] * pow(sf_rr_t, 1) + c_sf_z1[0];
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(sf_rr_t, 5) + c_sf_z1[4] * pow(sf_rr_t, 4) + c_sf_z1[3] * pow(sf_rr_t, 3) + c_sf_z1[2] * pow(sf_rr_t, 2) + c_sf_z1[1] * pow(sf_rr_t, 1) + c_sf_z1[0];
+            RR_foot_vel[2] = 5*c_sf_z1[5] * pow(sf_rr_t, 4) + 4*c_sf_z1[4] * pow(sf_rr_t, 3) + 3*c_sf_z1[3] * pow(sf_rr_t, 2) + 2*c_sf_z1[2] * pow(sf_rr_t, 1) + 1*c_sf_z1[1];
+ 
+        }
+        else{
+            sf_rr_t2 = sf_rr_t - (ts+tf)/2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
+            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(sf_rr_t2, 4) + 4*c_sf_z2[4] * pow(sf_rr_t2, 3) + 3*c_sf_z2[3] * pow(sf_rr_t2, 2) + 2*c_sf_z2[2] * pow(sf_rr_t2, 1) + 1*c_sf_z2[1];
+        }
+        
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        if(ft_cnt == ts_cnt - 1){
+            pre_x_moving_speed = x_moving_speed;
+            x_moving_speed = tmp_x_moving_speed;
+            
+            tar_rl_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+            tar_rr_foot_pos = 0;
+            sf_rl_t = 0;
+            
+            init_flag = true;
+        }
+    }
+    else if (ft_cnt < ft_step_cnt) {
+        //        cout << "=========== ft_phase = 2 ===========" << endl;
+        ft_phase = 2;
+        _c << 0, 0, 0, 0;
+        contact_num = 0;
+        com_t = ft_time - ts;
+        sf_rl_t = sf_rl_t + dt;
+        sf_rr_t = sf_rr_t + dt;
+
+        com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*com_t;
+        com_pos[2] = c_com_z2[5] * pow(com_t, 5) + c_com_z2[4] * pow(com_t, 4) + c_com_z2[3] * pow(com_t, 3) + c_com_z2[2] * pow(com_t, 2) + c_com_z2[1] * pow(com_t, 1) + c_com_z2[0];
+
+        com_vel[0] = pre_x_moving_speed;
+        com_vel[2] = 5 * c_com_z2[5] * pow(com_t, 4) + 4 * c_com_z2[4] * pow(com_t, 3) + 3 * c_com_z2[3] * pow(com_t, 2) + 2 * c_com_z2[2] * pow(com_t, 1) + 1 * c_com_z2[1];
+
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
+        RL_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rl_t, 4) + 4*c_sf_z3[4] * pow(sf_rl_t, 3) + 3*c_sf_z3[3] * pow(sf_rl_t, 2) + 2*c_sf_z3[2] * pow(sf_rl_t, 1) + 1*c_sf_z3[1];
+        
+        if(init_flag != true){
+            RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+            FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+            RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+
+            sf_rr_t2 = sf_rr_t -(ft_step_time + tf)/2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
+            RR_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rr_t2, 4) + 4*c_sf_z4[4] * pow(sf_rr_t2, 3) + 3*c_sf_z4[3] * pow(sf_rr_t2, 2) + 2*c_sf_z4[2] * pow(sf_rr_t2, 1) + 1*c_sf_z4[1];
+        
+        }
+        else{
+            RR_foot_pos[0] = tar_init_RR_foot_pos[0];
+            FL_foot_pos[0] = tar_init_FL_foot_pos[0];
+            RR_foot_vel[0] = tar_init_RR_foot_vel[0];
+
+            sf_rr_t2 = sf_rr_t - (ts+tf)/2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
+            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(sf_rr_t2, 4) + 4*c_sf_z2[4] * pow(sf_rr_t2, 3) + 3*c_sf_z2[3] * pow(sf_rr_t2, 2) + 2*c_sf_z2[2] * pow(sf_rr_t2, 1) + 1*c_sf_z2[1];
+            
+            if(ft_cnt == ft_step_cnt - 1){
+                init_flag = false;
+            } 
+        }
+        
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        
+        if (ft_cnt == ft_step_cnt - 1) {
+            
+            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*tf;
+            pre_com_pos[1] = com_pos[1];
+            pre_com_pos[2] = h_2;
+
+            pre_com_vel[0] = com_vel[0];
+            pre_com_vel[1] = com_vel[1];
+            pre_com_vel[2] = v_2;
+
+            pre_RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos;
+            pre_FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos;
+                    
+            FT_COM_X_Traj_Gen();
+        }
+    }
+    else if (ft_cnt < ft_step_cnt + ts_cnt) {
+        //        cout << "=========== ft_phase = 3 ===========" << endl;
+        ft_phase = 3;
+        _c << 0, 1, 1, 0;
+        contact_num = 2;
+        com_t = ft_time - ft_step_time;
+        sf_rl_t = sf_rl_t + dt;
+
+        com_pos[0] = c_com_x1[5] * pow(com_t, 5) + c_com_x1[4] * pow(com_t, 4) + c_com_x1[3] * pow(com_t, 3) + c_com_x1[2] * pow(com_t, 2) + c_com_x1[1] * pow(com_t, 1) + c_com_x1[0]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_pos[1] = pre_com_pos(1);
+        com_pos[2] = c_com_z3[5] * pow(com_t, 5) + c_com_z3[4] * pow(com_t, 4) + c_com_z3[3] * pow(com_t, 3) + c_com_z3[2] * pow(com_t, 2) + c_com_z3[1] * pow(com_t, 1) + c_com_z3[0];
+
+        com_vel[0] = 5 * c_com_x1[5] * pow(com_t, 4) + 4 * c_com_x1[4] * pow(com_t, 3) + 3 * c_com_x1[3] * pow(com_t, 2) + 2 * c_com_x1[2] * pow(com_t, 1) + 1 * c_com_x1[1]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_vel[1] = pre_com_vel[1];
+        com_vel[2] = 5 * c_com_z3[5] * pow(com_t, 4) + 4 * c_com_z3[4] * pow(com_t, 3) + 3 * c_com_z3[3] * pow(com_t, 2) + 2 * c_com_z3[2] * pow(com_t, 1) + 1 * c_com_z3[1];
+        
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        
+        RR_foot_pos[0] = pre_RR_foot_pos[0];
+        FL_foot_pos[0] = pre_FL_foot_pos[0];
+        RR_foot_vel[0] = tar_init_RR_foot_vel[0];
+        
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2];
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2];
+        RR_foot_vel[2] = tar_init_RR_foot_vel[2];
+        
+        if(sf_rl_t < (ft_step_time + tf)/2.0){
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
+            RL_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rl_t, 4) + 4*c_sf_z3[4] * pow(sf_rl_t, 3) + 3*c_sf_z3[3] * pow(sf_rl_t, 2) + 2*c_sf_z3[2] * pow(sf_rl_t, 1) + 1*c_sf_z3[1];
+ 
+        }
+        else{
+            sf_rl_t2 = sf_rl_t - (ft_step_time + tf)/2.0;
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
+            RL_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rl_t2, 4) + 4*c_sf_z4[4] * pow(sf_rl_t2, 3) + 3*c_sf_z4[3] * pow(sf_rl_t2, 2) + 2*c_sf_z4[2] * pow(sf_rl_t2, 1) + 1*c_sf_z4[1];
+        }
+        
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        
+        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
+            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
+            pre_com_pos[1] = com_pos(1);
+            pre_com_pos[2] = h_1;
+
+            pre_com_vel[0] = x_moving_speed;
+            pre_com_vel[1] = com_vel[1];
+            pre_com_vel[2] = v_1;
+            
+            sf_rr_t = 0;
+            
+            pre_x_moving_speed = x_moving_speed;
+            x_moving_speed = tmp_x_moving_speed;
+            
+            tar_rr_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+        }
+    }
+    else if (ft_cnt < 2 * ft_step_cnt) {
+        //        cout << "=========== ft_phase = 4 ===========" << endl;
+        ft_phase = 4;
+        _c << 0, 0, 0, 0;
+        contact_num = 0;
+        com_t = ft_time - ft_step_time - ts;
+        sf_rl_t = sf_rl_t + dt;
+        sf_rr_t = sf_rr_t + dt;
+        
+        com_pos[0] = pre_com_pos(0) + pre_x_moving_speed*com_t;
+        com_pos[1] = pre_com_pos(1);
+        com_pos[2] = c_com_z2[5] * pow(com_t, 5) + c_com_z2[4] * pow(com_t, 4) + c_com_z2[3] * pow(com_t, 3) + c_com_z2[2] * pow(com_t, 2) + c_com_z2[1] * pow(com_t, 1) + c_com_z2[0];
+
+        com_vel[0] = pre_x_moving_speed;
+        com_vel[1] = pre_com_vel[1];
+        com_vel[2] = 5 * c_com_z2[5] * pow(com_t, 4) + 4 * c_com_z2[4] * pow(com_t, 3) + 3 * c_com_z2[3] * pow(com_t, 2) + 2 * c_com_z2[2] * pow(com_t, 1) + 1 * c_com_z2[1];
+
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
+        
+        sf_rl_t2 = sf_rl_t - (ft_step_time + tf)/2.0;
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
+        RL_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rl_t2, 4) + 4*c_sf_z4[4] * pow(sf_rl_t2, 3) + 3*c_sf_z4[3] * pow(sf_rl_t2, 2) + 2*c_sf_z4[2] * pow(sf_rl_t2, 1) + 1*c_sf_z4[1];
+
+        RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
+        RR_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rr_t, 4) + 4*c_sf_z3[4] * pow(sf_rr_t, 3) + 3*c_sf_z3[3] * pow(sf_rr_t, 2) + 2*c_sf_z3[2] * pow(sf_rr_t, 1) + 1*c_sf_z3[1];
+
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        if (ft_cnt == 2 * ft_step_cnt - 1) {
+
+            pre_com_pos(0) = pre_com_pos(0) + pre_x_moving_speed*tf;
+            pre_com_pos(1) = com_pos(1);
+            pre_com_pos(2) = h_2; //com_pos(2);
+
+            pre_com_vel[0] = pre_x_moving_speed;
+            pre_com_vel[1] = com_vel[1];
+            pre_com_vel[2] = v_2;
+
+            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos;
+            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos;
+            
+            FT_COM_X_Traj_Gen();
+        }
+    }
+    else if (ft_cnt < 2 * ft_step_cnt + ts_cnt) {
+        //        cout << "=========== ft_phase = 5 ===========" << endl;
+        ft_phase = 5;
+        _c << 1, 0, 0, 1;
+        contact_num = 2;
+        com_t = ft_time - 2 * ft_step_time;
+        sf_rr_t = sf_rr_t + dt;
+
+        com_pos[0] = c_com_x1[5] * pow(com_t, 5) + c_com_x1[4] * pow(com_t, 4) + c_com_x1[3] * pow(com_t, 3) + c_com_x1[2] * pow(com_t, 2) + c_com_x1[1] * pow(com_t, 1) + c_com_x1[0];
+        com_pos[1] = pre_com_pos(1);
+        com_pos[2] = c_com_z3[5] * pow(com_t, 5) + c_com_z3[4] * pow(com_t, 4) + c_com_z3[3] * pow(com_t, 3) + c_com_z3[2] * pow(com_t, 2) + c_com_z3[1] * pow(com_t, 1) + c_com_z3[0];
+
+        com_vel[0] = 5*c_com_x1[5] * pow(com_t, 4) + 4*c_com_x1[4] * pow(com_t, 3) + 3*c_com_x1[3] * pow(com_t, 2) + 2*c_com_x1[2] * pow(com_t, 1) + 1*c_com_x1[1];
+        com_vel[1] = pre_com_vel[1];
+        com_vel[2] = 5 * c_com_z3[5] * pow(com_t, 4) + 4 * c_com_z3[4] * pow(com_t, 3) + 3 * c_com_z3[3] * pow(com_t, 2) + 2 * c_com_z3[2] * pow(com_t, 1) + 1 * c_com_z3[1];
+
+        RL_foot_pos[0] = pre_RL_foot_pos[0];
+        FR_foot_pos[0] = pre_FR_foot_pos[0];
+        RL_foot_vel[0] = tar_init_RL_foot_vel[0];
+        
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2];
+        FR_foot_pos[2] = tar_init_RL_foot_pos[2];
+        RL_foot_vel[2] = tar_init_RL_foot_vel[2];
+        
+        RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        
+        if(sf_rr_t < (ft_step_time + tf)/2.0){
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
+            RR_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rr_t, 4) + 4*c_sf_z3[4] * pow(sf_rr_t, 3) + 3*c_sf_z3[3] * pow(sf_rr_t, 2) + 2*c_sf_z3[2] * pow(sf_rr_t, 1) + 1*c_sf_z3[1];
+ 
+        }
+        else{
+            sf_rr_t2 = sf_rr_t - (ft_step_time + tf)/2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
+            RR_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rr_t2, 4) + 4*c_sf_z4[4] * pow(sf_rr_t2, 3) + 3*c_sf_z4[3] * pow(sf_rr_t2, 2) + 2*c_sf_z4[2] * pow(sf_rr_t2, 1) + 1*c_sf_z4[1];
+        }
+        
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        if (ft_cnt == 2 * ft_step_cnt + ts_cnt - 1) {
+            //            cout << "test!!!!!!!!!!!!!!!!!!!!!!!!! " << endl;
+
+            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*ts/2.0 + x_moving_speed*ts/2.0;
+            pre_com_pos[1] = com_pos(1);
+            pre_com_pos[2] = h_1; 
+
+            pre_com_vel[0] = x_moving_speed;
+            pre_com_vel[1] = com_vel[1];
+            pre_com_vel[2] = v_1;
+            
+//            pre_RL_foot_pos[0] = tar_init_RL_foot_pos[0] + tar_rl_foot_pos;
+//            pre_FR_foot_pos[0] = tar_init_FR_foot_pos[0] + tar_rl_foot_pos;
+            
+            pre_x_moving_speed = x_moving_speed;
+            x_moving_speed = tmp_x_moving_speed;
+            
+            tar_rl_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+            
+            sf_rl_t = 0;
+            
+            if (sub_ctrl_flag == false) {
+                ft_cnt = ts_cnt - 1;
+            }
+            
+        }
+    }
+    else if (ft_cnt < 3 * ft_step_cnt) {
+        //        cout << "=========== ft_phase = 6 (Final flight phase) ===========" << endl;
+        ft_phase = 6;
+        _c << 0, 0, 0, 0;
+        contact_num = 0;
+        com_t = ft_time - 2 * ft_step_time - ts;
+        sf_rl_t = sf_rl_t + dt;
+        sf_rr_t = sf_rr_t + dt;
+        
+        com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*com_t;
+        com_pos[2] = c_com_z2[5] * pow(com_t, 5) + c_com_z2[4] * pow(com_t, 4) + c_com_z2[3] * pow(com_t, 3) + c_com_z2[2] * pow(com_t, 2) + c_com_z2[1] * pow(com_t, 1) + c_com_z2[0];
+
+        com_vel[0] = pre_x_moving_speed;
+        com_vel[2] = 5 * c_com_z2[5] * pow(com_t, 4) + 4 * c_com_z2[4] * pow(com_t, 3) + 3 * c_com_z2[3] * pow(com_t, 2) + 2 * c_com_z2[2] * pow(com_t, 1) + 1 * c_com_z2[1];
+
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
+        RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time))*(sin(PI2/(2*(ft_step_time))*sf_rl_t));
+        
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z1[5] * pow(sf_rl_t, 5) + c_sf_z1[4] * pow(sf_rl_t, 4) + c_sf_z1[3] * pow(sf_rl_t, 3) + c_sf_z1[2] * pow(sf_rl_t, 2) + c_sf_z1[1] * pow(sf_rl_t, 1) + c_sf_z1[0];
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z1[5] * pow(sf_rl_t, 5) + c_sf_z1[4] * pow(sf_rl_t, 4) + c_sf_z1[3] * pow(sf_rl_t, 3) + c_sf_z1[2] * pow(sf_rl_t, 2) + c_sf_z1[1] * pow(sf_rl_t, 1) + c_sf_z1[0];
+        RL_foot_vel[2] = 5*c_sf_z1[5] * pow(sf_rl_t, 4) + 4*c_sf_z1[4] * pow(sf_rl_t, 3) + 3*c_sf_z1[3] * pow(sf_rl_t, 2) + 2*c_sf_z1[2] * pow(sf_rl_t, 1) + 1*c_sf_z1[1];
+
+        RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+
+        sf_rr_t2 = sf_rr_t -(ft_step_time + tf)/2.0;
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
+        RR_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rr_t2, 4) + 4*c_sf_z4[4] * pow(sf_rr_t2, 3) + 3*c_sf_z4[3] * pow(sf_rr_t2, 2) + 2*c_sf_z4[2] * pow(sf_rr_t2, 1) + 1*c_sf_z4[1];
+
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        if (ft_cnt == 3*ft_step_cnt - 1) {
+            
+            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*tf;
+            pre_com_pos[1] = com_pos[1];
+            pre_com_pos[2] = h_2;
+
+            pre_com_vel[0] = com_vel[0];
+            pre_com_vel[1] = com_vel[1];
+            pre_com_vel[2] = v_2;
+
+            pre_RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos;
+            pre_FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos;
+                    
+//            FT_COM_X_Traj_Gen();
+            // =============== COM =============== //                
+            init_x[0] = pre_com_pos[0];
+            init_x[1] = x_moving_speed;
+            init_x[2] = 0;
+
+            final_x[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
+            final_x[1] = 0;
+            final_x[2] = 0;
+
+            coefficient_5thPoly(init_x, final_x, ts, c_com_x2);
+
+            // =============== Swing Foot =============== //
+
+//            // Left (Second)
+//            init_x[0] = 0;
+//            init_x[1] = 0;
+//            init_x[2] = 0;
 //
-//    if (CP_y > tmp_cp_y_lower_limit) {
-//        //        cout << "CP_y = " << CP_y << endl;
+//            final_x[0] = 0 + x_moving_speed * ft_step_time;
+//            final_x[1] = 0;
+//            final_x[2] = 0;
 //
-//        if (CP_y < tmp_cp_y_upper_limit) {
-//            tmp_cp_foot_pos_y = CP_y;
-//        }
-//        else {
-//            tmp_cp_foot_pos_y = tmp_cp_y_upper_limit;
-//        }
-//
-//        get_cp_done_flag = true;
-//    }
-//    else if (CP_y < -tmp_cp_y_lower_limit) {
-//        //        cout << "CP_y = " << CP_y << endl;
-//
-//        if (CP_y > -tmp_cp_y_upper_limit) {
-//            tmp_cp_foot_pos_y = CP_y;
-//        }
-//        else {
-//            tmp_cp_foot_pos_y = -tmp_cp_y_upper_limit;
-//        }
-//
-//        get_cp_done_flag = true;
-//    }
-//    else if (get_cp_done_flag == false) {
-//        tmp_cp_foot_pos_y = 0;
-//    }
-//}
-//
-//void CRobot::CP_Con_FT(void){
-//    static int tmp_cp_cnt = 0;
-//    static int cp_on_cnt = 0;
-//    static double tmp_cp_time = 0;
-//    // ==================== CP CONTROLLER =================== //
-//
-//    // CP PHASE
-//    // 0 : Check CP
-//    // 1 : CASE1
-//    // 2 : CASE2
-//
-//    switch (CP_PHASE) {
-//    case 0:
-////        cout << "[CP_PHASE 0]" << endl;
-//        check_CP_FT();
+//            coefficient_5thPoly(init_x, final_x, ts, c_sf_x5);
+            
+        }
+        
+    }
+    else if (ft_cnt < 3*ft_step_cnt + ts_cnt) {
+        //        cout << "=========== ft_phase = 7 (Final stance phase) ===========" << endl;
+        ft_phase = 8;
+        _c << 0, 1, 1, 0;
+        contact_num = 2;
+        com_t = ft_time - 3*ft_step_time;
+        sf_rl_t = sf_rl_t + dt;
+
+        com_pos[0] = c_com_x2[5] * pow(com_t, 5) + c_com_x2[4] * pow(com_t, 4) + c_com_x2[3] * pow(com_t, 3) + c_com_x2[2] * pow(com_t, 2) + c_com_x2[1] * pow(com_t, 1) + c_com_x2[0]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_pos[1] = pre_com_pos(1);
+        com_pos[2] = c_com_z4[5] * pow(com_t, 5) + c_com_z4[4] * pow(com_t, 4) + c_com_z4[3] * pow(com_t, 3) + c_com_z4[2] * pow(com_t, 2) + c_com_z4[1] * pow(com_t, 1) + c_com_z4[0];
+
+        com_vel[0] = 5 * c_com_x2[5] * pow(com_t, 4) + 4 * c_com_x2[4] * pow(com_t, 3) + 3 * c_com_x2[3] * pow(com_t, 2) + 2 * c_com_x2[2] * pow(com_t, 1) + 1 * c_com_x2[1]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_vel[1] = pre_com_vel[1];
+        com_vel[2] = 5 * c_com_z4[5] * pow(com_t, 4) + 4 * c_com_z4[4] * pow(com_t, 3) + 3 * c_com_z4[3] * pow(com_t, 2) + 2 * c_com_z4[2] * pow(com_t, 1) + 1 * c_com_z4[1];
+        
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
+        RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time))*(sin(PI2/(2*(ft_step_time))*sf_rl_t));
+        
+        if(sf_rl_t < (ft_step_time)/2.0){
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
+            RL_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rl_t, 4) + 4*c_sf_z3[4] * pow(sf_rl_t, 3) + 3*c_sf_z3[3] * pow(sf_rl_t, 2) + 2*c_sf_z3[2] * pow(sf_rl_t, 1) + 1*c_sf_z3[1];
+ 
+        }
+        else{
+            sf_rl_t2 = sf_rl_t - (ft_step_time)/2.0;
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
+            RL_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rl_t2, 4) + 4*c_sf_z4[4] * pow(sf_rl_t2, 3) + 3*c_sf_z4[3] * pow(sf_rl_t2, 2) + 2*c_sf_z4[2] * pow(sf_rl_t2, 1) + 1*c_sf_z4[1];
+        }
+//        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z4[0];
+//        FR_foot_pos[2] = tar_init_FR_foot_pos[2];
+//        RL_foot_vel[2] = tar_init_RL_foot_vel[2];
 //        
-//        if (ft_cnt % ft_step_cnt < ts_cnt) {
-////        if (ft_cnt % ft_step_cnt == ts_cnt - 1) {
-//            if (get_cp_done_flag == true) {
-//                if(FC_PHASE == STANCE_RRFL){
-//                    CP_PHASE = 1;
-//                }
-//                else{
-//                    CP_PHASE = 2;
-//                }
-//                cp_on_cnt = ft_cnt % ft_step_cnt;
-//                
-//                cout << "cp_on_cnt = " << cp_on_cnt << endl;
-//                
-//                CP_move_step = 0;
-//                cp_foot_pos_y = tmp_cp_foot_pos_y / 3.0;
-//                tmp_cp_cnt = 0;
-//                get_cp_done_flag = false;
-//                
-//                init_CP_y = CP_y;
-//            }
-//            else {
-//                cp_foot_pos_y = 0;
-//            }
+        
+        RR_foot_pos[0] = pre_RR_foot_pos[0];
+        FL_foot_pos[0] = pre_FL_foot_pos[0];
+        RR_foot_vel[0] = tar_init_RR_foot_vel[0];
+        
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2];
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2];
+        RR_foot_vel[2] = tar_init_RR_foot_vel[2];
+        
+        FL_foot_vel = RR_foot_vel;
+        FR_foot_vel = RL_foot_vel;
+        
+        
+//        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
+//            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
+//            pre_com_pos[1] = com_pos(1);
+//            pre_com_pos[2] = h_1;
 //
-////            if (tmp_y_moving_speed > 0.01 || tmp_y_moving_speed < -0.01) {
-////                cp_foot_pos_y = 0;
-////                CP_PHASE = 0;
-////            }
-////            else 
-//            if (des_theta > 5 * D2R || des_theta < -5 * D2R) {
-//                cp_foot_pos_y = 0;
-//                CP_PHASE = 0;
-//            }
-//        }
-//        break;
-//
-//    case 1:
-//        cout << "[CP_PHASE 1] RRFL" << endl;
-//        if (CP_move_step == 0) {
-//            cout << "[CP_move_step == 0]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                cout << "[1]" << endl;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1 - cp_on_cnt) * dt; // now time
-//                tmp_cp_time = (double) (ft_step_cnt - cp_on_cnt) * dt; // stepping time
-//                
-//                cout << "ft_cnt % ft_step_cnt - 1 - cp_on_cnt = " << ft_cnt % ft_step_cnt - 1 - cp_on_cnt << endl;
-//                cout << "tmp_t = " << tmp_t << ", tmp_cp_time = " << tmp_cp_time << endl;
-//
-//                cp_foot_offset_y = Kp_cp * (CP_y - init_CP_y) / 2.0;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) + cp_foot_offset_y;
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) - cp_foot_offset_y;
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) - cp_foot_offset_y;
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) + cp_foot_offset_y;
-//                
-////                cp_RL_foot_pos[2] = 0 + 0.02 / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t));
-//            }
-//            else {
-//                CP_move_step = 1;
-//            }
-//        }
-//        else if (CP_move_step == 1) {
-//            cout << "[CP_move_step == 1]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                cout << "[3]" << endl;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1) * dt;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//
-//            }
-//            else {
-//                CP_move_step = 2;
-//                cp_foot_offset_y = 0;
-//                cp_foot_pos_y = 0;
-//            }
-//        }
-//        else if (CP_move_step == 2) {
-////            cout << "[CP_move_step == 2]" << "ft_cnt % ft_step_cnt = " << ft_cnt % ft_step_cnt << endl;
-////            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-//            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-////                tmp_cp_cnt++;
-////
-////                cout << endl << " =========== tmp_cp_cnt = " << tmp_cp_cnt << " ===========" << endl;
-//
-////                    if (tmp_cp_cnt == 6) { //3
-////                            cout << "[7]" << endl;
-//                CP_PHASE = 0;
-//                CP_move_step = 0;
-//                CP_move_done_flag = true;
-//                
-////                    }
-//            }
-////            }
-//        }
-//        break;
-//
-//    case 2:
-//        // swing foot can be located at CP during next phase.
-//        cout << "[CP_PHASE 2] RLFR" << endl;
-//        if (CP_move_step == 0) {
-//            cout << "[CP_move_step == 0]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-////                tmp_t = (double) (ft_cnt % ft_step_cnt) * dt;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1 - cp_on_cnt) * dt; // now time
-//                tmp_cp_time = (double) (ft_step_cnt - cp_on_cnt) * dt; // stepping time
-//                
-//                cout << "tmp_t = " << tmp_t << ", tmp_cp_time = " << tmp_cp_time << endl;
-//
-//                cp_foot_offset_y = Kp_cp * (CP_y - init_CP_y) / 2.0;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) - cp_foot_offset_y;
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) + cp_foot_offset_y;
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) + cp_foot_offset_y;
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) - cp_foot_offset_y;
-//
-////                    printf("[2] cp_foot_offset_y = %f\n", cp_foot_offset_y);
-//            }
-//            else {
-//                CP_move_step = 1;
-//            }
-//        }
-//        else if (CP_move_step == 1) {
-//            cout << "[CP_move_step == 1]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1) * dt;
-////                    cout << "[case.2][CP_move_step.2] tmp_t = " << tmp_t << ", cp_foot_pos_y = " << cp_foot_pos_y << endl;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//
-//            }
-//            else {
-//                CP_move_step = 2;
-//                cp_foot_pos_y = 0;
-//                cp_foot_offset_y = 0;
-//            }
-//        }
-//        else if (CP_move_step == 2) {
-////            cout << "[CP_move_step == 2]" << "ft_cnt % ft_step_cnt = " << ft_cnt % ft_step_cnt << endl;
-////            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
+//            pre_com_vel[0] = x_moving_speed;
+//            pre_com_vel[1] = com_vel[1];
+//            pre_com_vel[2] = v_1;
 //            
-//            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-////                tmp_cp_cnt++;
-////                cout << endl << " =========== tmp_cp_cnt = " << tmp_cp_cnt << " ===========" << endl;
-//
-////                    if (tmp_cp_cnt == 6) { //3
-//                CP_PHASE = 0;
-//                CP_move_step = 0;
-//                CP_move_done_flag = true;
-//                
-////                    }
-//            }
-////            }
+//            sf_rr_t = 0;
+//            
+//            pre_x_moving_speed = x_moving_speed;
+//            x_moving_speed = tmp_x_moving_speed;
+//            
+//            tar_rr_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
 //        }
-//        break;
-//    }
-//
-////    del_L_left = BOC_Kp_roll*(0 - lpf_IMURoll) + BOC_Ki_roll*sum_roll_err;
-////    del_L_right = -BOC_Kp_roll*(0 - lpf_IMURoll) - BOC_Ki_roll*sum_roll_err;
-//
-////    cp_RL_foot_pos[2] = 0.01 * (0 - IMURoll) + 0.01 * (0 - IMURoll_dot);
-//    
-//    
-////    cout << "cp_RL_foot_pos[1] = " << cp_RL_foot_pos[1] << ",cp_RR_foot_pos[1] = " << cp_RR_foot_pos[1] << endl;
-//    
-//}
+    }
+    else {
+        //        cout << "=========== ft_phase = 6 ===========" << endl;
+        ft_phase = 9;
+        _c << 1, 1, 1, 1;
+        contact_num = 4;
+        moving_done_flag = true;
 
-//void CRobot::CP_Con_FT(void){
-//    static int tmp_cp_cnt = 0;
-//    static int cp_on_cnt = 0;
-//    static double tmp_cp_time = 0;
-//    // ==================== CP CONTROLLER =================== //
+        com_pos = pre_com_pos;
+        com_vel = tar_init_com_pos;
+        
+        RL_foot_pos = pre_RL_foot_pos;
+        RR_foot_pos = pre_RR_foot_pos;
+        FL_foot_pos = pre_FL_foot_pos;
+        FR_foot_pos = pre_FR_foot_pos;
+        
+        RL_foot_vel = tar_init_RL_foot_vel;
+        RR_foot_vel = tar_init_RR_foot_vel;
+        FL_foot_vel = tar_init_FL_foot_vel;
+        FR_foot_vel = tar_init_FR_foot_vel;
+    }
+
+    FT_Turning_Traj_Gen2();
+
+    base_pos = com_pos + base_offset;
+    target_pos[6] = 0;
+    ft_cnt++;
+}
+//void CRobot::Flying_Trot_Running2(void)
+//{
+//    ft_time = (double) ft_cnt*dt;
+//    base_ori(2) = tmp_base_ori(2);
 //
-//    // CP PHASE
-//    // 0 : Check CP
-//    // 1 : CASE1
-//    // 2 : CASE2
+//    if (CP_con_onoff_flag == true) Get_CP();
 //
-//    switch (CP_PHASE) {
-//    case 0:
-////        cout << "[CP_PHASE 0]" << endl;
-//        check_CP_FT();
+//    if (ft_cnt == 0) {
+//        //        cout << "=========== ft_phase = 0 ===========" << endl;
+//        ft_phase = 0;
+//        moving_done_flag = false;
+//        _c << 1, 1, 1, 1;
+//        contact_num = 4;
+//
+//        com_pos = tar_init_com_pos;
+//        com_vel = tar_init_com_vel;
+//
+//        RL_foot_pos = tar_init_RL_foot_pos;
+//        RR_foot_pos = tar_init_RR_foot_pos;
+//        FL_foot_pos = tar_init_FL_foot_pos;
+//        FR_foot_pos = tar_init_FR_foot_pos;
 //        
-//        if (ft_cnt % ft_step_cnt <= ts_cnt) {
-//            if (get_cp_done_flag == true) {
-//                if(FC_PHASE == STANCE_RRFL){
-//                    CP_PHASE = 1;
-//                }
-//                else{
-//                    CP_PHASE = 2;
-//                }
-//                cp_on_cnt = ft_cnt % ft_step_cnt;
-//                
-//                cout << "cp_on_cnt = " << cp_on_cnt << endl;
-//                
-//                CP_move_step = 0;
-//                cp_foot_pos_y = tmp_cp_foot_pos_y / 3.0;
-//                tmp_cp_cnt = 0;
-//                get_cp_done_flag = false;
-//                
-//                init_CP_y = CP_y;
-//            }
-//            else {
-//                cp_foot_pos_y = 0;
-//            }
+//        RL_foot_vel = tar_init_RL_foot_vel;
+//        RR_foot_vel = tar_init_RR_foot_vel;
+//        FL_foot_vel = tar_init_FL_foot_vel;
+//        FR_foot_vel = tar_init_FR_foot_vel;
 //
-//            if (tmp_y_moving_speed > 0.01 || tmp_y_moving_speed < -0.01) {
-//                cp_foot_pos_y = 0;
-//                CP_PHASE = 0;
-//            }
-//            else if (des_theta > 5 * D2R || des_theta < -5 * D2R) {
-//                cp_foot_pos_y = 0;
-//                CP_PHASE = 0;
-//            }
-//        }
-//        break;
+//        x_moving_speed = 0;
+//        y_moving_speed = 0;
 //
-//    case 1:
-//        cout << "[CP_PHASE 1] RRFL" << endl;
-//        if (CP_move_step == 0) {
-//            cout << "[CP_move_step == 0]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                cout << "[1]" << endl;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1 - cp_on_cnt) * dt; // now time
-//                tmp_cp_time = (double) (ft_step_cnt - cp_on_cnt) * dt; // stepping time
-//                
-//                cout << "ft_cnt % ft_step_cnt - 1 - cp_on_cnt = " << ft_cnt % ft_step_cnt - 1 - cp_on_cnt << endl;
-//                cout << "tmp_t = " << tmp_t << ", tmp_cp_time = " << tmp_cp_time << endl;
-//
-//                cp_foot_offset_y = Kp_cp * (CP_y - init_CP_y) / 2.0;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) + cp_foot_offset_y;
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) - cp_foot_offset_y;
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) - cp_foot_offset_y;
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) + cp_foot_offset_y;
-//            }
-//            else {
-//                CP_move_step = 1;
-//            }
-//        }
-//        else if (CP_move_step == 1) {
-//            cout << "[CP_move_step == 1]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                cout << "[3]" << endl;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1) * dt;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//
-//            }
-//            else {
-//                CP_move_step = 2;
-//            }
-//        }
-//        else if (CP_move_step == 2) {
-//                cout << "[CP_move_step == 2]" << endl;
-////            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-////                if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-////                    tmp_cp_cnt++;
-////
-////                        cout << endl << " =========== tmp_cp_cnt = " << tmp_cp_cnt << " ===========" << endl;
-//
-////                    if (tmp_cp_cnt == 6) { //3
-////                            cout << "[7]" << endl;
-//                        CP_PHASE = 0;
-//                        CP_move_step = 0;
-//                        CP_move_done_flag = true;
-//                        cp_foot_offset_y = 0;
-////                    }
-////                }
-////            }
-//        }
-//        break;
-//
-//    case 2:
-//        // swing foot can be located at CP during next phase.
-//        cout << "[CP_PHASE 2] RLFR" << endl;
-//        if (CP_move_step == 0) {
-//            cout << "[CP_move_step == 0]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-////                tmp_t = (double) (ft_cnt % ft_step_cnt) * dt;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1 - cp_on_cnt) * dt; // now time
-//                tmp_cp_time = (double) (ft_step_cnt - cp_on_cnt) * dt; // stepping time
-//                
-//                cout << "tmp_t = " << tmp_t << ", tmp_cp_time = " << tmp_cp_time << endl;
-//
-//                cp_foot_offset_y = Kp_cp * (CP_y - init_CP_y) / 2.0;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) - cp_foot_offset_y;
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) + cp_foot_offset_y;
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) + cp_foot_offset_y;
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) - cp_foot_offset_y;
-//
-////                    printf("[2] cp_foot_offset_y = %f\n", cp_foot_offset_y);
-//            }
-//            else {
-//                CP_move_step = 1;
-//            }
-//        }
-//        else if (CP_move_step == 1) {
-//            cout << "[CP_move_step == 1]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1) * dt;
-////                    cout << "[case.2][CP_move_step.2] tmp_t = " << tmp_t << ", cp_foot_pos_y = " << cp_foot_pos_y << endl;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//
-//            }
-//            else {
-//                CP_move_step = 2;
-//            }
-//        }
-//        else if (CP_move_step == 2) {
-//            cout << "[CP_move_step == 2]" << endl;
-////            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-////                if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-////                    tmp_cp_cnt++;
-//
-////                    if (tmp_cp_cnt == 6) { //3
-//                        CP_PHASE = 0;
-//                        CP_move_step = 0;
-//                        CP_move_done_flag = true;
-//                        cp_foot_offset_y = 0;
-////                    }
-////                }
-////            }
-//        }
-//        break;
+//        FT_COM_SF_Z_Traj_Gen();
 //    }
+//    else if (ft_cnt < ts_cnt) {
+//        //        cout << "=========== ft_phase = 1 ===========" << endl;
+//        ft_phase = 1;
+//        _c << 1, 0, 0, 1;
+//        contact_num = 2;
+//        tmp_t = ft_time;
 //
-////    cout << "cp_RL_foot_pos[1] = " << cp_RL_foot_pos[1] << ",cp_RR_foot_pos[1] = " << cp_RR_foot_pos[1] << endl;
-//    
-//}
-
-//void CRobot::CP_Con_FT(void){
-//    static int tmp_cp_cnt = 0;
-//    static int cp_on_cnt = 0;
-//    static double tmp_cp_time = 0;
-//    // ==================== CP CONTROLLER =================== //
-//
-//    // CP PHASE
-//    // 0 : Check CP
-//    // 1 : CASE1
-//    // 2 : CASE2
-//
-//    switch (CP_PHASE) {
-//    case 0:
-//        cout << "[CP_PHASE 0]" << endl;
-//        check_CP_FT();
+//        com_pos = tar_init_com_pos;
+//        com_vel = tar_init_com_vel;
 //        
-//        if (ft_cnt % ft_step_cnt <= ts_cnt) {
-//            if (get_cp_done_flag == true) {
-//                if(FC_PHASE == STANCE_RRFL){
-//                    CP_PHASE = 1;
-//                }
-//                else{
-//                    CP_PHASE = 2;
-//                }
-//                cp_on_cnt = ft_cnt % ft_step_cnt;
-//                
-//                cout << "cp_on_cnt = " << cp_on_cnt << endl;
-//                
-//                CP_move_step = 0;
-//                cp_foot_pos_y = tmp_cp_foot_pos_y / 5.0;
-//                tmp_cp_cnt = 0;
-//                get_cp_done_flag = false;
+//        RL_foot_pos = tar_init_RL_foot_pos;
+//        RR_foot_pos = tar_init_RR_foot_pos;
+//        FL_foot_pos = tar_init_FL_foot_pos;
+//        FR_foot_pos = tar_init_FR_foot_pos;
+//        
+//        RL_foot_vel = tar_init_RL_foot_vel;
+//        RR_foot_vel = tar_init_RR_foot_vel;
+//        FL_foot_vel = tar_init_FL_foot_vel;
+//        FR_foot_vel = tar_init_FR_foot_vel;
+//
+//        com_pos[2] = c_com_z1[5] * pow(tmp_t, 5) + c_com_z1[4] * pow(tmp_t, 4) + c_com_z1[3] * pow(tmp_t, 3) + c_com_z1[2] * pow(tmp_t, 2) + c_com_z1[1] * pow(tmp_t, 1) + c_com_z1[0];
+//        com_vel[2] = 5 * c_com_z1[5] * pow(tmp_t, 4) + 4 * c_com_z1[4] * pow(tmp_t, 3) + 3 * c_com_z1[3] * pow(tmp_t, 2) + 2 * c_com_z1[2] * pow(tmp_t, 1) + 1 * c_com_z1[1];
+//
+//        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
+//        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
+//        RR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+//        FL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+//
+//    }
+//    else if (ft_cnt < ft_step_cnt) {
+//        //        cout << "=========== ft_phase = 2 ===========" << endl;
+//        ft_phase = 2;
+//        _c << 0, 0, 0, 0;
+//        contact_num = 0;
+//        tmp_t = ft_time - ts;
+//
+//        com_pos = tar_init_com_pos;
+//        com_vel = tar_init_com_vel;
+//
+//        RL_foot_pos = tar_init_RL_foot_pos;
+//        RR_foot_pos = tar_init_RR_foot_pos;
+//        FL_foot_pos = tar_init_FL_foot_pos;
+//        FR_foot_pos = tar_init_FR_foot_pos;
+//        
+//        RL_foot_vel = tar_init_RL_foot_vel;
+//        RR_foot_vel = tar_init_RR_foot_vel;
+//        FL_foot_vel = tar_init_FL_foot_vel;
+//        FR_foot_vel = tar_init_FR_foot_vel;
+//
+//        com_pos[2] = c_com_z2[5] * pow(tmp_t, 5) + c_com_z2[4] * pow(tmp_t, 4) + c_com_z2[3] * pow(tmp_t, 3) + c_com_z2[2] * pow(tmp_t, 2) + c_com_z2[1] * pow(tmp_t, 1) + c_com_z2[0];
+//        com_vel[2] = 5 * c_com_z2[5] * pow(tmp_t, 4) + 4 * c_com_z2[4] * pow(tmp_t, 3) + 3 * c_com_z2[3] * pow(tmp_t, 2) + 2 * c_com_z2[2] * pow(tmp_t, 1) + 1 * c_com_z2[1];
+//
+//        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
+//        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
+//        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
+//        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
+//        
+//        RL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t, 4) + 4*c_sf_z2[4] * pow(tmp_t, 3) + 3*c_sf_z2[3] * pow(tmp_t, 2) + 2*c_sf_z2[2] * pow(tmp_t, 1) + 1*c_sf_z2[1];
+//        RR_foot_vel[2] = 5*c_sf_z3[5] * pow(tmp_t, 4) + 4*c_sf_z3[4] * pow(tmp_t, 3) + 3*c_sf_z3[3] * pow(tmp_t, 2) + 2*c_sf_z3[2] * pow(tmp_t, 1) + 1*c_sf_z3[1];
+//        FL_foot_vel[2] = 5*c_sf_z3[5] * pow(tmp_t, 4) + 4*c_sf_z3[4] * pow(tmp_t, 3) + 3*c_sf_z3[3] * pow(tmp_t, 2) + 2*c_sf_z3[2] * pow(tmp_t, 1) + 1*c_sf_z3[1];
+//        FR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t, 4) + 4*c_sf_z2[4] * pow(tmp_t, 3) + 3*c_sf_z2[3] * pow(tmp_t, 2) + 2*c_sf_z2[2] * pow(tmp_t, 1) + 1*c_sf_z2[1];
+//
+//        if (ft_cnt == ft_step_cnt - 1) {
+//            pre_x_moving_speed = x_moving_speed;
+//            pre_y_moving_speed = y_moving_speed;
+//            x_moving_speed = tmp_x_moving_speed;
+//            y_moving_speed = tmp_y_moving_speed;
+//
+//            pre_com_pos[0] = com_pos[0];
+//            pre_com_pos[1] = com_pos[1];
+//            pre_com_pos[2] = h_2;
+//
+//            pre_com_vel[0] = com_vel[0];
+//            pre_com_vel[1] = com_vel[1];
+//            pre_com_vel[2] = v_2;
+//
+//            pre_RL_foot_pos[0] = RL_foot_pos[0];
+//            pre_RL_foot_pos[1] = RL_foot_pos[1];
+//            pre_RL_foot_pos[2] = tar_init_RL_foot_pos[2] + swing_foot_height;
+//
+//            pre_RR_foot_pos[0] = RR_foot_pos[0];
+//            pre_RR_foot_pos[1] = RR_foot_pos[1];
+//            pre_RR_foot_pos[2] = tar_init_RR_foot_pos[2];
+//
+//            pre_FL_foot_pos[0] = FL_foot_pos[0];
+//            pre_FL_foot_pos[1] = FL_foot_pos[1];
+//            pre_FL_foot_pos[2] = tar_init_FL_foot_pos[2];
+//
+//            pre_FR_foot_pos[0] = FR_foot_pos[0];
+//            pre_FR_foot_pos[1] = FR_foot_pos[1];
+//            pre_FR_foot_pos[2] = tar_init_FR_foot_pos[2] + swing_foot_height;
+//
+//            FT_COM_SF_X_Traj_Gen();
+//        }
+//    }
+//    else if (ft_cnt < ft_step_cnt + ts_cnt) {
+//        //        cout << "=========== ft_phase = 3 ===========" << endl;
+//        ft_phase = 3;
+//        _c << 0, 1, 1, 0;
+//        contact_num = 2;
+//        tmp_t = ft_time - ft_step_time;
+//        tmp_t2 = ft_time - ft_step_time;
+//
+//        com_pos[0] = c_com_x1[5] * pow(tmp_t, 5) + c_com_x1[4] * pow(tmp_t, 4) + c_com_x1[3] * pow(tmp_t, 3) + c_com_x1[2] * pow(tmp_t, 2) + c_com_x1[1] * pow(tmp_t, 1) + c_com_x1[0]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+//        com_pos[1] = pre_com_pos(1);
+//        com_pos[2] = c_com_z3[5] * pow(tmp_t, 5) + c_com_z3[4] * pow(tmp_t, 4) + c_com_z3[3] * pow(tmp_t, 3) + c_com_z3[2] * pow(tmp_t, 2) + c_com_z3[1] * pow(tmp_t, 1) + c_com_z3[0];
+//
+//        com_vel[0] = 5 * c_com_x1[5] * pow(tmp_t, 4) + 4 * c_com_x1[4] * pow(tmp_t, 3) + 3 * c_com_x1[3] * pow(tmp_t, 2) + 2 * c_com_x1[2] * pow(tmp_t, 1) + 1 * c_com_x1[1]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+//        com_vel[1] = pre_com_vel[1];
+//        com_vel[2] = 5 * c_com_z3[5] * pow(tmp_t, 4) + 4 * c_com_z3[4] * pow(tmp_t, 3) + 3 * c_com_z3[3] * pow(tmp_t, 2) + 2 * c_com_z3[2] * pow(tmp_t, 1) + 1 * c_com_z3[1];
+//
+//        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
+//        RL_foot_pos[1] = pre_RL_foot_pos[1];
+//        RL_foot_pos[2] = pre_RL_foot_pos[2];
+//
+//        RR_foot_pos[0] = pre_RR_foot_pos[0];
+//        RR_foot_pos[1] = pre_RR_foot_pos[1];
+//        RR_foot_pos[2] = pre_RR_foot_pos[2];
+//
+//        FL_foot_pos[0] = pre_FL_foot_pos[0];
+//        FL_foot_pos[1] = pre_FL_foot_pos[1];
+//        FL_foot_pos[2] = pre_FL_foot_pos[2];
+//
+//        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
+//        FR_foot_pos[1] = pre_FR_foot_pos[1];
+//        FR_foot_pos[2] = pre_FR_foot_pos[2];
+//        
+//        RL_foot_vel = tar_init_RL_foot_vel;
+//        RR_foot_vel = tar_init_RR_foot_vel;
+//        FL_foot_vel = tar_init_FL_foot_vel;
+//        FR_foot_vel = tar_init_FR_foot_vel;
+//        
+//        RL_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t2, 4) + 4*c_sf_x1[4] * pow(tmp_t2, 3) + 3*c_sf_x1[3] * pow(tmp_t2, 2) + 2*c_sf_x1[2] * pow(tmp_t2, 1) + 1*c_sf_x1[1];
+//        FR_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t2, 4) + 4*c_sf_x1[4] * pow(tmp_t2, 3) + 3*c_sf_x1[3] * pow(tmp_t2, 2) + 2*c_sf_x1[2] * pow(tmp_t2, 1) + 1*c_sf_x1[1];     
+//
+//        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
+//            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
+//            pre_com_pos[1] = com_pos(1);
+//            pre_com_pos[2] = h_1; //com_pos(2);
+//
+//            pre_com_vel[0] = x_moving_speed;
+//            pre_com_vel[1] = com_vel[1];
+//            pre_com_vel[2] = v_1;
+//
+//            //            pre_RL_foot_pos[0] = RL_foot_pos[0];//pre_RL_foot_pos[0] + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;//RL_foot_pos[0];//x_moving_speed * (ft_step_time);
+//            pre_RL_foot_pos[1] = RL_foot_pos[1];
+//            pre_RL_foot_pos[2] = RL_foot_pos[2];
+//
+//            pre_RR_foot_pos[0] = RR_foot_pos[0];
+//            pre_RR_foot_pos[1] = RR_foot_pos[1];
+//            pre_RR_foot_pos[2] = RR_foot_pos[2];
+//
+//            pre_FL_foot_pos[0] = FL_foot_pos[0];
+//            pre_FL_foot_pos[1] = FL_foot_pos[1];
+//            pre_FL_foot_pos[2] = FL_foot_pos[2];
+//
+//            //            pre_FR_foot_pos[0] = FR_foot_pos[0];//pre_FR_foot_pos[0] + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;//FR_foot_pos[0];
+//            pre_FR_foot_pos[1] = FR_foot_pos[1];
+//            pre_FR_foot_pos[2] = FR_foot_pos[2];
+//
+//            //            cout << "pre_RL_foot_pos[0] = " << pre_RL_foot_pos[0] << endl;
+//            //            printf("[final] FR_foot_pos[0] = %f, pre_FR_foot_pos[0] = %f\n",FR_foot_pos[0],pre_FR_foot_pos[0]);
+//        }
+//    }
+//    else if (ft_cnt < 2 * ft_step_cnt) {
+//        //        cout << "=========== ft_phase = 4 ===========" << endl;
+//        ft_phase = 4;
+//        _c << 0, 0, 0, 0;
+//        contact_num = 0;
+//        tmp_t = ft_time - ft_step_time - ts;
+//        tmp_t2 = ft_time - ft_step_time;
+//
+//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
+//        com_pos[1] = pre_com_pos(1);
+//        com_pos[2] = c_com_z2[5] * pow(tmp_t, 5) + c_com_z2[4] * pow(tmp_t, 4) + c_com_z2[3] * pow(tmp_t, 3) + c_com_z2[2] * pow(tmp_t, 2) + c_com_z2[1] * pow(tmp_t, 1) + c_com_z2[0];
+//
+//        com_vel[0] = x_moving_speed;
+//        com_vel[1] = pre_com_vel[1];
+//        com_vel[2] = 5 * c_com_z2[5] * pow(tmp_t, 4) + 4 * c_com_z2[4] * pow(tmp_t, 3) + 3 * c_com_z2[3] * pow(tmp_t, 2) + 2 * c_com_z2[2] * pow(tmp_t, 1) + 1 * c_com_z2[1];
+//
+//        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
+//        RL_foot_pos[1] = pre_RL_foot_pos[1];
+//        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
+//
+//        RR_foot_pos[0] = pre_RR_foot_pos[0];
+//        RR_foot_pos[1] = pre_RR_foot_pos[1];
+//        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
+//        //        RR_foot_pos[2] = init_RR_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
+//
+//        FL_foot_pos[0] = pre_FL_foot_pos[0];
+//        FL_foot_pos[1] = pre_FL_foot_pos[1];
+//        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
+//        //        FL_foot_pos[2] = init_FL_foot_pos[2] + swing_foot_height/2.0*(1-cos(PI2/(2*tf)*tmp_t));
+//
+//        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
+//        FR_foot_pos[1] = pre_FR_foot_pos[1];
+//        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
+//
+//        // ---------------------------------------------------------------- //
+//        RL_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t2, 4) + 4*c_sf_x1[4] * pow(tmp_t2, 3) + 3*c_sf_x1[3] * pow(tmp_t2, 2) + 2*c_sf_x1[2] * pow(tmp_t2, 1) + 1*c_sf_x1[1];
+//        RL_foot_vel[1] = tar_init_RL_foot_vel[1];
+//        RL_foot_vel[2] = 5*c_sf_z3[5] * pow(tmp_t, 4) + 4*c_sf_z3[4] * pow(tmp_t, 3) + 3*c_sf_z3[3] * pow(tmp_t, 2) + 2*c_sf_z3[2] * pow(tmp_t, 1) + 1*c_sf_z3[1];
+//
+//        RR_foot_vel[0] = tar_init_RR_foot_vel[0];
+//        RR_foot_vel[1] = tar_init_RR_foot_vel[1];
+//        RR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t, 4) + 4*c_sf_z2[4] * pow(tmp_t, 3) + 3*c_sf_z2[3] * pow(tmp_t, 2) + 2*c_sf_z2[2] * pow(tmp_t, 1) + 1*c_sf_z2[1];
+//
+//        FL_foot_vel[0] = tar_init_FL_foot_vel[0];
+//        FL_foot_vel[1] = tar_init_FL_foot_vel[1];
+//        FL_foot_vel[2] = RR_foot_vel[2];
+//
+//        FR_foot_vel[0] = RL_foot_vel[0];
+//        FR_foot_vel[1] = tar_init_FR_foot_vel[1];
+//        FR_foot_vel[2] = RL_foot_vel[2];
+//
+//        
+//        if (ft_cnt == 2 * ft_step_cnt - 1) {
+//            tmp_t2 = ts + tf;
+//
+//            pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*tf;
+//            pre_com_pos(1) = com_pos(1);
+//            pre_com_pos(2) = h_2; //com_pos(2);
+//
+//            pre_com_vel[0] = x_moving_speed;
+//            pre_com_vel[1] = com_vel[1];
+//            pre_com_vel[2] = v_2;
+//
+//            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0]; //RL_foot_pos[0];//pre_RL_foot_pos(0) + pre_x_moving_speed * step_time + x_moving_speed * step_time;//RL_foot_pos[0];//x_moving_speed * (ft_step_time);
+//            pre_RL_foot_pos[1] = RL_foot_pos[1];
+//            pre_RL_foot_pos[2] = tar_init_RL_foot_pos[2];
+//
+//            pre_RR_foot_pos[0] = RR_foot_pos[0];
+//            pre_RR_foot_pos[1] = RR_foot_pos[1];
+//            pre_RR_foot_pos[2] = tar_init_RR_foot_pos[2] + swing_foot_height;
+//
+//            pre_FL_foot_pos[0] = FL_foot_pos[0];
+//            pre_FL_foot_pos[1] = FL_foot_pos[1];
+//            pre_FL_foot_pos[2] = tar_init_FL_foot_pos[2] + swing_foot_height;
+//
+//            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t2, 5) + c_sf_x1[4] * pow(tmp_t2, 4) + c_sf_x1[3] * pow(tmp_t2, 3) + c_sf_x1[2] * pow(tmp_t2, 2) + c_sf_x1[1] * pow(tmp_t2, 1) + c_sf_x1[0];
+//            pre_FR_foot_pos[1] = FR_foot_pos[1];
+//            pre_FR_foot_pos[2] = tar_init_FR_foot_pos[2];
+//        }
+//    }
+//    else if (ft_cnt < 2 * ft_step_cnt + ts_cnt) {
+//        //        cout << "=========== ft_phase = 5 ===========" << endl;
+//        ft_phase = 5;
+//        _c << 1, 0, 0, 1;
+//        contact_num = 2;
+//        tmp_t = ft_time - 2 * ft_step_time;
+//        tmp_t2 = ft_time - 2 * ft_step_time;
+//
+//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
+//        com_pos[1] = pre_com_pos(1);
+//        com_pos[2] = c_com_z3[5] * pow(tmp_t, 5) + c_com_z3[4] * pow(tmp_t, 4) + c_com_z3[3] * pow(tmp_t, 3) + c_com_z3[2] * pow(tmp_t, 2) + c_com_z3[1] * pow(tmp_t, 1) + c_com_z3[0];
+//
+//        com_vel[0] = x_moving_speed;
+//        com_vel[1] = pre_com_vel[1];
+//        com_vel[2] = 5 * c_com_z3[5] * pow(tmp_t, 4) + 4 * c_com_z3[4] * pow(tmp_t, 3) + 3 * c_com_z3[3] * pow(tmp_t, 2) + 2 * c_com_z3[2] * pow(tmp_t, 1) + 1 * c_com_z3[1];
+//
+//        RL_foot_pos[0] = pre_RL_foot_pos[0];
+//        RL_foot_pos[1] = pre_RL_foot_pos[1];
+//        RL_foot_pos[2] = pre_RL_foot_pos[2];
+//
+//        RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
+//        RR_foot_pos[1] = pre_RR_foot_pos[1];
+//        RR_foot_pos[2] = pre_RR_foot_pos[2];
+//
+//        FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
+//        FL_foot_pos[1] = pre_FL_foot_pos[1];
+//        FL_foot_pos[2] = pre_FL_foot_pos[2];
+//
+//        FR_foot_pos[0] = pre_FR_foot_pos[0];
+//        FR_foot_pos[1] = pre_FR_foot_pos[1];
+//        FR_foot_pos[2] = pre_FR_foot_pos[2];
+//        
+//        RL_foot_vel = tar_init_RL_foot_vel;
+//        RR_foot_vel = tar_init_RR_foot_vel;
+//        FL_foot_vel = tar_init_FL_foot_vel;
+//        FR_foot_vel = tar_init_FR_foot_vel;
+//        
+//        RR_foot_vel[0] = 5*c_sf_x2[5] * pow(tmp_t2, 4) + 4*c_sf_x2[4] * pow(tmp_t2, 3) + 3*c_sf_x2[3] * pow(tmp_t2, 2) + 2*c_sf_x2[2] * pow(tmp_t2, 1) + 1*c_sf_x2[1];
+//        FL_foot_vel[0] = RR_foot_vel[0];
+//
+//
+//        if (ft_cnt == 2 * ft_step_cnt + ts_cnt - 1) {
+//            //            cout << "test!!!!!!!!!!!!!!!!!!!!!!!!! " << endl;
+//
+//            pre_com_pos[0] = pre_com_pos[0] + x_moving_speed * (ts);
+//            pre_com_pos[1] = com_pos(1);
+//            pre_com_pos[2] = h_1; //com_pos(2);
+//
+//            pre_com_vel[0] = x_moving_speed;
+//            pre_com_vel[1] = com_vel[1];
+//            pre_com_vel[2] = v_1;
+//
+//            pre_RL_foot_pos[0] = RL_foot_pos[0];
+//            pre_RL_foot_pos[1] = RL_foot_pos[1];
+//            pre_RL_foot_pos[2] = RL_foot_pos[2];
+//
+//            //            pre_RR_foot_pos[0] = pre_RR_foot_pos(0) + x_moving_speed * ft_step_time*2;//RR_foot_pos[0];
+//            pre_RR_foot_pos[1] = RR_foot_pos[1];
+//            pre_RR_foot_pos[2] = RR_foot_pos[2];
+//
+//            //            pre_FL_foot_pos[0] = pre_FL_foot_pos(0) + x_moving_speed * ft_step_time*2;//FL_foot_pos[0];
+//            pre_FL_foot_pos[1] = FL_foot_pos[1];
+//            pre_FL_foot_pos[2] = FL_foot_pos[2];
+//
+//            pre_FR_foot_pos[0] = FR_foot_pos[0];
+//            pre_FR_foot_pos[1] = FR_foot_pos[1];
+//            pre_FR_foot_pos[2] = FR_foot_pos[2];
+//        }
+//    }
+//    else if (ft_cnt < 3 * ft_step_cnt) {
+//        //        cout << "=========== ft_phase = 6 ===========" << endl;
+//        ft_phase = 6;
+//        _c << 0, 0, 0, 0;
+//        contact_num = 0;
+//        tmp_t = ft_time - 2 * ft_step_time - ts;
+//        tmp_t2 = ft_time - 2 * ft_step_time;
+//
+//        com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
+//        com_pos[1] = pre_com_pos(1);
+//        com_pos[2] = c_com_z2[5] * pow(tmp_t, 5) + c_com_z2[4] * pow(tmp_t, 4) + c_com_z2[3] * pow(tmp_t, 3) + c_com_z2[2] * pow(tmp_t, 2) + c_com_z2[1] * pow(tmp_t, 1) + c_com_z2[0];
+//
+//        com_vel[0] = x_moving_speed;
+//        com_vel[1] = pre_com_vel[1];
+//        com_vel[2] = 5 * c_com_z2[5] * pow(tmp_t, 4) + 4 * c_com_z2[4] * pow(tmp_t, 3) + 3 * c_com_z2[3] * pow(tmp_t, 2) + 2 * c_com_z2[2] * pow(tmp_t, 1) + 1 * c_com_z2[1];
+//
+//        RL_foot_pos[0] = pre_RL_foot_pos[0];
+//        RL_foot_pos[1] = pre_RL_foot_pos[1];
+//        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
+//
+//        RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
+//        RR_foot_pos[1] = pre_RR_foot_pos[1];
+//        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
+//
+//        FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t2, 5) + c_sf_x2[4] * pow(tmp_t2, 4) + c_sf_x2[3] * pow(tmp_t2, 3) + c_sf_x2[2] * pow(tmp_t2, 2) + c_sf_x2[1] * pow(tmp_t2, 1) + c_sf_x2[0];
+//        FL_foot_pos[1] = pre_FL_foot_pos[1];
+//        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z3[5] * pow(tmp_t, 5) + c_sf_z3[4] * pow(tmp_t, 4) + c_sf_z3[3] * pow(tmp_t, 3) + c_sf_z3[2] * pow(tmp_t, 2) + c_sf_z3[1] * pow(tmp_t, 1) + c_sf_z3[0];
+//
+//        FR_foot_pos[0] = pre_FR_foot_pos[0];
+//        FR_foot_pos[1] = pre_FR_foot_pos[1];
+//        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t, 5) + c_sf_z2[4] * pow(tmp_t, 4) + c_sf_z2[3] * pow(tmp_t, 3) + c_sf_z2[2] * pow(tmp_t, 2) + c_sf_z2[1] * pow(tmp_t, 1) + c_sf_z2[0];
+//
+//        // ---------------------------------------------------------------- //
+////        RL_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t2, 4) + 4*c_sf_x1[4] * pow(tmp_t2, 3) + 3*c_sf_x1[3] * pow(tmp_t2, 2) + 2*c_sf_x1[2] * pow(tmp_t2, 1) + 1*c_sf_x1[1];
+//        RL_foot_vel[0] = tar_init_RL_foot_vel[0];
+//        RL_foot_vel[1] = tar_init_RL_foot_vel[1];
+//        RL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t, 4) + 4*c_sf_z2[4] * pow(tmp_t, 3) + 3*c_sf_z2[3] * pow(tmp_t, 2) + 2*c_sf_z2[2] * pow(tmp_t, 1) + 1*c_sf_z2[1];
+//
+//        RR_foot_vel[0] = 5*c_sf_x2[5] * pow(tmp_t2, 4) + 4*c_sf_x2[4] * pow(tmp_t2, 3) + 3*c_sf_x2[3] * pow(tmp_t2, 2) + 2*c_sf_x2[2] * pow(tmp_t2, 1) + 1*c_sf_x2[1];
+//        RR_foot_vel[1] = tar_init_RR_foot_vel[1];
+//        RR_foot_vel[2] = 5*c_sf_z3[5] * pow(tmp_t, 4) + 4*c_sf_z3[4] * pow(tmp_t, 3) + 3*c_sf_z3[3] * pow(tmp_t, 2) + 2*c_sf_z3[2] * pow(tmp_t, 1) + 1*c_sf_z3[1];
+//
+//        FL_foot_vel[0] = RR_foot_vel[0];
+//        FL_foot_vel[1] = tar_init_FL_foot_vel[1];
+//        FL_foot_vel[2] = RR_foot_vel[2];
+//
+//        FR_foot_vel[0] = tar_init_FR_foot_vel[0];
+//        FR_foot_vel[1] = tar_init_FR_foot_vel[1];
+//        FR_foot_vel[2] = RL_foot_vel[2];
+//        
+//        if (ft_cnt == 3 * ft_step_cnt - 1) {
+//
+//            pre_com_pos(0) = pre_com_pos[0] + x_moving_speed * tf;
+//            pre_com_pos(1) = pre_com_pos[1];
+//            pre_com_pos(2) = h_2;
+//
+//            pre_com_vel[0] = x_moving_speed;
+//            pre_com_vel[1] = com_vel[1];
+//            pre_com_vel[2] = v_2;
+//
+//            pre_RL_foot_pos[0] = RL_foot_pos[0];
+//            pre_RL_foot_pos[1] = RL_foot_pos[1];
+//            pre_RL_foot_pos[2] = tar_init_RL_foot_pos[2] + swing_foot_height;
+//
+//            pre_RR_foot_pos[0] = RR_foot_pos[0];
+//            pre_RR_foot_pos[1] = RR_foot_pos[1];
+//            pre_RR_foot_pos[2] = tar_init_RR_foot_pos[2];
+//
+//            pre_FL_foot_pos[0] = FL_foot_pos[0];
+//            pre_FL_foot_pos[1] = FL_foot_pos[1];
+//            pre_FL_foot_pos[2] = tar_init_FL_foot_pos[2];
+//
+//            pre_FR_foot_pos[0] = FR_foot_pos[0];
+//            pre_FR_foot_pos[1] = FR_foot_pos[1];
+//            pre_FR_foot_pos[2] = tar_init_FR_foot_pos[2] + swing_foot_height;
+//
+//
+//            if (sub_ctrl_flag == false) {
+//                pre_x_moving_speed = x_moving_speed;
+//                x_moving_speed = tmp_x_moving_speed;
+//
+//                FT_COM_SF_X_Traj_Gen();
+//                ft_cnt = ft_step_cnt - 1;
 //            }
 //            else {
-//                cp_foot_pos_y = 0;
-//            }
+//                // =============== COM =============== //                
+//                init_x[0] = pre_com_pos[0];
+//                init_x[1] = x_moving_speed;
+//                init_x[2] = 0;
 //
-//            if (tmp_y_moving_speed > 0.01 || tmp_y_moving_speed < -0.01) {
-//                cp_foot_pos_y = 0;
-//                CP_PHASE = 0;
-//            }
-//            else if (des_theta > 5 * D2R || des_theta < -5 * D2R) {
-//                cp_foot_pos_y = 0;
-//                CP_PHASE = 0;
-//            }
-//        }
+//                final_x[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
+//                final_x[1] = 0;
+//                final_x[2] = 0;
 //
-//        break;
+//                coefficient_5thPoly(init_x, final_x, ts, c_com_x2);
 //
-//    case 1:
-//        cout << "[CP_PHASE 1] RRFL" << endl;
-//        if (CP_move_step == 0) {
-//            cout << "[CP_move_step == 0]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                cout << "[1]" << endl;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1 - cp_on_cnt) * dt; // now time
-//                tmp_cp_time = (double) (ft_step_cnt - 1 - cp_on_cnt) * dt; // stepping time
-//                
-//                cout << "ft_cnt % ft_step_cnt - 1 = " << ft_cnt % ft_step_cnt - 1 << endl;
-//                cout << "tmp_t = " << tmp_t << ", tmp_cp_time = " << tmp_cp_time << endl;
+//                // =============== Swing Foot =============== //
 //
-//                cp_foot_offset_y = Kp_cp * (CP_y - cp_foot_pos_y * 2) / 2.0;
-//                
-////                if(cp_foot_pos_y > 0){
-////                    cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) + cp_foot_offset_y;
-////                    cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) - cp_foot_offset_y;
-////                    cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) - cp_foot_offset_y;
-////                    cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) + cp_foot_offset_y;
-////                }
-////                else{
-////                    cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) + cp_foot_offset_y;
-////                    cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) - cp_foot_offset_y;
-////                    cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) - cp_foot_offset_y;
-////                    cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * ft_step_time) * tmp_t)) + cp_foot_offset_y;
-////                }
+//                // Left (Second)
+//                init_x[0] = 0;
+//                init_x[1] = 0;
+//                init_x[2] = 0;
 //
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) + cp_foot_offset_y;
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) - cp_foot_offset_y;
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) - cp_foot_offset_y;
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (2 * tmp_cp_time) * tmp_t)) + cp_foot_offset_y;
-//            }
-//            else {
-//                CP_move_step = 1;
+//                final_x[0] = 0 + x_moving_speed * ft_step_time;
+//                final_x[1] = 0;
+//                final_x[2] = 0;
+//
+//                coefficient_5thPoly(init_x, final_x, ts, c_sf_x5);
 //            }
 //        }
-//        else if (CP_move_step == 1) {
-//            cout << "[CP_move_step == 1]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                cout << "[3]" << endl;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1) * dt;
+//    }
+//    else if (ft_cnt < 3 * ft_step_cnt + ts_cnt) {
+//        //       cout << "=========== ft_phase = 7 (FINAL) ===========" << endl;
+//        ft_phase = 7;
+//        _c << 0, 1, 1, 0;
+//        contact_num = 2;
+//        tmp_t = ft_time - 3 * ft_step_time;
 //
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
+//        com_pos[0] = c_com_x2[5] * pow(tmp_t, 5) + c_com_x2[4] * pow(tmp_t, 4) + c_com_x2[3] * pow(tmp_t, 3) + c_com_x2[2] * pow(tmp_t, 2) + c_com_x2[1] * pow(tmp_t, 1) + c_com_x2[0];
+//        com_pos[1] = init_com_pos(1);
+//        com_pos[2] = c_com_z4[5] * pow(tmp_t, 5) + c_com_z4[4] * pow(tmp_t, 4) + c_com_z4[3] * pow(tmp_t, 3) + c_com_z4[2] * pow(tmp_t, 2) + c_com_z4[1] * pow(tmp_t, 1) + c_com_z4[0];
 //
-//            }
-//            else {
-//                CP_move_step = 2;
-//            }
+//        com_vel[0] = 5 * c_com_x2[5] * pow(tmp_t, 4) + 4 * c_com_x2[4] * pow(tmp_t, 3) + 3 * c_com_x2[3] * pow(tmp_t, 2) + 2 * c_com_x2[2] * pow(tmp_t, 1) + 1 * c_com_x2[1];
+//        com_vel[1] = pre_com_vel[1];
+//        com_vel[2] = 5 * c_com_z4[5] * pow(tmp_t, 4) + 4 * c_com_z4[4] * pow(tmp_t, 3) + 3 * c_com_z4[3] * pow(tmp_t, 2) + 2 * c_com_z4[2] * pow(tmp_t, 1) + 1 * c_com_z4[1];
+//
+//        RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x5[5] * pow(tmp_t, 5) + c_sf_x5[4] * pow(tmp_t, 4) + c_sf_x5[3] * pow(tmp_t, 3) + c_sf_x5[2] * pow(tmp_t, 2) + c_sf_x5[1] * pow(tmp_t, 1) + c_sf_x5[0];
+//        RL_foot_pos[1] = pre_RL_foot_pos[1];
+//        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(tmp_t, 5) + c_sf_z4[4] * pow(tmp_t, 4) + c_sf_z4[3] * pow(tmp_t, 3) + c_sf_z4[2] * pow(tmp_t, 2) + c_sf_z4[1] * pow(tmp_t, 1) + c_sf_z4[0];
+//
+//        RR_foot_pos[0] = pre_RR_foot_pos[0];
+//        RR_foot_pos[1] = pre_RR_foot_pos[1];
+//        RR_foot_pos[2] = pre_RR_foot_pos[2];
+//
+//        FL_foot_pos[0] = pre_FL_foot_pos[0];
+//        FL_foot_pos[1] = pre_FL_foot_pos[1];
+//        FL_foot_pos[2] = pre_FL_foot_pos[2];
+//
+//        FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x5[5] * pow(tmp_t, 5) + c_sf_x5[4] * pow(tmp_t, 4) + c_sf_x5[3] * pow(tmp_t, 3) + c_sf_x5[2] * pow(tmp_t, 2) + c_sf_x5[1] * pow(tmp_t, 1) + c_sf_x5[0];
+//        FR_foot_pos[1] = pre_FR_foot_pos[1];
+//        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(tmp_t, 5) + c_sf_z4[4] * pow(tmp_t, 4) + c_sf_z4[3] * pow(tmp_t, 3) + c_sf_z4[2] * pow(tmp_t, 2) + c_sf_z4[1] * pow(tmp_t, 1) + c_sf_z4[0];
+//
+//        // ----------------------- TOMMOROW ------------------------- //
+//        RL_foot_vel[0] = 5*c_sf_x5[5] * pow(tmp_t, 4) + 4*c_sf_x5[4] * pow(tmp_t, 3) + 3*c_sf_x5[3] * pow(tmp_t, 2) + 2*c_sf_x5[2] * pow(tmp_t, 1) + 1*c_sf_x5[1];
+//        RL_foot_vel[1] = tar_init_RL_foot_vel[1];
+//        RL_foot_vel[2] = 5*c_sf_z4[5] * pow(tmp_t, 4) + 4*c_sf_z4[4] * pow(tmp_t, 3) + 3*c_sf_z4[3] * pow(tmp_t, 2) + 2*c_sf_z4[2] * pow(tmp_t, 1) + 1*c_sf_z4[1];
+//
+//        RR_foot_vel[0] = tar_init_RR_foot_vel[0];
+//        RR_foot_vel[1] = tar_init_RR_foot_vel[1];
+//        RR_foot_vel[2] = tar_init_RR_foot_vel[2];
+//
+//        FL_foot_vel[0] = tar_init_FL_foot_vel[0];
+//        FL_foot_vel[1] = tar_init_FL_foot_vel[1];
+//        FL_foot_vel[2] = tar_init_FL_foot_vel[2];
+//
+//        FR_foot_vel[0] = RL_foot_vel[0];
+//        FR_foot_vel[1] = tar_init_FR_foot_vel[1];
+//        FR_foot_vel[2] = RL_foot_vel[2];
+//        
+//        if (ft_cnt == 3 * ft_step_cnt + ts_cnt - 1) {
+//            pre_com_pos[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
+//            pre_com_pos[1] = com_pos(1);
+//            pre_com_pos[2] = h_0; //com_pos(2);
+//
+//            pre_RL_foot_pos[0] = pre_RL_foot_pos(0) + x_moving_speed * ft_step_time; //init_RL_foot_pos[0];// + pre_x_moving_speed * step_time + x_moving_speed * step_time;//RL_foot_pos[0];//x_moving_speed * (ft_step_time);
+//            pre_RL_foot_pos[1] = pre_RL_foot_pos[1];
+//            pre_RL_foot_pos[2] = tar_init_RL_foot_pos[2];
+//
+//            pre_RR_foot_pos[0] = pre_RR_foot_pos[0];
+//            pre_RR_foot_pos[1] = pre_RR_foot_pos[1];
+//            pre_RR_foot_pos[2] = pre_RR_foot_pos[2];
+//
+//            pre_FL_foot_pos[0] = pre_FL_foot_pos[0];
+//            pre_FL_foot_pos[1] = pre_FL_foot_pos[1];
+//            pre_FL_foot_pos[2] = pre_FL_foot_pos[2];
+//
+//            pre_FR_foot_pos[0] = pre_FR_foot_pos(0) + x_moving_speed * ft_step_time; //init_FR_foot_pos[0];// + pre_x_moving_speed * step_time + x_moving_speed * step_time;//FR_foot_pos[0];
+//            pre_FR_foot_pos[1] = pre_FR_foot_pos[1];
+//            pre_FR_foot_pos[2] = tar_init_FR_foot_pos[2];
 //        }
-//        else if (CP_move_step == 2) {
-//                cout << "[CP_move_step == 2]" << endl;
-//            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-//                if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-//                    tmp_cp_cnt++;
-//
-//                        cout << endl << " =========== tmp_cp_cnt = " << tmp_cp_cnt << " ===========" << endl;
-//
-//                    if (tmp_cp_cnt == 6) { //3
-////                            cout << "[7]" << endl;
-//                        CP_PHASE = 0;
-//                        CP_move_step = 0;
-//                        CP_move_done_flag = true;
-//                    }
-//                }
-//            }
-//        }
-//        break;
-//
-//    case 2:
-//        // swing foot can be located at CP during next phase.
-//        cout << "[CP_PHASE 2] RLFR" << endl;
-//        if (CP_move_step == 0) {
-//            cout << "[CP_move_step == 0]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-////                tmp_t = (double) (ft_cnt % ft_step_cnt) * dt;
-//                tmp_t = (double) (ft_cnt % ft_step_cnt - 1 - cp_on_cnt) * dt; // now time
-//                tmp_cp_time = (double) (ft_step_cnt - 1 - cp_on_cnt) * dt; // stepping time
-//                
-//                cout << "tmp_t = " << tmp_t << ", tmp_cp_time = " << tmp_cp_time << endl;
-//
-//                cp_foot_offset_y = Kp_cp * (CP_y - cp_foot_pos_y * 2) / 2.0;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) - cp_foot_offset_y;
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) + cp_foot_offset_y;
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] + (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) + cp_foot_offset_y;
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] - (cp_foot_pos_y) / 2.0 * (1 - cos(PI2 / (tmp_cp_time * 2) * tmp_t)) - cp_foot_offset_y;
-//
-////                    printf("[2] cp_foot_offset_y = %f\n", cp_foot_offset_y);
-//            }
-//            else {
-//                CP_move_step = 1;
-//            }
-//        }
-//        else if (CP_move_step == 1) {
-//            cout << "[CP_move_step == 1]" << endl;
-//            if (ft_cnt % ft_step_cnt < ft_step_cnt - 1) {
-//                tmp_t = (double) (ft_cnt % ft_step_cnt) * dt;
-////                    cout << "[case.2][CP_move_step.2] tmp_t = " << tmp_t << ", cp_foot_pos_y = " << cp_foot_pos_y << endl;
-//
-//                cp_RL_foot_pos[1] = init_cp_RL_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_RR_foot_pos[1] = init_cp_RR_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FL_foot_pos[1] = init_cp_FL_foot_pos[1] + (cp_foot_pos_y + cp_foot_offset_y) - (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//                cp_FR_foot_pos[1] = init_cp_FR_foot_pos[1] - (cp_foot_pos_y + cp_foot_offset_y) + (cp_foot_pos_y + cp_foot_offset_y) / 2.0 * (1 - cos(PI2 / (ft_step_time * 2) * tmp_t));
-//
-//            }
-//            else {
-//                CP_move_step = 2;
-//            }
-//        }
-//        else if (CP_move_step == 2) {
-//            cout << "[CP_move_step == 2]" << endl;
-//            if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-//                if (ft_cnt % ft_step_cnt == ft_step_cnt - 1) {
-//                    tmp_cp_cnt++;
-//
-//                    if (tmp_cp_cnt == 6) { //3
-//                        CP_PHASE = 0;
-//                        CP_move_step = 0;
-//                        CP_move_done_flag = true;
-//                    }
-//                }
-//            }
-//        }
-//        break;
 //    }
 //
+//    else {
+//        //        cout << "=========== ft_phase = 8 ===========" << endl;
+//        ft_phase = 8;
+//        _c << 1, 1, 1, 1;
+//        contact_num = 4;
+//        moving_done_flag = true;
+//
+//        com_pos = pre_com_pos;
+//        com_vel = tar_init_com_pos;
+//        
+//        RL_foot_pos = pre_RL_foot_pos;
+//        RR_foot_pos = pre_RR_foot_pos;
+//        FL_foot_pos = pre_FL_foot_pos;
+//        FR_foot_pos = pre_FR_foot_pos;
+//        
+//        RL_foot_vel = tar_init_RL_foot_vel;
+//        RR_foot_vel = tar_init_RR_foot_vel;
+//        FL_foot_vel = tar_init_FL_foot_vel;
+//        FR_foot_vel = tar_init_FR_foot_vel;
+//    }
+//
+//    FT_Turning_Traj_Gen2();
+//
+//    base_pos = com_pos + base_offset;
+//    target_pos[6] = 0;
+//    ft_cnt++;
 //}
 
-void CRobot::COM_SF_FT_X_Traj_Gen()
+void CRobot::FT_COM_X_Traj_Gen()
 {
     // =============== COM =============== //
     init_x[0] = pre_com_pos[0];
@@ -6507,55 +3957,69 @@ void CRobot::COM_SF_FT_X_Traj_Gen()
     final_x[2] = 0;
 
     coefficient_5thPoly(init_x, final_x, ts, c_com_x1);
-
-    // ============ Swing Foot Pos. ============ //
-    // Left (First)
-    init_x[0] = 0;
-    init_x[1] = 0;
-    init_x[2] = 0;
-
-    final_x[0] = 0 + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;
-    final_x[1] = 0;
-    final_x[2] = 0;
-
-    coefficient_5thPoly(init_x, final_x, ts + tf, c_sf_x1);
-
-    // Right (First)
-    init_x[0] = 0;
-    init_x[1] = 0;
-    init_x[2] = 0;
-
-    final_x[0] = 0 + x_moving_speed * ft_step_time * 2;
-    final_x[1] = 0;
-    final_x[2] = 0;
-
-    coefficient_5thPoly(init_x, final_x, ts + tf, c_sf_x2);
-
-    // Left (Second)
-    init_x[0] = 0 + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;
-    init_x[1] = 0;
-    init_x[2] = 0;
-
-    final_x[0] = 0 + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time * 3;
-    final_x[1] = 0;
-    final_x[2] = 0;
-
-    coefficient_5thPoly(init_x, final_x, ts, c_sf_x3);
-
-    // Right (Second)
-    init_x[0] = 0 + x_moving_speed * ft_step_time * 2;
-    init_x[1] = 0;
-    init_x[2] = 0;
-
-    final_x[0] = 0 + x_moving_speed * ft_step_time * 4;
-    final_x[1] = 0;
-    final_x[2] = 0;
-
-    coefficient_5thPoly(init_x, final_x, ts, c_sf_x4);
-
 }
 
-void CRobot::COM_SF_FT_Z_Traj_Gen()
+//void CRobot::FT_COM_SF_X_Traj_Gen()
+//{
+//    // =============== COM =============== //
+//    init_x[0] = pre_com_pos[0];
+//    init_x[1] = pre_x_moving_speed;
+//    init_x[2] = 0;
+//
+//    final_x[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
+//    final_x[1] = x_moving_speed;
+//    final_x[2] = 0;
+//
+//    coefficient_5thPoly(init_x, final_x, ts, c_com_x1);
+//
+//    // ============ Swing Foot Pos. ============ //
+//    // Left (First)
+//    init_x[0] = 0;
+//    init_x[1] = 0;
+//    init_x[2] = 0;
+//
+//    final_x[0] = 0 + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;
+//    final_x[1] = 0;
+//    final_x[2] = 0;
+//
+//    coefficient_5thPoly(init_x, final_x, ts + tf, c_sf_x1);
+//
+//    // Right (First)
+//    init_x[0] = 0;
+//    init_x[1] = 0;
+//    init_x[2] = 0;
+//
+//    final_x[0] = 0 + x_moving_speed * ft_step_time * 2;
+//    final_x[1] = 0;
+//    final_x[2] = 0;
+//
+//    coefficient_5thPoly(init_x, final_x, ts + tf, c_sf_x2);
+//
+//    // Left (Second)
+//    init_x[0] = 0 + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time;
+//    init_x[1] = 0;
+//    init_x[2] = 0;
+//
+//    final_x[0] = 0 + pre_x_moving_speed * ft_step_time + x_moving_speed * ft_step_time * 3;
+//    final_x[1] = 0;
+//    final_x[2] = 0;
+//
+//    coefficient_5thPoly(init_x, final_x, ts, c_sf_x3);
+//
+//    // Right (Second)
+//    init_x[0] = 0 + x_moving_speed * ft_step_time * 2;
+//    init_x[1] = 0;
+//    init_x[2] = 0;
+//
+//    final_x[0] = 0 + x_moving_speed * ft_step_time * 4;
+//    final_x[1] = 0;
+//    final_x[2] = 0;
+//
+//    coefficient_5thPoly(init_x, final_x, ts, c_sf_x4);
+//
+//}
+
+void CRobot::FT_COM_SF_Z_Traj_Gen()
 {
     // =============== COM =============== //
     init_x[0] = h_0;
@@ -6609,7 +4073,17 @@ void CRobot::COM_SF_FT_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, ts, c_sf_z1);
+    coefficient_5thPoly(init_x, final_x, (ts + tf)/2.0, c_sf_z1);
+
+    init_x[0] = swing_foot_height;
+    init_x[1] = 0;
+    init_x[2] = 0;
+
+    final_x[0] = 0;
+    final_x[1] = 0;
+    final_x[2] = 0;
+
+    coefficient_5thPoly(init_x, final_x, (ts + tf)/2.0, c_sf_z2);
 
     init_x[0] = 0;
     init_x[1] = 0;
@@ -6619,7 +4093,7 @@ void CRobot::COM_SF_FT_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, tf, c_sf_z2);
+    coefficient_5thPoly(init_x, final_x, (ts + 2*tf)/2.0, c_sf_z3);
 
     init_x[0] = swing_foot_height;
     init_x[1] = 0;
@@ -6629,54 +4103,261 @@ void CRobot::COM_SF_FT_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, tf, c_sf_z3);
+    coefficient_5thPoly(init_x, final_x, (ts + 2*tf)/2.0, c_sf_z4);
 
-    init_x[0] = swing_foot_height;
-    init_x[1] = 0;
-    init_x[2] = 0;
+}
 
-    final_x[0] = 0;
-    final_x[1] = 0;
-    final_x[2] = 0;
+void CRobot::FT_Turning_Traj_Gen2(void)
+{
+    const double turn_l = 0.4134; // sqrt(0.35^2 + (0.115 + 0.105)^2)
+    const double x1 = 0.35, y1 = 0.22, turn_theta1 = 57.8477 * D2R;
+    static double x2 = 0.35, y2 = 0.22, turn_theta2 = 0;
+    static double del_x = 0, del_y = 0;
+    static double target_theta = turn_theta1;
+    static double tmp_target_theta = 0;
 
-    coefficient_5thPoly(init_x, final_x, ts, c_sf_z4);
+    // turn left
+    if ((base_ori(2) > 0.01) && (ft_cnt == 2 * ft_step_cnt)) {
+        if (turn_mode == 0) {
+            turn_start_flag = true;
+            turn_mode = 1;
 
+            target_theta = -base_ori(2) * 2.0; // [rad]
+
+            printf("[left] target_theta = %f\n", target_theta);
+        }
+    } // turn right
+    else if ((base_ori(2) < -0.01) && (ft_cnt == ft_step_cnt)) {
+        if (turn_mode == 0) {
+            turn_start_flag = true;
+            turn_mode = 3;
+
+            target_theta = base_ori(2) * 2.0; // [rad]
+
+            printf("[right] target_theta = %f\n", target_theta);
+        }
+    }
+
+    if (turn_start_flag == true) {
+        if (turn_mode == 1) {
+            if (turn_cnt <= ts_cnt) {
+                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+            }
+            else {
+                tmp_target_theta = turn_theta1 + target_theta;
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+            }
+
+            if (turn_cnt == ft_step_cnt - 1) {
+                turn_mode = 2;
+                turn_cnt = 0;
+            }
+        }
+        else if (turn_mode == 2) {
+            if (turn_cnt <= ts_cnt) {
+
+                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+            }
+            else {
+                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+
+            }
+
+            if (turn_cnt == ts_cnt + tf_cnt - 1) { //FC_PHASE == STOP
+                // Initialization
+                turn_mode = 0;
+                turn_cnt = 0;
+                turn_start_flag = false;
+            }
+        }
+        else if (turn_mode == 3) {//) && (ctc_cnt2 < preview_cnt*2)){
+            if (turn_cnt <= ts_cnt) {
+                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                //                            printf("[2] tmp_target_theta = %f\n",tmp_target_theta*R2D);
+
+                turn_cnt++;
+            }
+            else {
+                tmp_target_theta = turn_theta1 + target_theta;
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+
+            }
+
+            if (turn_cnt == step_cnt - 1) {
+                turn_mode = 4;
+                turn_cnt = 0;
+            }
+        }
+        else if (turn_mode == 4) {
+            if (turn_cnt <= ts_cnt) {
+
+                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+            }
+            else {
+                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
+
+                x2 = turn_l * sin(tmp_target_theta);
+                y2 = turn_l * cos(tmp_target_theta);
+
+                del_x = x2 - x1;
+                del_y = y2 - y1;
+
+                turn_xl_EP = del_x;
+                turn_yl_EP = del_y;
+                turn_xr_EP = del_x;
+                turn_yr_EP = -del_y;
+
+                turn_cnt++;
+            }
+
+            if (turn_cnt == ts_cnt + tf_cnt - 1) { // FC_PHASE == STOP
+                // Initialization
+                turn_mode = 0;
+                turn_cnt = 0;
+                turn_start_flag = false;
+            }
+        }
+    }
+    else {
+        turn_mode = 0;
+        turn_cnt = 0;
+
+        turn_xl_EP = 0;
+        turn_yl_EP = 0;
+        turn_xr_EP = 0;
+        turn_yr_EP = 0;
+    }
+
+    RL_foot_pos_local_offset << -turn_xr_EP, -turn_yr_EP, 0;
+    RR_foot_pos_local_offset << -turn_xl_EP, -turn_yl_EP, 0;
+    FL_foot_pos_local_offset << +turn_xl_EP, +turn_yl_EP, 0;
+    FR_foot_pos_local_offset << +turn_xr_EP, +turn_yr_EP, 0;
+
+    // ======= Turning trajectory generation  END ======= //    
 }
 
 void CRobot::FT_Turning_Traj_Gen(void)
 {
-    //    // ======= Turning trajectory generation ======= //
-    //    //    printf("================= [FT] Turning trajectory generation ============== \n");
-    //
-    //    const double turn_l = 0.4134; // sqrt(0.35^2 + (0.115 + 0.105)^2)
-    //    const double x1 = 0.35, y1 = 0.22, turn_theta1 = 57.8477 * D2R;
-    //    static double x2 = 0.35, y2 = 0.22; //, turn_theta2 = 0;
-    //    static double del_x = 0, del_y = 0;
-    //    static double target_theta = turn_theta1;
-    //    static double tmp_target_theta = 0;
-    //
-    //    // turn left
-    //    if ((des_theta > 0.01) * D2R && (ft_cnt == 2 * ft_step_cnt)) {
-    //        if (turn_mode == 0) {
-    //            turn_start_flag = true;
-    //            turn_mode = 1;
-    //
-    //            target_theta = -des_theta / 2.0; // [rad]
-    //
-    //            printf("[left] target_theta = %f\n", target_theta);
+    // ======= Turning trajectory generation ======= //
+    //    printf("================= [FT] Turning trajectory generation ============== \n");
+
+    //        const double turn_l = 0.4134; // sqrt(0.35^2 + (0.115 + 0.105)^2)
+    //        const double x1 = 0.35, y1 = 0.22, turn_theta1 = 57.8477 * D2R;
+    //        static double x2 = 0.35, y2 = 0.22; //, turn_theta2 = 0;
+    //        static double del_x = 0, del_y = 0;
+    //        static double target_theta = turn_theta1;
+    //        static double tmp_target_theta = 0;
+    //    
+    //        // turn left
+    //        if ((des_theta > 0.01) * D2R && (ft_cnt == 2 * ft_step_cnt)) {
+    //            if (turn_mode == 0) {
+    //                turn_start_flag = true;
+    //                turn_mode = 1;
+    //    
+    //                target_theta = -des_theta / 2.0; // [rad]
+    //    
+    //                printf("[left] target_theta = %f\n", target_theta);
+    //            }
     //        }
-    //    }
-    //    else if ((des_theta < -0.01) * D2R && (ft_cnt == 1 * ft_step_cnt)) {
-    //        if (turn_mode == 0) {
-    //            turn_start_flag = true;
-    //            turn_mode = 3;
-    //
-    //            target_theta = des_theta / 2.0; // [rad]
-    //
-    //            printf("[right] target_theta = %f\n", target_theta);
+    //        else if ((des_theta < -0.01) * D2R && (ft_cnt == 1 * ft_step_cnt)) {
+    //            if (turn_mode == 0) {
+    //                turn_start_flag = true;
+    //                turn_mode = 3;
+    //    
+    //                target_theta = des_theta / 2.0; // [rad]
+    //    
+    //                printf("[right] target_theta = %f\n", target_theta);
+    //            }
     //        }
-    //    }
-    //
+
     //    if (turn_start_flag == true) {
     //        if (turn_mode == 1) {
     //            if (turn_cnt <= ts_cnt) {

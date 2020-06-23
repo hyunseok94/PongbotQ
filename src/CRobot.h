@@ -50,84 +50,8 @@ typedef enum {
 
 typedef enum {
     NO_ACT,
-    EXIT_PROGRAM,
-    SET_MOTOR_GAIN,
-    SET_CURRENT_GAIN,
-    LOAD_PARAMETER,
-    SAVE_PARAMETER,
-    SET_JOINT_PARAMETER,
-    GET_JOINT_PARAMETER,
-    SET_BOARD_PARAMETER,
-    GET_BOARD_PARAMETER,
-    PRINT_JOINT_PARAMETER,
-    CHECK_DEVICE,
-    GAIN_SETTING,
-    ENABLE_FET,
-    ENABLE_FET_EACH,
-    DISABLE_FET,
-    DISABLE_FET_EACH,
-    RUN_CMD,
-    RUN_CMD_EACH,
-    STOP_CMD,
-    STOP_CMD_EACH,
-    GOTO_LIMIT_POS,
-    GOTO_LIMIT_POS_UPPER_ALL,
-    GOTO_LIMIT_POS_LOWER_ALL,
-    GOTO_LIMIT_POS_ALL,
-    ENCODER_ZERO,
-    ENCODER_ZERO_EACH,
-    SAVE_ZMP_INIT_POS,
-    SET_ENCODER_RESOLUTION,
-    SET_DEADZONE,
-    SET_JAMPWM_FAULT,
-    SET_MAX_VEL_ACC,
-    SET_CONTROL_MODE,
-    SET_HOME_SEARCH_PARAMETER,
-    SET_HOME_MAX_VEL_ACC,
-    SET_POSITION_LIMIT,
-    SET_ERROR_BOUND,
-    REQUEST_PARAMETER,
-    POSITION_LIMIT_ONOFF,
-    BEEP,
-    JOINT_REF_SET_RELATIVE,
-    JOINT_REF_SET_ABS,
-    SET_FT_PARAMETER,
-    GET_FT_PARAMETER,
-    NULL_FT_SENSOR,
-    NULL_WRIST_FT_SENSOR,
-    NULL_FOOT_ANGLE_SENSOR,
-    NULL_IMU_SENSOR,
-    SET_IMU_OFFSET,
-    PRINT_FT_PARAMETER,
-    SET_IMU_PARAMETER,
-    GET_IMU_PARAMETER,
-    PRINT_IMU_PARAMETER,
-    SET_DAMPING_GAIN,
-    SET_DSP_GAIN,
-    GOTO_WALK_READY_POS,
     GOTO_HOME_POS,
-    START_ZMP_INITIALIZATION,
-    STOP_ZMP_INITIALIZATION,
-    GOTO_FORWARD,
-    STOP_WALKING,
-    SET_MOCAP,
-    C_CONTROL_MODE,
-    P_CONTROL_MODE,
-    GRIP_ON,
-    GRIP_OFF,
-    GRIP_STOP,
-    DEMO_FLAG,
-    TEST_FUNCTION,
-    DEMO_GRASP, // jungho77
-    SET_PREDEF_WALK, // jungho77
-    INIT_WB_MOCAP, // by Inhyeok
-    DEMO_CONTROL_OFF_POS,
-    DEMO_CONTROL_ON_POS,
-    RBT_ON_MODE, //CDI
-    RBT_OFF_MODE, //CDI
-    CCTM_ON,
-    CCTM_OFF,
-    JUMP_ONESTEP, // BKCho
+    GOTO_WALK_READY_POS,        
     NOMAL_TROT_WALKING,
     FLYING_TROT_RUNNING,
     TORQUE_OFF,
@@ -261,7 +185,8 @@ public:
     void SF_X_Traj_Gen(void);
     void SF_X_Traj_Gen_Final(void);
     void get_zmp(void);
-    void Flying_Trot_Running(void);
+//    void Flying_Trot_Running2(void);
+    void Flying_Trot_Running3(void);
     void Flying_Trot_Running_Traj(unsigned int i);
     void Flying_Trot_Running_Traj_Final(unsigned int i);
     void SF_Flying_Trot_Z_Traj_Gen(void);
@@ -282,15 +207,16 @@ public:
     void COM_FT_Z_Traj_Gen(void);
     void SF_FT_X_Traj_Gen(void);
     void SF_FT_Z_Traj_Gen(void);
-    void Pronk_Jump(void);
+//    void Pronk_Jump(void);
     void Test_Function(void);
     void Turning_Traj_Gen(void);
     void FT_Turning_Traj_Gen(void);
+    void FT_Turning_Traj_Gen2(void);
     void TW_COM_SF_X_Traj_Gen(void);
     void TW_SF_Z_Traj_Gen(void);
     void TW_Turning_Traj_Gen(void);
-    void COM_SF_FT_X_Traj_Gen(void);
-    void COM_SF_FT_Z_Traj_Gen(void);
+    void FT_COM_SF_X_Traj_Gen(void);
+    void FT_COM_SF_Z_Traj_Gen(void);
     void CP_Con_FT(void);
     void check_CP_FT(void);
     void FT_Traj_Gen(void);
@@ -302,6 +228,8 @@ public:
     void TW_COM_Traj_Gen(void);
     void TW_SF_Traj_Gen(void);
     void Get_CP(void);
+    void MPC_Init(void);
+    void FT_COM_X_Traj_Gen(void);
 
     //    void Get_CP(void);
 
@@ -354,6 +282,7 @@ public:
     int Mode;
 
     RigidBodyDynamics::Model* m_pModel; //* URDF Model
+//    RigidBodyDynamics::Math::VectorNd tar_RobotState;
     RigidBodyDynamics::Math::VectorNd RobotState;
     RigidBodyDynamics::Math::VectorNd RobotStatedot;
     RigidBodyDynamics::Math::VectorNd RobotState2dot;
@@ -421,6 +350,12 @@ public:
     MatrixNd J_RR = MatrixNd::Zero(3, 19);
     MatrixNd J_FL = MatrixNd::Zero(3, 19);
     MatrixNd J_FR = MatrixNd::Zero(3, 19);
+
+    MatrixNd J_RL2 = MatrixNd::Zero(3, 3);
+	MatrixNd J_RR2 = MatrixNd::Zero(3, 3);
+	MatrixNd J_FL2 = MatrixNd::Zero(3, 3);
+	MatrixNd J_FR2 = MatrixNd::Zero(3, 3);
+
     MatrixNd J_FRONT_BODY = MatrixNd::Zero(6, 19);
     MatrixNd J_BASE = MatrixNd::Zero(6, 19);
 
@@ -484,6 +419,18 @@ public:
     VectorNd tar_RR_foot_pos_local = VectorNd::Zero(3);
     VectorNd tar_FL_foot_pos_local = VectorNd::Zero(3);
     VectorNd tar_FR_foot_pos_local = VectorNd::Zero(3);
+    
+    VectorNd tar_RL_foot_vel_local = VectorNd::Zero(3);
+    VectorNd tar_RR_foot_vel_local = VectorNd::Zero(3);
+    VectorNd tar_FL_foot_vel_local = VectorNd::Zero(3);
+    VectorNd tar_FR_foot_vel_local = VectorNd::Zero(3);
+
+    VectorNd tar_RL_q_dot_local = VectorNd::Zero(3);
+    VectorNd tar_RR_q_dot_local = VectorNd::Zero(3);
+    VectorNd tar_FL_q_dot_local = VectorNd::Zero(3);
+    VectorNd tar_FR_q_dot_local = VectorNd::Zero(3);
+
+
 
     VectorNd act_RL_foot_pos_local = VectorNd::Zero(3);
     VectorNd act_RR_foot_pos_local = VectorNd::Zero(3);
@@ -519,7 +466,7 @@ public:
     // weight
     MatrixNd _S = MatrixNd::Identity(6, 6);
     MatrixNd _W = MatrixNd::Identity(12, 12);
-    double _alpha = 0.00001;
+    double _alpha = 0.000001; // 0.00001
 
     MatrixNd _P = MatrixNd::Zero(12, 12);
     VectorNd _q = VectorNd::Zero(12);
@@ -628,8 +575,8 @@ public:
     VectorNd P = VectorNd::Zero(6);
     MatrixNd A = MatrixNd::Zero(6, 6);
 
-    VectorNd tmp_data1 = VectorNd::Zero(30);
-    VectorNd tmp_data2 = VectorNd::Zero(30);
+    VectorNd tmp_data1 = VectorNd::Zero(50);
+    VectorNd tmp_data2 = VectorNd::Zero(50);
     VectorNd computed_tor = VectorNd::Zero(13);
     VectorNd Fc_vsd = VectorNd::Zero(12);
     VectorNd Kp_vsd = VectorNd::Zero(12);
@@ -676,6 +623,7 @@ public:
     //    VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd pre_com_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd pre_com_vel = VectorNd::Zero(3);
     VectorNd com_vel = VectorNd::Zero(3); // x,y,z
     //    VectorNd com_ori = VectorNd::Zero(3); // roll,pitch,yaw
     //    VectorNd pre_com_ori = VectorNd::Zero(3); // roll,pitch,yaw
@@ -685,8 +633,8 @@ public:
     VectorNd base_ori_quat = VectorNd::Zero(4); // roll,pitch,yaw
     VectorNd old_com_pos = VectorNd::Zero(3); // x,y,z
     VectorNd old_com_vel = VectorNd::Zero(3); // x,y,z
-    VectorNd target_com_vel = VectorNd::Zero(3); // x,y,z
-    VectorNd target_com_acc = VectorNd::Zero(3); // x,y,z
+    VectorNd tar_init_com_vel = VectorNd::Zero(3); // x,y,z
+    VectorNd tar_init_com_acc = VectorNd::Zero(3); // x,y,z
 
     VectorNd base_pos = VectorNd::Zero(3); // x,y,z
     VectorNd act_base_pos = VectorNd::Zero(3);
@@ -752,6 +700,7 @@ public:
     VectorNd zmp_ref = VectorNd::Zero(2, 1);
 
     VectorNd init_com_pos = VectorNd::Zero(3);
+    VectorNd init_com_vel = VectorNd::Zero(3);
     VectorNd goal_com_pos = VectorNd::Zero(3);
 
     VectorNd init_base_pos = VectorNd::Zero(3);
@@ -762,6 +711,11 @@ public:
     VectorNd init_RR_foot_pos = VectorNd::Zero(3);
     VectorNd init_FL_foot_pos = VectorNd::Zero(3);
     VectorNd init_FR_foot_pos = VectorNd::Zero(3);
+    
+    VectorNd tar_init_RL_foot_vel = VectorNd::Zero(3);
+    VectorNd tar_init_RR_foot_vel = VectorNd::Zero(3);
+    VectorNd tar_init_FL_foot_vel = VectorNd::Zero(3);
+    VectorNd tar_init_FR_foot_vel = VectorNd::Zero(3);
 
     VectorNd RL_foot_pos = VectorNd::Zero(3);
     VectorNd RR_foot_pos = VectorNd::Zero(3);
@@ -772,6 +726,11 @@ public:
     VectorNd RR_cp_foot_pos = VectorNd::Zero(3);
     VectorNd FL_cp_foot_pos = VectorNd::Zero(3);
     VectorNd FR_cp_foot_pos = VectorNd::Zero(3);
+    
+    VectorNd RL_cp_foot_vel = VectorNd::Zero(3);
+    VectorNd RR_cp_foot_vel = VectorNd::Zero(3);
+    VectorNd FL_cp_foot_vel = VectorNd::Zero(3);
+    VectorNd FR_cp_foot_vel = VectorNd::Zero(3);
 
     VectorNd RL_foot_pos_local_offset = VectorNd::Zero(3);
     VectorNd RR_foot_pos_local_offset = VectorNd::Zero(3);
@@ -900,7 +859,7 @@ public:
     VectorNd p_robot_com_from_w = VectorNd::Zero(4, 1);
     VectorNd p_robot_com = VectorNd::Zero(3, 1);
     VectorNd base_offset = VectorNd::Zero(3, 1);
-    VectorNd target_com_pos = VectorNd::Zero(3, 1);
+    VectorNd tar_init_com_pos = VectorNd::Zero(3, 1);
 
     int CP_PHASE;
     double tmp_t, tmp_t2, tmp_t3;
@@ -962,7 +921,10 @@ public:
     MatrixNd Rot_Mat_XYZ = MatrixNd::Zero(3, 3);
 
     double kp_dc, kd_dc;
-
+    
+    int cp_phase = 0;
+    int walking_phase = 0;
+    int ft_phase = 0;
     //    int cp_x_case, cp_y_case;
     //    double next_cp_x, next_cp_y;
 
@@ -1013,4 +975,3 @@ private:
 };
 
 #endif /* CROBOT_H */
-
