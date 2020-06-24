@@ -230,6 +230,8 @@ public:
     void Get_CP(void);
     void MPC_Init(void);
     void FT_COM_X_Traj_Gen(void);
+    double fifth_order_poly(double c[], double t);
+    double fifth_order_poly_dot(double c[], double t);
 
     //    void Get_CP(void);
 

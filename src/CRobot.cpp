@@ -367,11 +367,11 @@ void CRobot::setRobotModel(Model* getModel)
     v_0 = 0;
     a_0 = 0;
 
-    v_1 = 0.05; //0.10; //0.15;
+    v_1 = 0.1; //0.10; //0.15;
     a_1 = -GRAVITY;
 
     h_2 = tar_init_com_pos(2);
-    v_2 = -0.00; //-0.05; // -0.3
+    v_2 = -0.05; //-0.05; // -0.3
     a_2 = -GRAVITY;
 
     h_3 = tar_init_com_pos(2);
@@ -537,13 +537,27 @@ void CRobot::ComputeTorqueControl()
     tmp_data2[4] = act_com_pos(0);
     tmp_data2[5] = act_com_pos(1);
     tmp_data2[6] = act_com_pos(2);
+    
+    tmp_data2[29] = com_vel(0);
+    tmp_data2[30] = com_vel(1);
+    tmp_data2[31] = com_vel(2);
+    tmp_data2[32] = act_com_vel(0);
+    tmp_data2[33] = act_com_vel(1);
+    tmp_data2[34] = act_com_vel(2);
 
-    tmp_data2[7] = base_ori(0) * R2D; //base_pos(0);
-    tmp_data2[8] = base_ori(1) * R2D; //base_pos(1);
-    tmp_data2[9] = base_ori(2) * R2D; //base_pos(2);
-    tmp_data2[10] = act_base_ori(0) * R2D; //act_base_pos(0);
-    tmp_data2[11] = act_base_ori(1) * R2D; //act_base_pos(1);
-    tmp_data2[12] = act_base_ori(2) * R2D; //act_base_pos(2);
+    tmp_data2[7] = base_ori(0) * R2D; // [deg]
+    tmp_data2[8] = base_ori(1) * R2D; 
+    tmp_data2[9] = base_ori(2) * R2D; 
+    tmp_data2[10] = act_base_ori(0) * R2D; // [deg]
+    tmp_data2[11] = act_base_ori(1) * R2D; 
+    tmp_data2[12] = act_base_ori(2) * R2D; 
+    
+    tmp_data2[35] = base_ori_dot(0) * R2D; // [deg/s]
+    tmp_data2[36] = base_ori_dot(1) * R2D; 
+    tmp_data2[37] = base_ori_dot(2) * R2D; 
+    tmp_data2[38] = act_base_ori_dot(0) * R2D; // [deg/s]
+    tmp_data2[39] = act_base_ori_dot(1) * R2D;
+    tmp_data2[40] = act_base_ori_dot(2) * R2D;
 
     tmp_data2[13] = RL_foot_pos(0);//tar_RL_foot_pos_local(0); //RL_foot_pos(0);
     tmp_data2[14] = RL_foot_pos(1);//tar_RL_foot_pos_local(1); //RL_foot_pos(1);
@@ -566,13 +580,8 @@ void CRobot::ComputeTorqueControl()
 
     
 
-//    tmp_data2[22] = com_vel(0);
-//    tmp_data2[23] = com_vel(1);
-//    tmp_data2[24] = com_vel(2);
-//    tmp_data2[25] = act_com_vel(0);
-//    tmp_data2[26] = act_com_vel(1);
-//    tmp_data2[27] = act_com_vel(2);
-//
+
+
 //    tmp_data2[28] = IMURoll * R2D;
 //    tmp_data2[29] = IMUPitch * R2D;
 
@@ -2932,24 +2941,24 @@ void CRobot::Flying_Trot_Running3(void)
         com_t = ft_time;
         sf_rr_t = sf_rr_t + dt;
 
-        com_pos[2] = c_com_z1[5] * pow(com_t, 5) + c_com_z1[4] * pow(com_t, 4) + c_com_z1[3] * pow(com_t, 3) + c_com_z1[2] * pow(com_t, 2) + c_com_z1[1] * pow(com_t, 1) + c_com_z1[0];
-        com_vel[2] = 5 * c_com_z1[5] * pow(com_t, 4) + 4 * c_com_z1[4] * pow(com_t, 3) + 3 * c_com_z1[3] * pow(com_t, 2) + 2 * c_com_z1[2] * pow(com_t, 1) + 1 * c_com_z1[1];
+        com_pos[2] = fifth_order_poly(c_com_z1,com_t);
+        com_vel[2] = fifth_order_poly_dot(c_com_z1,com_t);
 
         RL_foot_pos[2] = tar_init_RL_foot_pos[2];
         FR_foot_pos[2] = tar_init_FR_foot_pos[2];
         RL_foot_vel[2] = tar_init_RL_foot_vel[2];
                 
         if(sf_rr_t < (ts+tf)/2.0){
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(sf_rr_t, 5) + c_sf_z1[4] * pow(sf_rr_t, 4) + c_sf_z1[3] * pow(sf_rr_t, 3) + c_sf_z1[2] * pow(sf_rr_t, 2) + c_sf_z1[1] * pow(sf_rr_t, 1) + c_sf_z1[0];
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(sf_rr_t, 5) + c_sf_z1[4] * pow(sf_rr_t, 4) + c_sf_z1[3] * pow(sf_rr_t, 3) + c_sf_z1[2] * pow(sf_rr_t, 2) + c_sf_z1[1] * pow(sf_rr_t, 1) + c_sf_z1[0];
-            RR_foot_vel[2] = 5*c_sf_z1[5] * pow(sf_rr_t, 4) + 4*c_sf_z1[4] * pow(sf_rr_t, 3) + 3*c_sf_z1[3] * pow(sf_rr_t, 2) + 2*c_sf_z1[2] * pow(sf_rr_t, 1) + 1*c_sf_z1[1];
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rr_t);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rr_t);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z1,sf_rr_t);
  
         }
         else{
             sf_rr_t2 = sf_rr_t - (ts+tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
-            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(sf_rr_t2, 4) + 4*c_sf_z2[4] * pow(sf_rr_t2, 3) + 3*c_sf_z2[3] * pow(sf_rr_t2, 2) + 2*c_sf_z2[2] * pow(sf_rr_t2, 1) + 1*c_sf_z2[1];
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z2,sf_rr_t2);
         }
         
         FL_foot_vel = RR_foot_vel;
@@ -2976,18 +2985,17 @@ void CRobot::Flying_Trot_Running3(void)
         sf_rr_t = sf_rr_t + dt;
 
         com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*com_t;
-        com_pos[2] = c_com_z2[5] * pow(com_t, 5) + c_com_z2[4] * pow(com_t, 4) + c_com_z2[3] * pow(com_t, 3) + c_com_z2[2] * pow(com_t, 2) + c_com_z2[1] * pow(com_t, 1) + c_com_z2[0];
+        com_pos[2] = fifth_order_poly(c_com_z2,com_t);
 
         com_vel[0] = pre_x_moving_speed;
-        com_vel[2] = 5 * c_com_z2[5] * pow(com_t, 4) + 4 * c_com_z2[4] * pow(com_t, 3) + 3 * c_com_z2[3] * pow(com_t, 2) + 2 * c_com_z2[2] * pow(com_t, 1) + 1 * c_com_z2[1];
+        com_vel[2] = fifth_order_poly_dot(c_com_z2,com_t);
 
         RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         
-        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
-        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
-        RL_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rl_t, 4) + 4*c_sf_z3[4] * pow(sf_rl_t, 3) + 3*c_sf_z3[3] * pow(sf_rl_t, 2) + 2*c_sf_z3[2] * pow(sf_rl_t, 1) + 1*c_sf_z3[1];
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
+        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rl_t);
         
         if(init_flag != true){
             RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
@@ -2995,9 +3003,9 @@ void CRobot::Flying_Trot_Running3(void)
             RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
 
             sf_rr_t2 = sf_rr_t -(ft_step_time + tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
-            RR_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rr_t2, 4) + 4*c_sf_z4[4] * pow(sf_rr_t2, 3) + 3*c_sf_z4[3] * pow(sf_rr_t2, 2) + 2*c_sf_z4[2] * pow(sf_rr_t2, 1) + 1*c_sf_z4[1];
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rr_t2);
         
         }
         else{
@@ -3006,9 +3014,9 @@ void CRobot::Flying_Trot_Running3(void)
             RR_foot_vel[0] = tar_init_RR_foot_vel[0];
 
             sf_rr_t2 = sf_rr_t - (ts+tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(sf_rr_t2, 5) + c_sf_z2[4] * pow(sf_rr_t2, 4) + c_sf_z2[3] * pow(sf_rr_t2, 3) + c_sf_z2[2] * pow(sf_rr_t2, 2) + c_sf_z2[1] * pow(sf_rr_t2, 1) + c_sf_z2[0];
-            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(sf_rr_t2, 4) + 4*c_sf_z2[4] * pow(sf_rr_t2, 3) + 3*c_sf_z2[3] * pow(sf_rr_t2, 2) + 2*c_sf_z2[2] * pow(sf_rr_t2, 1) + 1*c_sf_z2[1];
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z2,sf_rr_t2);
             
             if(ft_cnt == ft_step_cnt - 1){
                 init_flag = false;
@@ -3043,13 +3051,13 @@ void CRobot::Flying_Trot_Running3(void)
         com_t = ft_time - ft_step_time;
         sf_rl_t = sf_rl_t + dt;
 
-        com_pos[0] = c_com_x1[5] * pow(com_t, 5) + c_com_x1[4] * pow(com_t, 4) + c_com_x1[3] * pow(com_t, 3) + c_com_x1[2] * pow(com_t, 2) + c_com_x1[1] * pow(com_t, 1) + c_com_x1[0]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_pos[0] = fifth_order_poly(c_com_x1,com_t);
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = c_com_z3[5] * pow(com_t, 5) + c_com_z3[4] * pow(com_t, 4) + c_com_z3[3] * pow(com_t, 3) + c_com_z3[2] * pow(com_t, 2) + c_com_z3[1] * pow(com_t, 1) + c_com_z3[0];
+        com_pos[2] = fifth_order_poly(c_com_z3,com_t);
 
-        com_vel[0] = 5 * c_com_x1[5] * pow(com_t, 4) + 4 * c_com_x1[4] * pow(com_t, 3) + 3 * c_com_x1[3] * pow(com_t, 2) + 2 * c_com_x1[2] * pow(com_t, 1) + 1 * c_com_x1[1]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_vel[0] = fifth_order_poly_dot(c_com_x1,com_t);
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = 5 * c_com_z3[5] * pow(com_t, 4) + 4 * c_com_z3[4] * pow(com_t, 3) + 3 * c_com_z3[3] * pow(com_t, 2) + 2 * c_com_z3[2] * pow(com_t, 1) + 1 * c_com_z3[1];
+        com_vel[2] = fifth_order_poly_dot(c_com_z3,com_t);
         
         RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
@@ -3064,16 +3072,16 @@ void CRobot::Flying_Trot_Running3(void)
         RR_foot_vel[2] = tar_init_RR_foot_vel[2];
         
         if(sf_rl_t < (ft_step_time + tf)/2.0){
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
-            RL_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rl_t, 4) + 4*c_sf_z3[4] * pow(sf_rl_t, 3) + 3*c_sf_z3[3] * pow(sf_rl_t, 2) + 2*c_sf_z3[2] * pow(sf_rl_t, 1) + 1*c_sf_z3[1];
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rl_t);
  
         }
         else{
             sf_rl_t2 = sf_rl_t - (ft_step_time + tf)/2.0;
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
-            RL_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rl_t2, 4) + 4*c_sf_z4[4] * pow(sf_rl_t2, 3) + 3*c_sf_z4[3] * pow(sf_rl_t2, 2) + 2*c_sf_z4[2] * pow(sf_rl_t2, 1) + 1*c_sf_z4[1];
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rl_t2);
         }
         
         FL_foot_vel = RR_foot_vel;
@@ -3108,28 +3116,28 @@ void CRobot::Flying_Trot_Running3(void)
         
         com_pos[0] = pre_com_pos(0) + pre_x_moving_speed*com_t;
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = c_com_z2[5] * pow(com_t, 5) + c_com_z2[4] * pow(com_t, 4) + c_com_z2[3] * pow(com_t, 3) + c_com_z2[2] * pow(com_t, 2) + c_com_z2[1] * pow(com_t, 1) + c_com_z2[0];
+        com_pos[2] = fifth_order_poly(c_com_z2,com_t);
 
         com_vel[0] = pre_x_moving_speed;
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = 5 * c_com_z2[5] * pow(com_t, 4) + 4 * c_com_z2[4] * pow(com_t, 3) + 3 * c_com_z2[3] * pow(com_t, 2) + 2 * c_com_z2[2] * pow(com_t, 1) + 1 * c_com_z2[1];
+        com_vel[2] = fifth_order_poly_dot(c_com_z2,com_t);
 
         RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
         
         sf_rl_t2 = sf_rl_t - (ft_step_time + tf)/2.0;
-        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
-        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
-        RL_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rl_t2, 4) + 4*c_sf_z4[4] * pow(sf_rl_t2, 3) + 3*c_sf_z4[3] * pow(sf_rl_t2, 2) + 2*c_sf_z4[2] * pow(sf_rl_t2, 1) + 1*c_sf_z4[1];
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
+        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rl_t2);
 
         RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
         FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
         RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
         
-        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
-        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
-        RR_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rr_t, 4) + 4*c_sf_z3[4] * pow(sf_rr_t, 3) + 3*c_sf_z3[3] * pow(sf_rr_t, 2) + 2*c_sf_z3[2] * pow(sf_rr_t, 1) + 1*c_sf_z3[1];
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
+        RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rr_t);
 
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
@@ -3138,7 +3146,7 @@ void CRobot::Flying_Trot_Running3(void)
 
             pre_com_pos(0) = pre_com_pos(0) + pre_x_moving_speed*tf;
             pre_com_pos(1) = com_pos(1);
-            pre_com_pos(2) = h_2; //com_pos(2);
+            pre_com_pos(2) = h_2; 
 
             pre_com_vel[0] = pre_x_moving_speed;
             pre_com_vel[1] = com_vel[1];
@@ -3158,13 +3166,13 @@ void CRobot::Flying_Trot_Running3(void)
         com_t = ft_time - 2 * ft_step_time;
         sf_rr_t = sf_rr_t + dt;
 
-        com_pos[0] = c_com_x1[5] * pow(com_t, 5) + c_com_x1[4] * pow(com_t, 4) + c_com_x1[3] * pow(com_t, 3) + c_com_x1[2] * pow(com_t, 2) + c_com_x1[1] * pow(com_t, 1) + c_com_x1[0];
+        com_pos[0] = fifth_order_poly(c_com_x1,com_t);
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = c_com_z3[5] * pow(com_t, 5) + c_com_z3[4] * pow(com_t, 4) + c_com_z3[3] * pow(com_t, 3) + c_com_z3[2] * pow(com_t, 2) + c_com_z3[1] * pow(com_t, 1) + c_com_z3[0];
+        com_pos[2] = fifth_order_poly(c_com_z3,com_t);
 
-        com_vel[0] = 5*c_com_x1[5] * pow(com_t, 4) + 4*c_com_x1[4] * pow(com_t, 3) + 3*c_com_x1[3] * pow(com_t, 2) + 2*c_com_x1[2] * pow(com_t, 1) + 1*c_com_x1[1];
+        com_vel[0] = fifth_order_poly_dot(c_com_x1,com_t);
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = 5 * c_com_z3[5] * pow(com_t, 4) + 4 * c_com_z3[4] * pow(com_t, 3) + 3 * c_com_z3[3] * pow(com_t, 2) + 2 * c_com_z3[2] * pow(com_t, 1) + 1 * c_com_z3[1];
+        com_vel[2] = fifth_order_poly_dot(c_com_z3,com_t);
 
         RL_foot_pos[0] = pre_RL_foot_pos[0];
         FR_foot_pos[0] = pre_FR_foot_pos[0];
@@ -3179,16 +3187,16 @@ void CRobot::Flying_Trot_Running3(void)
         RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
         
         if(sf_rr_t < (ft_step_time + tf)/2.0){
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z3[5] * pow(sf_rr_t, 5) + c_sf_z3[4] * pow(sf_rr_t, 4) + c_sf_z3[3] * pow(sf_rr_t, 3) + c_sf_z3[2] * pow(sf_rr_t, 2) + c_sf_z3[1] * pow(sf_rr_t, 1) + c_sf_z3[0];
-            RR_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rr_t, 4) + 4*c_sf_z3[4] * pow(sf_rr_t, 3) + 3*c_sf_z3[3] * pow(sf_rr_t, 2) + 2*c_sf_z3[2] * pow(sf_rr_t, 1) + 1*c_sf_z3[1];
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rr_t);
  
         }
         else{
             sf_rr_t2 = sf_rr_t - (ft_step_time + tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
-            RR_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rr_t2, 4) + 4*c_sf_z4[4] * pow(sf_rr_t2, 3) + 3*c_sf_z4[3] * pow(sf_rr_t2, 2) + 2*c_sf_z4[2] * pow(sf_rr_t2, 1) + 1*c_sf_z4[1];
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rr_t2);
         }
         
         FL_foot_vel = RR_foot_vel;
@@ -3204,19 +3212,23 @@ void CRobot::Flying_Trot_Running3(void)
             pre_com_vel[0] = x_moving_speed;
             pre_com_vel[1] = com_vel[1];
             pre_com_vel[2] = v_1;
-            
-//            pre_RL_foot_pos[0] = tar_init_RL_foot_pos[0] + tar_rl_foot_pos;
-//            pre_FR_foot_pos[0] = tar_init_FR_foot_pos[0] + tar_rl_foot_pos;
-            
-            pre_x_moving_speed = x_moving_speed;
-            x_moving_speed = tmp_x_moving_speed;
-            
-            tar_rl_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
-            
+                   
             sf_rl_t = 0;
             
             if (sub_ctrl_flag == false) {
                 ft_cnt = ts_cnt - 1;
+                
+                pre_x_moving_speed = x_moving_speed;
+                x_moving_speed = tmp_x_moving_speed;
+
+                tar_rl_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+            }
+            else{
+                pre_x_moving_speed = x_moving_speed;
+                x_moving_speed = 0;    
+            
+                tar_rl_foot_pos = pre_x_moving_speed*(ts + tf);
+            
             }
             
         }
@@ -3231,27 +3243,27 @@ void CRobot::Flying_Trot_Running3(void)
         sf_rr_t = sf_rr_t + dt;
         
         com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*com_t;
-        com_pos[2] = c_com_z2[5] * pow(com_t, 5) + c_com_z2[4] * pow(com_t, 4) + c_com_z2[3] * pow(com_t, 3) + c_com_z2[2] * pow(com_t, 2) + c_com_z2[1] * pow(com_t, 1) + c_com_z2[0];
+        com_pos[2] = fifth_order_poly(c_com_z2,com_t);
 
         com_vel[0] = pre_x_moving_speed;
-        com_vel[2] = 5 * c_com_z2[5] * pow(com_t, 4) + 4 * c_com_z2[4] * pow(com_t, 3) + 3 * c_com_z2[3] * pow(com_t, 2) + 2 * c_com_z2[2] * pow(com_t, 1) + 1 * c_com_z2[1];
+        com_vel[2] = fifth_order_poly_dot(c_com_z2,com_t);
 
         RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
         FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
         RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time))*(sin(PI2/(2*(ft_step_time))*sf_rl_t));
         
-        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z1[5] * pow(sf_rl_t, 5) + c_sf_z1[4] * pow(sf_rl_t, 4) + c_sf_z1[3] * pow(sf_rl_t, 3) + c_sf_z1[2] * pow(sf_rl_t, 2) + c_sf_z1[1] * pow(sf_rl_t, 1) + c_sf_z1[0];
-        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z1[5] * pow(sf_rl_t, 5) + c_sf_z1[4] * pow(sf_rl_t, 4) + c_sf_z1[3] * pow(sf_rl_t, 3) + c_sf_z1[2] * pow(sf_rl_t, 2) + c_sf_z1[1] * pow(sf_rl_t, 1) + c_sf_z1[0];
-        RL_foot_vel[2] = 5*c_sf_z1[5] * pow(sf_rl_t, 4) + 4*c_sf_z1[4] * pow(sf_rl_t, 3) + 3*c_sf_z1[3] * pow(sf_rl_t, 2) + 2*c_sf_z1[2] * pow(sf_rl_t, 1) + 1*c_sf_z1[1];
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rl_t);
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rl_t);
+        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z1,sf_rl_t);
 
         RR_foot_pos[0] = pre_RR_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
         FL_foot_pos[0] = pre_FL_foot_pos[0] + tar_rr_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
         RR_foot_vel[0] = tar_rr_foot_pos/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
 
         sf_rr_t2 = sf_rr_t -(ft_step_time + tf)/2.0;
-        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
-        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z4[5] * pow(sf_rr_t2, 5) + c_sf_z4[4] * pow(sf_rr_t2, 4) + c_sf_z4[3] * pow(sf_rr_t2, 3) + c_sf_z4[2] * pow(sf_rr_t2, 2) + c_sf_z4[1] * pow(sf_rr_t2, 1) + c_sf_z4[0];
-        RR_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rr_t2, 4) + 4*c_sf_z4[4] * pow(sf_rr_t2, 3) + 3*c_sf_z4[3] * pow(sf_rr_t2, 2) + 2*c_sf_z4[2] * pow(sf_rr_t2, 1) + 1*c_sf_z4[1];
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
+        RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rr_t2);
 
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
@@ -3279,61 +3291,42 @@ void CRobot::Flying_Trot_Running3(void)
             final_x[1] = 0;
             final_x[2] = 0;
 
-            coefficient_5thPoly(init_x, final_x, ts, c_com_x2);
-
-            // =============== Swing Foot =============== //
-
-//            // Left (Second)
-//            init_x[0] = 0;
-//            init_x[1] = 0;
-//            init_x[2] = 0;
-//
-//            final_x[0] = 0 + x_moving_speed * ft_step_time;
-//            final_x[1] = 0;
-//            final_x[2] = 0;
-//
-//            coefficient_5thPoly(init_x, final_x, ts, c_sf_x5);
-            
-        }
-        
+            coefficient_5thPoly(init_x, final_x, ts, c_com_x2);            
+        }        
     }
     else if (ft_cnt < 3*ft_step_cnt + ts_cnt) {
         //        cout << "=========== ft_phase = 7 (Final stance phase) ===========" << endl;
-        ft_phase = 8;
+        ft_phase = 7;
         _c << 0, 1, 1, 0;
         contact_num = 2;
         com_t = ft_time - 3*ft_step_time;
         sf_rl_t = sf_rl_t + dt;
 
-        com_pos[0] = c_com_x2[5] * pow(com_t, 5) + c_com_x2[4] * pow(com_t, 4) + c_com_x2[3] * pow(com_t, 3) + c_com_x2[2] * pow(com_t, 2) + c_com_x2[1] * pow(com_t, 1) + c_com_x2[0]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_pos[0] = fifth_order_poly(c_com_x2,com_t);
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = c_com_z4[5] * pow(com_t, 5) + c_com_z4[4] * pow(com_t, 4) + c_com_z4[3] * pow(com_t, 3) + c_com_z4[2] * pow(com_t, 2) + c_com_z4[1] * pow(com_t, 1) + c_com_z4[0];
+        com_pos[2] = fifth_order_poly(c_com_z4,com_t);
 
-        com_vel[0] = 5 * c_com_x2[5] * pow(com_t, 4) + 4 * c_com_x2[4] * pow(com_t, 3) + 3 * c_com_x2[3] * pow(com_t, 2) + 2 * c_com_x2[2] * pow(com_t, 1) + 1 * c_com_x2[1]; //init_com_pos(0) + x_moving_speed * (ts / 2 + tf + t2);
+        com_vel[0] = fifth_order_poly_dot(c_com_x2,com_t);
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = 5 * c_com_z4[5] * pow(com_t, 4) + 4 * c_com_z4[4] * pow(com_t, 3) + 3 * c_com_z4[3] * pow(com_t, 2) + 2 * c_com_z4[2] * pow(com_t, 1) + 1 * c_com_z4[1];
+        com_vel[2] = fifth_order_poly_dot(c_com_z4,com_t);
         
         RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
         FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
         RL_foot_vel[0] = tar_rl_foot_pos/2.0*PI2/(2*(ft_step_time))*(sin(PI2/(2*(ft_step_time))*sf_rl_t));
         
         if(sf_rl_t < (ft_step_time)/2.0){
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z3[0];
-            RL_foot_vel[2] = 5*c_sf_z3[5] * pow(sf_rl_t, 4) + 4*c_sf_z3[4] * pow(sf_rl_t, 3) + 3*c_sf_z3[3] * pow(sf_rl_t, 2) + 2*c_sf_z3[2] * pow(sf_rl_t, 1) + 1*c_sf_z3[1];
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rl_t);
  
         }
         else{
             sf_rl_t2 = sf_rl_t - (ft_step_time)/2.0;
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z4[5] * pow(sf_rl_t2, 5) + c_sf_z4[4] * pow(sf_rl_t2, 4) + c_sf_z4[3] * pow(sf_rl_t2, 3) + c_sf_z4[2] * pow(sf_rl_t2, 2) + c_sf_z4[1] * pow(sf_rl_t2, 1) + c_sf_z4[0];
-            RL_foot_vel[2] = 5*c_sf_z4[5] * pow(sf_rl_t2, 4) + 4*c_sf_z4[4] * pow(sf_rl_t2, 3) + 3*c_sf_z4[3] * pow(sf_rl_t2, 2) + 2*c_sf_z4[2] * pow(sf_rl_t2, 1) + 1*c_sf_z4[1];
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rl_t2);
         }
-//        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z3[5] * pow(sf_rl_t, 5) + c_sf_z3[4] * pow(sf_rl_t, 4) + c_sf_z3[3] * pow(sf_rl_t, 3) + c_sf_z3[2] * pow(sf_rl_t, 2) + c_sf_z3[1] * pow(sf_rl_t, 1) + c_sf_z4[0];
-//        FR_foot_pos[2] = tar_init_FR_foot_pos[2];
-//        RL_foot_vel[2] = tar_init_RL_foot_vel[2];
-//        
-        
+
         RR_foot_pos[0] = pre_RR_foot_pos[0];
         FL_foot_pos[0] = pre_FL_foot_pos[0];
         RR_foot_vel[0] = tar_init_RR_foot_vel[0];
@@ -3345,7 +3338,25 @@ void CRobot::Flying_Trot_Running3(void)
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
         
-        
+        if (ft_cnt == 3*ft_step_cnt + ts_cnt - 1) {
+            pre_com_pos[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
+            pre_com_pos[1] = com_pos(1);
+            pre_com_pos[2] = h_0;
+
+            pre_com_vel[0] = 0;
+            pre_com_vel[1] = com_vel[1];
+            pre_com_vel[2] = v_0;
+            
+            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + tar_rl_foot_pos;
+            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + tar_rl_foot_pos;
+            
+            cout << "com_pos = " << pre_com_pos.transpose() << endl;
+            cout << "com_vel = " << pre_com_vel.transpose() << endl;
+            cout << "RL_foot_pos = " << pre_RL_foot_pos.transpose() << endl;
+            cout << "RR_foot_pos = " << pre_RR_foot_pos.transpose() << endl;
+            cout << "FL_foot_pos = " << pre_FL_foot_pos.transpose() << endl;
+            cout << "FR_foot_pos = " << pre_FR_foot_pos.transpose() << endl;
+        }
 //        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
 //            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
 //            pre_com_pos[1] = com_pos(1);
@@ -3364,8 +3375,8 @@ void CRobot::Flying_Trot_Running3(void)
 //        }
     }
     else {
-        //        cout << "=========== ft_phase = 6 ===========" << endl;
-        ft_phase = 9;
+        //        cout << "=========== ft_phase = 8 (Motion Done !!) ===========" << endl;
+        ft_phase = 8;
         _c << 1, 1, 1, 1;
         contact_num = 4;
         moving_done_flag = true;
@@ -4324,220 +4335,16 @@ void CRobot::FT_Turning_Traj_Gen2(void)
     // ======= Turning trajectory generation  END ======= //    
 }
 
-void CRobot::FT_Turning_Traj_Gen(void)
+double CRobot::fifth_order_poly(double c[], double t)
 {
-    // ======= Turning trajectory generation ======= //
-    //    printf("================= [FT] Turning trajectory generation ============== \n");
-
-    //        const double turn_l = 0.4134; // sqrt(0.35^2 + (0.115 + 0.105)^2)
-    //        const double x1 = 0.35, y1 = 0.22, turn_theta1 = 57.8477 * D2R;
-    //        static double x2 = 0.35, y2 = 0.22; //, turn_theta2 = 0;
-    //        static double del_x = 0, del_y = 0;
-    //        static double target_theta = turn_theta1;
-    //        static double tmp_target_theta = 0;
-    //    
-    //        // turn left
-    //        if ((des_theta > 0.01) * D2R && (ft_cnt == 2 * ft_step_cnt)) {
-    //            if (turn_mode == 0) {
-    //                turn_start_flag = true;
-    //                turn_mode = 1;
-    //    
-    //                target_theta = -des_theta / 2.0; // [rad]
-    //    
-    //                printf("[left] target_theta = %f\n", target_theta);
-    //            }
-    //        }
-    //        else if ((des_theta < -0.01) * D2R && (ft_cnt == 1 * ft_step_cnt)) {
-    //            if (turn_mode == 0) {
-    //                turn_start_flag = true;
-    //                turn_mode = 3;
-    //    
-    //                target_theta = des_theta / 2.0; // [rad]
-    //    
-    //                printf("[right] target_theta = %f\n", target_theta);
-    //            }
-    //        }
-
-    //    if (turn_start_flag == true) {
-    //        if (turn_mode == 1) {
-    //            if (turn_cnt <= ts_cnt) {
-    //
-    //                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //            }
-    //            else {
-    //                tmp_target_theta = turn_theta1 + target_theta;
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //            }
-    //
-    //            if (FC_PHASE == STANCE_RRFL) {
-    //                turn_mode = 2;
-    //                turn_cnt = 0;
-    //            }
-    //        }
-    //        else if (turn_mode == 2) {
-    //            if (turn_cnt <= ts_cnt) {
-    //
-    //                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //            }
-    //            else {
-    //                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //
-    //            }
-    //
-    //            if (turn_cnt == ts_cnt + tf_cnt - 1) { //FC_PHASE == STOP
-    //                // Initialization
-    //                turn_mode = 0;
-    //                turn_cnt = 0;
-    //                turn_start_flag = false;
-    //            }
-    //        }
-    //        else if (turn_mode == 3) {//) && (ctc_cnt2 < preview_cnt*2)){
-    //            if (turn_cnt <= ts_cnt) {
-    //                tmp_target_theta = turn_theta1 + target_theta / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                //                            printf("[2] tmp_target_theta = %f\n",tmp_target_theta*R2D);
-    //
-    //                turn_cnt++;
-    //            }
-    //            else {
-    //                tmp_target_theta = turn_theta1 + target_theta;
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //
-    //            }
-    //
-    //            if (FC_PHASE == STANCE_RLFR) {
-    //                turn_mode = 4;
-    //                turn_cnt = 0;
-    //            }
-    //        }
-    //        else if (turn_mode == 4) {
-    //            if (turn_cnt <= ts_cnt) {
-    //
-    //                tmp_target_theta = turn_theta1 + target_theta + (0 - target_theta) / 2.0 * (1 - cos(PI2 / (2 * ts) * (double) turn_cnt * dt));
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //            }
-    //            else {
-    //                tmp_target_theta = turn_theta1; // + target_theta + (0 - target_theta) / 2.0 * (1-cos(PI2 / (2*dsp_time) * (double)turn_cnt*dt));
-    //
-    //                x2 = turn_l * sin(tmp_target_theta);
-    //                y2 = turn_l * cos(tmp_target_theta);
-    //
-    //                del_x = x2 - x1;
-    //                del_y = y2 - y1;
-    //
-    //                turn_xl_EP = del_x;
-    //                turn_yl_EP = del_y;
-    //                turn_xr_EP = del_x;
-    //                turn_yr_EP = -del_y;
-    //
-    //                turn_cnt++;
-    //            }
-    //
-    //            if (turn_cnt == ts_cnt + tf_cnt - 1) { // FC_PHASE == STOP
-    //                // Initialization
-    //                turn_mode = 0;
-    //                turn_cnt = 0;
-    //                turn_start_flag = false;
-    //            }
-    //        }
-    //    }
-    //    else {
-    //        turn_mode = 0;
-    //        turn_cnt = 0;
-    //
-    //        turn_xl_EP = 0;
-    //        turn_yl_EP = 0;
-    //        turn_xr_EP = 0;
-    //        turn_yr_EP = 0;
-    //    }
-    //
-    //    // ======= Turning trajectory generation  END ======= //
+    static double y = 0;
+    y = c[5]*pow(t, 5) + c[4]*pow(t, 4) + c[3]*pow(t, 3) + c[2]*pow(t, 2) + c[1]*pow(t, 1) + c[0];
+    return y;
 }
 
-
+double CRobot::fifth_order_poly_dot(double c[], double t)
+{
+    static double y = 0;
+    y = 5*c[5]*pow(t, 4) + 4*c[4]*pow(t, 3) + 3*c[3]*pow(t, 2) + 2*c[2]*pow(t, 1) + 1*c[1];
+    return y;
+}
