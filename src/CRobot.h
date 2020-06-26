@@ -427,10 +427,15 @@ public:
     VectorNd tar_FL_foot_vel_local = VectorNd::Zero(3);
     VectorNd tar_FR_foot_vel_local = VectorNd::Zero(3);
 
-    VectorNd tar_RL_q_dot_local = VectorNd::Zero(3);
-    VectorNd tar_RR_q_dot_local = VectorNd::Zero(3);
-    VectorNd tar_FL_q_dot_local = VectorNd::Zero(3);
-    VectorNd tar_FR_q_dot_local = VectorNd::Zero(3);
+    VectorNd act_RL_q_dot = VectorNd::Zero(3);
+    VectorNd act_RR_q_dot = VectorNd::Zero(3);
+    VectorNd act_FL_q_dot = VectorNd::Zero(3);
+    VectorNd act_FR_q_dot = VectorNd::Zero(3);
+    
+    VectorNd tar_RL_q_dot = VectorNd::Zero(3);
+    VectorNd tar_RR_q_dot = VectorNd::Zero(3);
+    VectorNd tar_FL_q_dot = VectorNd::Zero(3);
+    VectorNd tar_FR_q_dot = VectorNd::Zero(3);
 
 
 
@@ -506,7 +511,8 @@ public:
     bool cp_con_on_flag;
 
 
-    unsigned int ctc_cnt = 0, ctc_cnt2 = 0;
+//    unsigned int ctc_cnt = 0, ctc_cnt2 = 0;
+    unsigned int wr_cnt = 0;
     double dt = 0.001;
 
     VectorNd Kp_q = VectorNd::Zero(13);
@@ -562,6 +568,11 @@ public:
     double x_moving_speed, y_moving_speed, pre_x_moving_speed, pre_y_moving_speed; // [m/s]
     VectorNd act_com_pos = VectorNd::Zero(3);
     VectorNd pre_act_com_pos = VectorNd::Zero(3);
+    
+    VectorNd tmp_com_pos = VectorNd::Zero(3);
+    VectorNd tmp_pre_com_pos = VectorNd::Zero(3);
+    VectorNd tmp_com_vel = VectorNd::Zero(3);
+    
     VectorNd tmp_base_ori = VectorNd::Zero(3);
     double tmp_x_moving_speed, tmp_y_moving_speed;
     VectorNd act_com_vel = VectorNd::Zero(3);
@@ -639,9 +650,11 @@ public:
     VectorNd tar_init_com_acc = VectorNd::Zero(3); // x,y,z
 
     VectorNd base_pos = VectorNd::Zero(3); // x,y,z
+    VectorNd tmp_act_base_pos = VectorNd::Zero(3);
     VectorNd act_base_pos = VectorNd::Zero(3);
     VectorNd base_vel = VectorNd::Zero(3);
     VectorNd act_base_vel = VectorNd::Zero(3);
+    VectorNd tmp_act_base_vel = VectorNd::Zero(3);
     VectorNd pre_act_com_vel = VectorNd::Zero(3);
     VectorNd base_ori = VectorNd::Zero(3);
     VectorNd pre_base_ori = VectorNd::Zero(3);
@@ -753,6 +766,11 @@ public:
     VectorNd RR_foot_vel = VectorNd::Zero(3);
     VectorNd FL_foot_vel = VectorNd::Zero(3);
     VectorNd FR_foot_vel = VectorNd::Zero(3);
+    
+    VectorNd act_RL_foot_vel = VectorNd::Zero(3);
+    VectorNd act_RR_foot_vel = VectorNd::Zero(3);
+    VectorNd act_FL_foot_vel = VectorNd::Zero(3);
+    VectorNd act_FR_foot_vel = VectorNd::Zero(3);
 
 
     bool stop_flag = false;
@@ -927,6 +945,10 @@ public:
     int cp_phase = 0;
     int walking_phase = 0;
     int ft_phase = 0;
+    
+    double pos_alpha = 0; 
+    double vel_alpha = 0;
+ 
     //    int cp_x_case, cp_y_case;
     //    double next_cp_x, next_cp_y;
 

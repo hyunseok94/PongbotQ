@@ -89,6 +89,7 @@ namespace gazebo
         physics::JointPtr FR_TIP_JOINT;
 
         physics::ModelPtr model;
+//        physics::LinkPtr REAR_BODY;
 
         //  PID
         common::PID pid_RL_HR, pid_RL_HP, pid_RL_KN;
@@ -365,6 +366,8 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     printf("============= [Load] =============\n");
 
     this->model = _model;
+    
+//    this->UPPER_BODY = this->model->GetLink("BODY");
 
     printf("[1]\n");
     RBDLSetting();
@@ -401,20 +404,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     //* get com pos
 
-    //    PongBotQ.act_com_pos(0) = this->REAR_BODY->GetWorldPose().pos.x;
-    //    PongBotQ.act_com_pos(1) = this->REAR_BODY->GetWorldPose().pos.y;
-    //    PongBotQ.act_com_pos(2) = this->REAR_BODY->GetWorldPose().pos.z;
-    //    
-    //    PongBotQ.actual_com_speed[0]=(PongBotQ.actual_com_position[0]-PongBotQ.pre_actual_com_position[0])/0.001;
-    //    PongBotQ.actual_com_speed[1]=(PongBotQ.actual_com_position[1]-PongBotQ.pre_actual_com_position[1])/0.001;
-    //    PongBotQ.actual_com_speed[2]=(PongBotQ.actual_com_position[2]-PongBotQ.pre_actual_com_position[2])/0.001;
-    //    
-    //    PongBotQ.pre_actual_com_position[0]=PongBotQ.actual_com_position[0];
-    //    PongBotQ.pre_actual_com_position[1]=PongBotQ.actual_com_position[1];
-    //    PongBotQ.pre_actual_com_position[2]=PongBotQ.actual_com_position[2];
+    PongBotQ.tmp_com_pos[0] = this->REAR_BODY->GetWorldPose().pos.x;
+    PongBotQ.tmp_com_pos[1] = this->REAR_BODY->GetWorldPose().pos.y;
+    PongBotQ.tmp_com_pos[2] = this->REAR_BODY->GetWorldPose().pos.z;
+        
+    PongBotQ.tmp_com_vel[0]=(PongBotQ.tmp_com_pos[0] - PongBotQ.tmp_pre_com_pos[0])/PongBotQ.dt;
+    PongBotQ.tmp_com_vel[1]=(PongBotQ.tmp_com_pos[1] - PongBotQ.tmp_pre_com_pos[1])/PongBotQ.dt;
+    PongBotQ.tmp_com_vel[2]=(PongBotQ.tmp_com_pos[2] - PongBotQ.tmp_pre_com_pos[2])/PongBotQ.dt;
 
-
-
+    PongBotQ.tmp_pre_com_pos[0] = PongBotQ.tmp_com_pos[0];
+    PongBotQ.tmp_pre_com_pos[1] = PongBotQ.tmp_com_pos[1];
+    PongBotQ.tmp_pre_com_pos[2] = PongBotQ.tmp_com_pos[2];
 
     //    std::cout<<"pos"<<std::endl;
     //    std::cout<<PongBotQ.actual_com_position[0]<<std::endl;
@@ -481,7 +481,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case CTRLMODE_WALK_READY:
         cout << "============= [CTRLMODE_WALK_READY] ==========" << endl;
 
-        PongBotQ.ctc_cnt = 0;
+        PongBotQ.wr_cnt = 0;
 
         PongBotQ.com_pos = PongBotQ.init_com_pos;
         PongBotQ.com_vel << 0, 0, 0;
