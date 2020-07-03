@@ -15,8 +15,10 @@
 #include <ignition/math/Vector3.hh>
 // RBDL
 #include "Eigen/Dense"
+
 #include <rbdl/rbdl.h>
 #include <rbdl/addons/urdfreader/urdfreader.h>
+
 // Rviz
 #include <sensor_msgs/JointState.h>             //for rviz
 #include <tf/transform_broadcaster.h>           //for rviz
@@ -458,16 +460,6 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     case CTRLMODE_INITIALIZE:
         cout << "============= [CTRLMODE_INITIALIZE] ==========" << endl;
 
-        //        PongBotQ.ctc_cnt = 0;
-        //        PongBotQ.ctc_cnt2 = 0;
-        //        
-        //        PongBotQ.X_new << 0,0,0;
-        //        PongBotQ.Y_new << 0,0,0;
-        //        PongBotQ.zmp_ref_array = MatrixNd::Zero(PongBotQ.preview_cnt,2);
-        //        PongBotQ.step_num = 0;
-        //        PongBotQ.traj_stop_flag = true;
-
-
         PongBotQ.CommandFlag = NO_ACT_WITH_CTC;
         PongBotQ.ControlMode = CTRLMODE_NONE;
         break;
@@ -549,11 +541,18 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     case CTRLMODE_TEST:
         cout << "============= [CTRLMODE_TEST] ==========" << endl;
-
-        PongBotQ.test_cnt = 0;
-        PongBotQ.MPC_Init();
-        PongBotQ.CommandFlag = TEST_FLAG;
+        
+        if (PongBotQ.walk_ready_moving_done_flag == true) {
+            PongBotQ.test_cnt = 0;
+            PongBotQ.MPC_Init();
+            PongBotQ.CommandFlag = TEST_FLAG;     
+        }
+        else {
+            cout << " ======== not yet walk ready ======== " << endl;
+        }
+        
         PongBotQ.ControlMode = CTRLMODE_NONE;
+             
         break;
     }
 
@@ -588,6 +587,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     case NOMAL_TROT_WALKING:
         //        printf("===========================================\n");        
+        
         PongBotQ.StateUpdate();
         PongBotQ.Trot_Walking4();
         PongBotQ.Get_Opt_F();
@@ -598,15 +598,26 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         //        printf("===========================================\n");
         PongBotQ.StateUpdate();
         PongBotQ.Flying_Trot_Running3();
-        if(PongBotQ.ft_phase != 2 && PongBotQ.ft_phase != 4 && PongBotQ.ft_phase != 6){
-            PongBotQ.Get_Opt_F();
-        }
-        else{
-            PongBotQ.Fc = VectorXd::Zero(19);
-            PongBotQ.Fc[9] = 0;
-            PongBotQ.Fc[12] = 0;
-            PongBotQ.Fc[15] = 0;
-            PongBotQ.Fc[18] = 0;
+        
+//        if(PongBotQ.ft_phase != 2 && PongBotQ.ft_phase != 4 && PongBotQ.ft_phase != 6){
+//            PongBotQ.Get_Opt_F();
+//        }
+//        else{
+//            PongBotQ.Fc = VectorXd::Zero(19);
+//            PongBotQ.Fc[9] = 0;
+//            PongBotQ.Fc[12] = 0;
+//            PongBotQ.Fc[15] = 0;
+//            PongBotQ.Fc[18] = 0;
+//        }
+       
+        PongBotQ.Get_Opt_F();
+
+        if(PongBotQ.ft_phase == 2 || PongBotQ.ft_phase == 4 || PongBotQ.ft_phase == 6){
+                PongBotQ.Fc = VectorNd::Zero(19);
+                PongBotQ.Fc[9] = 0;
+                PongBotQ.Fc[12] = 0;
+                PongBotQ.Fc[15] = 0;
+                PongBotQ.Fc[18] = 0;
         }
         
         PongBotQ.ComputeTorqueControl();
@@ -616,16 +627,16 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         //        printf("===========================================\n");
         //        PongBotQ.get_zmp();
 //        PongBotQ.Pronk_Jump();
-
+        
         PongBotQ.ComputeTorqueControl();
         break;
 
     case TEST_FLAG:
         //        printf("===========================================\n");
-//        PongBotQ.StateUpdate();
+        PongBotQ.StateUpdate();
         PongBotQ.Test_Function();
-//        PongBotQ.Get_Opt_F();
-//        PongBotQ.ComputeTorqueControl();
+        PongBotQ.Get_Opt_F();
+        PongBotQ.ComputeTorqueControl();
         break;
     }
 
@@ -667,7 +678,9 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
     }
     else if (msg->buttons[5] == true) {
         // ========= [Test] ========== //
+//        cout << "1" << endl;
         if (PongBotQ.moving_done_flag == true) {
+//            cout << "2" << endl;
             PongBotQ.ControlMode = 7;
             PongBotQ.sub_ctrl_flag = 0;
         }

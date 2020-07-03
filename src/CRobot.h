@@ -179,8 +179,8 @@ public:
     void Foot_step_planner(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
     void Foot_step_planner_first(VectorNd init_foot_l_2d, VectorNd init_foot_r_2d);
     void COM_X_Traj_Gen(unsigned int i);
-    void Preview_con(void);
-    void Preview_con_2d(void);
+//    void Preview_con(void);
+//    void Preview_con_2d(void);
     void SF_Z_Traj_Gen(void);
     void SF_X_Traj_Gen(void);
     void SF_X_Traj_Gen_Final(void);
@@ -232,7 +232,10 @@ public:
     void FT_COM_X_Traj_Gen(void);
     double fifth_order_poly(double c[], double t);
     double fifth_order_poly_dot(double c[], double t);
-
+    double fifth_order_poly_2dot(double c[], double t);
+    MatrixNd Kron(MatrixNd AA, MatrixNd BB);
+    MatrixNd pow_mat(MatrixNd mat, int x);
+    
     //    void Get_CP(void);
 
     //VectorNd FK1(VectorNd q);    
@@ -354,9 +357,9 @@ public:
     MatrixNd J_FR = MatrixNd::Zero(3, 19);
 
     MatrixNd J_RL2 = MatrixNd::Zero(3, 3);
-	MatrixNd J_RR2 = MatrixNd::Zero(3, 3);
-	MatrixNd J_FL2 = MatrixNd::Zero(3, 3);
-	MatrixNd J_FR2 = MatrixNd::Zero(3, 3);
+    MatrixNd J_RR2 = MatrixNd::Zero(3, 3);
+    MatrixNd J_FL2 = MatrixNd::Zero(3, 3);
+    MatrixNd J_FR2 = MatrixNd::Zero(3, 3);
 
     MatrixNd J_FRONT_BODY = MatrixNd::Zero(6, 19);
     MatrixNd J_BASE = MatrixNd::Zero(6, 19);
@@ -576,6 +579,7 @@ public:
     VectorNd tmp_base_ori = VectorNd::Zero(3);
     double tmp_x_moving_speed, tmp_y_moving_speed;
     VectorNd act_com_vel = VectorNd::Zero(3);
+    VectorNd act_com_acc = VectorNd::Zero(3);
     VectorNd act_com_vel2 = VectorNd::Zero(2);
     VectorNd act_com_pos2 = VectorNd::Zero(2);
     VectorNd lpf_act_com_vel = VectorNd::Zero(3);
@@ -610,8 +614,6 @@ public:
 
     double w1, w2;
 
-
-
     double foot_height;
     double com_height;
     double z1[6], z2[6], z3[6];
@@ -621,17 +623,17 @@ public:
     double walk_time, dsp_t1, dsp_t2;
 
     // ============== Preview ============= //
-    unsigned int preview_cnt = 1000;
-
-    double Gi = 0;
-    VectorNd Gx = VectorNd::Zero(3);
-    VectorNd Gp = VectorNd::Zero(1000);
-
-    MatrixNd AA = MatrixNd::Zero(3, 3);
-    VectorNd BB = VectorNd::Zero(3);
-    VectorNd CC = VectorNd::Zero(3);
-
-    double pv_Gp[1000], pv_Gx[3], pv_Gi[1];
+//    unsigned int preview_cnt = 1000;
+//
+//    double Gi = 0;
+//    VectorNd Gx = VectorNd::Zero(3);
+//    VectorNd Gp = VectorNd::Zero(1000);
+//
+//    MatrixNd AA = MatrixNd::Zero(3, 3);
+//    VectorNd BB = VectorNd::Zero(3);
+//    VectorNd CC = VectorNd::Zero(3);
+//
+//    double pv_Gp[1000], pv_Gx[3], pv_Gi[1];
 
     //    VectorNd com_x = VectorNd::Zero(3);   // x, x_dot, x_2dot
     VectorNd com_pos = VectorNd::Zero(3); // x,y,z
@@ -685,7 +687,7 @@ public:
     MatrixNd pre_foot_r_2d = MatrixNd::Zero(5, 2);
     VectorNd final_foot_l_2d = VectorNd::Zero(2);
     VectorNd final_foot_r_2d = VectorNd::Zero(2);
-    MatrixNd zmp_ref_array = MatrixNd::Zero(preview_cnt, 2);
+//    MatrixNd zmp_ref_array = MatrixNd::Zero(preview_cnt, 2);
     VectorNd XX = VectorNd::Zero(3);
     VectorNd X_new = VectorNd::Zero(3);
     VectorNd Y_new = VectorNd::Zero(3);
@@ -706,13 +708,13 @@ public:
     VectorNd tmp_cp_FL_foot_pos = VectorNd::Zero(3);
     VectorNd tmp_cp_FR_foot_pos = VectorNd::Zero(3);
 
-    MatrixNd com_x_array = MatrixNd::Zero(preview_cnt, 3);
-    VectorNd zmp_x_array = VectorNd::Zero(preview_cnt);
+//    MatrixNd com_x_array = MatrixNd::Zero(preview_cnt, 3);
+//    VectorNd zmp_x_array = VectorNd::Zero(preview_cnt);
     double zmp_x, zmp_y, lpf_zmp_x, old_lpf_zmp_x;
-    VectorNd sum_e = VectorNd::Zero(2, 1);
-    VectorNd pre_err = VectorNd::Zero(2, 1);
-    VectorNd pre_sum_p = VectorNd::Zero(2, 1);
-    VectorNd zmp_ref = VectorNd::Zero(2, 1);
+//    VectorNd sum_e = VectorNd::Zero(2, 1);
+//    VectorNd pre_err = VectorNd::Zero(2, 1);
+//    VectorNd pre_sum_p = VectorNd::Zero(2, 1);
+//    VectorNd zmp_ref = VectorNd::Zero(2, 1);
 
     VectorNd init_com_pos = VectorNd::Zero(3);
     VectorNd init_com_vel = VectorNd::Zero(3);
@@ -962,6 +964,7 @@ public:
     OSQPSettings *settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
     OSQPData *data = (OSQPData *) c_malloc(sizeof (OSQPData));
 
+    // =============== for QP based balance controller ================= //
     c_int exitflag = 0;
     c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     c_int A_nnz = 12;
@@ -994,6 +997,57 @@ public:
 
     VectorNd tmp_P_x = VectorNd::Zero(78);
     VectorNd new_c = VectorNd::Zero(12);
+    
+    // =============== for QP based balance controller END ================= //
+    
+    // ============== MPC ============== //
+    int state_num = 3;
+    int output_num = 1;
+    int input_num = 1;
+
+    double Ts = 0.15;
+    int Nc = 10;
+    int Np = 10 + 0;
+    
+    double h_com = 0.4;
+    double g = 9.81;
+    double new_ref = 0;
+//    
+    MatrixNd PHI = MatrixNd::Zero(3, 3);
+    VectorNd GAM = VectorNd::Zero(3);
+    MatrixNd C = MatrixNd::Zero(1,3);
+    
+    MatrixNd Q_tilda = MatrixNd::Zero(Nc, Nc);
+    MatrixNd R_tilda = MatrixNd::Zero(Nc, Nc);
+    MatrixNd _Q = MatrixNd::Identity(1, 1);
+    MatrixNd _R = MatrixNd::Identity(1, 1)*pow(10,-6);
+    VectorNd x_ini = VectorNd::Zero(3);
+    VectorNd y_ini = VectorNd::Zero(1);
+    
+    MatrixNd Ax_tilda = MatrixNd::Zero(state_num*Np, state_num);
+    MatrixNd tmp_Ax = MatrixNd::Zero(state_num, state_num);
+    MatrixNd Bx_tilda = MatrixNd::Zero(state_num*Np, input_num*Nc);
+    MatrixNd tmp_Bx2 = MatrixNd::Zero(state_num*Np, input_num*Nc);
+    MatrixNd Bx_element = MatrixNd::Zero(state_num, input_num);
+    MatrixNd C_tilda = MatrixNd::Zero(output_num*Np, state_num*Np);
+    MatrixNd Q_bar = MatrixNd::Zero(state_num*Np, state_num*Np);
+    MatrixNd H = MatrixNd::Zero(Nc, Nc);
+    MatrixNd ref_tilda = MatrixNd::Zero(Np, 1);
+    MatrixNd f = MatrixNd::Zero(Np, 1);
+    MatrixNd Gy_tmp = MatrixNd::Zero(Np*output_num, Np*output_num);
+    MatrixNd Gy = MatrixNd::Zero(Np*output_num*2, Np*output_num);
+    MatrixNd gy = MatrixNd::Zero(Np*output_num*2, output_num);
+    MatrixNd Gy_new = MatrixNd::Zero(Np*output_num*2, input_num*Nc);
+    MatrixNd gy_new = MatrixNd::Zero(Np*output_num*2, 1);
+    
+    MatrixNd Gu_tmp = MatrixNd::Zero(Nc*input_num, Nc*input_num);
+    MatrixNd Gu = MatrixNd::Zero(Nc*input_num*2, Nc*input_num);
+    MatrixNd gu = MatrixNd::Zero(Nc*input_num*2, 1);
+    
+    MatrixNd G = MatrixNd::Zero(Np*output_num*2 + Nc*input_num*2, input_num*Nc);
+    MatrixNd bk = MatrixNd::Zero(Np*output_num*2 + Nc*input_num*2, 1);
+    VectorNd state_x = VectorNd::Zero(3);
+    VectorNd output_y = VectorNd::Zero(1);
 
 private:
 };
