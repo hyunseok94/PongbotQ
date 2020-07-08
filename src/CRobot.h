@@ -789,6 +789,7 @@ public:
     double c_com_z1[6], c_com_z2[6], c_com_z3[6], c_com_z4[6];
     double c_com_x1[6], c_com_x2[6], c_com_x3[6], c_com_x4[6], c_com_x5[6];
     double c_com_y1[6], c_com_y2[6], c_com_y3[6], c_com_y4[6], c_com_y5[6];
+    double c_state_x1[6];
     double c_sf_z1[6], c_sf_z2[6], c_sf_z3[6], c_sf_z4[6];
     double c_sf_x1[6], c_sf_x2[6], c_sf_x3[6], c_sf_x4[6], c_sf_x5[6];
     double c_sf_y1[6], c_sf_y2[6], c_sf_y3[6], c_sf_y4[6], c_sf_y5[6];
@@ -966,34 +967,34 @@ public:
 
     // =============== for QP based balance controller ================= //
     c_int exitflag = 0;
-    c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    c_int A_nnz = 12;
-    c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-    c_float l[12]; // = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
-    c_float u[12]; // = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
-    c_int n = 12;
-    c_int m = 12;
-
-    //	c_float q[12];
-
-    c_int P_nnz = 78;
-    c_int P_i[78] = {0,
-        0, 1,
-        0, 1, 2,
-        0, 1, 2, 3,
-        0, 1, 2, 3, 4,
-        0, 1, 2, 3, 4, 5,
-        0, 1, 2, 3, 4, 5, 6,
-        0, 1, 2, 3, 4, 5, 6, 7,
-        0, 1, 2, 3, 4, 5, 6, 7, 8,
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-
-    c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
-    c_float P_x[78];
-    c_float q[12];
+//    c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+//    c_int A_nnz = 12;
+//    c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+//    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+//    c_float l[12]; // = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
+//    c_float u[12]; // = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
+//    c_int n = 12;
+//    c_int m = 12;
+//
+//    //	c_float q[12];
+//
+//    c_int P_nnz = 78;
+//    c_int P_i[78] = {0,
+//        0, 1,
+//        0, 1, 2,
+//        0, 1, 2, 3,
+//        0, 1, 2, 3, 4,
+//        0, 1, 2, 3, 4, 5,
+//        0, 1, 2, 3, 4, 5, 6,
+//        0, 1, 2, 3, 4, 5, 6, 7,
+//        0, 1, 2, 3, 4, 5, 6, 7, 8,
+//        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+//        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+//
+//    c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
+//    c_float P_x[78];
+//    c_float q[12];
 
     VectorNd tmp_P_x = VectorNd::Zero(78);
     VectorNd new_c = VectorNd::Zero(12);
@@ -1046,8 +1047,58 @@ public:
     
     MatrixNd G = MatrixNd::Zero(Np*output_num*2 + Nc*input_num*2, input_num*Nc);
     MatrixNd bk = MatrixNd::Zero(Np*output_num*2 + Nc*input_num*2, 1);
-    VectorNd state_x = VectorNd::Zero(3);
-    VectorNd output_y = VectorNd::Zero(1);
+    
+    double input_u = 0;
+//    VectorNd input_u = VectorNd::Zero(1);
+    VectorNd new_state_x = VectorNd::Zero(3);
+    VectorNd pre_state_x = VectorNd::Zero(3);
+    VectorNd act_state_x = VectorNd::Zero(3);
+    VectorNd act_output_y = VectorNd::Zero(1);
+//    double act_output_y = 0;
+    
+//    double output_constraint = 0.1;
+    double input_constraint = 100.0;
+    
+//    c_float H_x[55];
+//    c_int H_nnz = 55;
+//    c_int H_i[55] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+//    
+//    c_int H_p[11] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+    
+    c_float H_x[55];
+    c_int H_nnz = 55;
+    c_int H_i[55] = {0,
+                     0, 1,
+                     0, 1, 2,
+                     0, 1, 2, 3,
+                     0, 1, 2, 3, 4,
+                     0, 1, 2, 3, 4, 5,
+                     0, 1, 2, 3, 4, 5, 6,
+                     0, 1, 2, 3, 4, 5, 6, 7,
+                     0, 1, 2, 3, 4, 5, 6, 7, 8,
+                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    
+    c_int H_p[11] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55};
+    
+    c_float G_x[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};//{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};//{1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    c_int G_nnz = 10;
+    c_int G_i[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    c_int G_p[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    c_float G_l[10] = {-input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint};
+    c_float G_u[10] = { input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint};
+    c_int G_n = 10;
+    c_int G_m = 10;
+    
+    c_float ff[10];
 
 private:
 };

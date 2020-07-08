@@ -544,6 +544,17 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         
         if (PongBotQ.walk_ready_moving_done_flag == true) {
             PongBotQ.test_cnt = 0;
+            
+            
+            
+            // Cleanup
+//            if (PongBotQ.data) {
+//                if (PongBotQ.data->A) c_free(PongBotQ.data->A);
+//                if (PongBotQ.data->P) c_free(PongBotQ.data->P);
+//                c_free(PongBotQ.data);
+//            }
+//            if (PongBotQ.settings) c_free(PongBotQ.settings);
+            
             PongBotQ.MPC_Init();
             PongBotQ.CommandFlag = TEST_FLAG;     
         }
@@ -581,7 +592,8 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
         PongBotQ.StateUpdate();
         PongBotQ.WalkReady_Pos_Traj();
-        PongBotQ.Get_Opt_F();
+        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
+//        PongBotQ.Get_Opt_F();
         PongBotQ.ComputeTorqueControl();
         break;
 
@@ -590,7 +602,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         
         PongBotQ.StateUpdate();
         PongBotQ.Trot_Walking4();
-        PongBotQ.Get_Opt_F();
+//        PongBotQ.Get_Opt_F();
         PongBotQ.ComputeTorqueControl();
         break;
 
@@ -635,7 +647,8 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         //        printf("===========================================\n");
         PongBotQ.StateUpdate();
         PongBotQ.Test_Function();
-        PongBotQ.Get_Opt_F();
+//        PongBotQ.Get_Opt_F();
+//        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
         PongBotQ.ComputeTorqueControl();
         break;
     }
