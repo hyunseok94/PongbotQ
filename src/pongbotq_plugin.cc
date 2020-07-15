@@ -555,7 +555,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 //            }
 //            if (PongBotQ.settings) c_free(PongBotQ.settings);
             
-            PongBotQ.MPC_Init();
+//            PongBotQ.MPC_Init();
             PongBotQ.CommandFlag = TEST_FLAG;     
         }
         else {
@@ -592,8 +592,8 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
         PongBotQ.StateUpdate();
         PongBotQ.WalkReady_Pos_Traj();
-        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
-//        PongBotQ.Get_Opt_F();
+//        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
+        PongBotQ.Get_Opt_F();
         PongBotQ.ComputeTorqueControl();
         break;
 
@@ -602,7 +602,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         
         PongBotQ.StateUpdate();
         PongBotQ.Trot_Walking4();
-//        PongBotQ.Get_Opt_F();
+        PongBotQ.Get_Opt_F();
         PongBotQ.ComputeTorqueControl();
         break;
 
@@ -611,18 +611,18 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         PongBotQ.StateUpdate();
         PongBotQ.Flying_Trot_Running3();
         
-//        if(PongBotQ.ft_phase != 2 && PongBotQ.ft_phase != 4 && PongBotQ.ft_phase != 6){
-//            PongBotQ.Get_Opt_F();
-//        }
-//        else{
-//            PongBotQ.Fc = VectorXd::Zero(19);
-//            PongBotQ.Fc[9] = 0;
-//            PongBotQ.Fc[12] = 0;
-//            PongBotQ.Fc[15] = 0;
-//            PongBotQ.Fc[18] = 0;
-//        }
+        if(PongBotQ.ft_phase != 2 && PongBotQ.ft_phase != 4 && PongBotQ.ft_phase != 6){
+            PongBotQ.Get_Opt_F();
+        }
+        else{
+            PongBotQ.Fc = VectorXd::Zero(19);
+            PongBotQ.Fc[9] = 0;
+            PongBotQ.Fc[12] = 0;
+            PongBotQ.Fc[15] = 0;
+            PongBotQ.Fc[18] = 0;
+        }
        
-        PongBotQ.Get_Opt_F();
+//        PongBotQ.Get_Opt_F();
 
         if(PongBotQ.ft_phase == 2 || PongBotQ.ft_phase == 4 || PongBotQ.ft_phase == 6){
                 PongBotQ.Fc = VectorNd::Zero(19);
@@ -647,7 +647,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         //        printf("===========================================\n");
         PongBotQ.StateUpdate();
         PongBotQ.Test_Function();
-//        PongBotQ.Get_Opt_F();
+        PongBotQ.Get_Opt_F();
 //        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
         PongBotQ.ComputeTorqueControl();
         break;
@@ -923,8 +923,8 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
     // DH Publisher
     ros_pub1 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data1/", 1000);
     ros_pub2 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data2/", 1000);
-    ros_msg1.data.resize(50);
-    ros_msg2.data.resize(50);
+    ros_msg1.data.resize(80);
+    ros_msg2.data.resize(80);
 
     P_RL_force = n.advertise<geometry_msgs::WrenchStamped>("RL_force", 1000);
     P_RR_force = n.advertise<geometry_msgs::WrenchStamped>("RR_force", 1000);
@@ -1252,7 +1252,7 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
     //TmpData[29] = PongBotQ.target_com_acc[0];
     //    TmpData[29] = sqrt(pow(PongBotQ.actual_com_speed[0],2)+pow(PongBotQ.actual_com_speed[1],2));
 
-    for (unsigned int i = 0; i < 50; ++i) {
+    for (unsigned int i = 0; i < 80; ++i) {
         ros_msg1.data[i] = PongBotQ.tmp_data1(i);
     }
 
@@ -1319,7 +1319,7 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish2()
     //    TmpData2[29] = PongBotQ.cp_FL_foot_pos[0];
 
 
-    for (unsigned int i = 0; i < 50; ++i) {
+    for (unsigned int i = 0; i < 80; ++i) {
         ros_msg2.data[i] = PongBotQ.tmp_data2[i];
     }
 

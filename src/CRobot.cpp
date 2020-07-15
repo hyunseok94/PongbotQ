@@ -17,6 +17,7 @@ CRobot::~CRobot()
 
 void CRobot::setRobotModel(Model* getModel)
 {
+	cout << endl << "Set Robot Model Start !!" << endl;
     Mode = MODE_SIMULATION;
 //    Mode = MODE_ACTUAL_ROBOT;
 
@@ -43,8 +44,8 @@ void CRobot::setRobotModel(Model* getModel)
         tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
         tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105 + 0.0, 0.0;
 
-        Kp_q << 200, 250, 250, 200, 250, 250, 15000, 200, 250, 250, 200, 250, 250;
-        Kd_q << 4, 5, 5, 4, 5, 5, 400, 4, 5, 5, 4, 5, 5;
+        Kp_q << 200, 250, 250, 200, 250, 250, 30000, 200, 250, 250, 200, 250, 250;
+        Kd_q << 4, 5, 5, 4, 5, 5, 1000, 4, 5, 5, 4, 5, 5;
 
         //        FT_Kp_q << 400, 500, 500, 400, 500, 500, 5000, 400, 500, 500, 400, 500, 500;
         //        FT_Kd_q << 10, 12, 12, 10, 12, 12, 100, 10, 12, 12, 10, 12, 12;
@@ -91,14 +92,20 @@ void CRobot::setRobotModel(Model* getModel)
                 4000, 4000, 4000,
                 4000, 4000, 4000;
         
-//        Kd_t << 400, 400, 400,
-//                400, 400, 400,
-//                400, 400, 400,
-//                400, 400, 400;
         Kd_t << 300, 300, 300,
                 300, 300, 300,
                 300, 300, 300,
                 300, 300, 300;
+        
+//        Kp_t << 6000, 15000, 15000,
+//                6000, 15000, 15000,
+//                6000, 15000, 15000,
+//                6000, 15000, 15000;
+//               
+//        Kd_t << 300, 350, 400,
+//                300, 350, 400,
+//                300, 350, 400,
+//                300, 350, 400;
 
         Kp_x << 0, 0, 0,
                 0, 0, 0,
@@ -126,6 +133,18 @@ void CRobot::setRobotModel(Model* getModel)
 //                0, 1, 0,
 //                0, 0, 0;
 
+//        Kp_x << 1, 0, 0,
+//                0, 10, 0,
+//                0, 0, 1;
+//        Kd_x << 0.01, 0, 0,
+//                0, 0.1, 0,
+//                0, 0, 0.01;
+//        Kp_w << 1000, 0, 0,
+//                0, 100, 0,
+//                0, 0, 0;
+//        Kd_w << 5, 0, 0,
+//                0, 1, 0,
+//                0, 0, 0;
 
 
         //        alpha_act_com_x = 0.1, alpha_act_com_y = 0.1;
@@ -261,9 +280,9 @@ void CRobot::setRobotModel(Model* getModel)
 //                100, 100, 80;
 
         Kp_t << 5000, 5000, 2000,
-        		5000, 5000, 2000,
-        		5000, 5000, 2000,
-        		5000, 5000, 2000;
+                5000, 5000, 2000,
+                5000, 5000, 2000,
+                5000, 5000, 2000;
         Kd_t << 100, 100, 20,
                 100, 100, 20,
                 100, 100, 20,
@@ -417,12 +436,12 @@ void CRobot::setRobotModel(Model* getModel)
     pd_con_task[6] = 0;
     tmp_CTC_Torque = CTC_Torque;
 
-//    osqp_init();
+    QP_Con_Init();
+    
+    MPC_Con_Init();
     
     
-    
-    
-    
+    cout << endl << "Set Robot Model End !!" << endl;
 }
 
 
@@ -610,8 +629,12 @@ void CRobot::ComputeTorqueControl()
     C_term = hatNonLinearEffects - G_term;
 
     //	Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
+    
+    MPC_Fc << 0,0,0,0,0,0,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0;
 
-    CTC_Torque = fc_weight * (C_term + G_term - J_A.transpose() * (Fc - pd_con_task));
+//    cout << "Torque by MPC_FC = " << - J_A.transpose() * (MPC_Fc) << endl;
+    
+    CTC_Torque = fc_weight * (C_term + G_term - J_A.transpose() * (Fc - pd_con_task + MPC_Fc*10));
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
@@ -675,6 +698,14 @@ void CRobot::ComputeTorqueControl()
     tmp_data2[27] = joint[2].torque;
     
     tmp_data2[28] = ft_phase*0.1;
+    
+    tmp_data2[48] = com_acc(0);
+    tmp_data2[49] = com_acc(1);
+    tmp_data2[50] = com_acc(2);
+    
+    tmp_data2[51] = act_com_acc(0);
+    tmp_data2[52] = act_com_acc(1);
+    tmp_data2[53] = act_com_acc(2);
 
     
 
@@ -767,331 +798,260 @@ void CRobot::ComputeTorqueControl()
     //    cout << "===========================" << endl;
 }
 
-void CRobot::osqp_init(void)
+void CRobot::QP_Con_Init(void)
 {
-//    // Selection matrix
-//    S_mat.block<6, 19>(0, 0) = MatrixNd::Zero(6, 19);
-//    S_mat.block<13, 6>(6, 0) = MatrixNd::Zero(13, 6);
-//    S_mat.block<13, 13>(6, 6) = MatrixNd::Identity(13, 13);
-//
-//    des_x_2dot << 0, 0, 0;
-//    des_w_dot << 0, 0, 0;
-//
-//    _m = 48.5; //kg
-//    //    _I_g << 1.7214, -0.0038, -0.1540,
-//    //            -0.0038, 4.9502, -0.0006,
-//    //            -0.1540, -0.0006, 5.1152;
-//
-//    _I_g << 1.7214, 0, 0,
-//            0, 4.9502, 0,
-//            0, 0, 5.1152;
-//
-//    _A.block<3, 3>(0, 0) = MatrixNd::Identity(3, 3);
-//    _A.block<3, 3>(0, 3) = MatrixNd::Identity(3, 3);
-//    _A.block<3, 3>(0, 6) = MatrixNd::Identity(3, 3);
-//    _A.block<3, 3>(0, 9) = MatrixNd::Identity(3, 3);
-//
-//    tar_RL_foot_pos_local = tar_init_RL_foot_pos - init_base_pos;
-//    tar_RR_foot_pos_local = tar_init_RR_foot_pos - init_base_pos;
-//    tar_FL_foot_pos_local = tar_init_FL_foot_pos - init_base_pos;
-//    tar_FR_foot_pos_local = tar_init_FR_foot_pos - init_base_pos;
-//
-//    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
-//            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
-//            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
-//
-//    _A.block<3, 12>(3, 0) = p_com_oross_pro;
-//
-//    _g << 0, 0, 9.81;
-//
-//    _b << _m * (des_x_2dot + _g),
-//            _I_g*des_w_dot;
-//
-//    fx_max = 100;
-//    fx_min = -100;
-//    fy_max = 100;
-//    fy_min = -100;
-//    fz_max = 1000;
-//    fz_min = 0;
-//
-//    _d_u << fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max;
-//    _d_l << fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min;
-//
-//    _P = _A.transpose() * _S * _A + _alpha*_W;
-//    _q = -_A.transpose() * _S*_b;
-//
-//    // ===================== OSQP  ====================== //
-//
-//    c_float P_x[78] = {_P(0, 0),
-//        _P(0, 1), _P(1, 1),
-//        _P(0, 2), _P(1, 2), _P(2, 2),
-//        _P(0, 3), _P(1, 3), _P(2, 3), _P(3, 3),
-//        _P(0, 4), _P(1, 4), _P(2, 4), _P(3, 4), _P(4, 4),
-//        _P(0, 5), _P(1, 5), _P(2, 5), _P(3, 5), _P(4, 5), _P(5, 5),
-//        _P(0, 6), _P(1, 6), _P(2, 6), _P(3, 6), _P(4, 6), _P(5, 6), _P(6, 6),
-//        _P(0, 7), _P(1, 7), _P(2, 7), _P(3, 7), _P(4, 7), _P(5, 7), _P(6, 7), _P(7, 7),
-//        _P(0, 8), _P(1, 8), _P(2, 8), _P(3, 8), _P(4, 8), _P(5, 8), _P(6, 8), _P(7, 8), _P(8, 8),
-//        _P(0, 9), _P(1, 9), _P(2, 9), _P(3, 9), _P(4, 9), _P(5, 9), _P(6, 9), _P(7, 9), _P(8, 9), _P(9, 9),
-//        _P(0, 10), _P(1, 10), _P(2, 10), _P(3, 10), _P(4, 10), _P(5, 10), _P(6, 10), _P(7, 10), _P(8, 10), _P(9, 10), _P(10, 10),
-//        _P(0, 11), _P(1, 11), _P(2, 11), _P(3, 11), _P(4, 11), _P(5, 11), _P(6, 11), _P(7, 11), _P(8, 11), _P(9, 11), _P(10, 11), _P(11, 11)};
-//
-//    c_float q[12] = {_q(0), _q(1), _q(2), _q(3), _q(4), _q(5), _q(6), _q(7), _q(8), _q(9), _q(10), _q(11)};
-//
-//    c_float l[12] = {_c(0) * _d_l(0), _c(0) * _d_l(1), _c(0) * _d_l(2), _c(1) * _d_l(3), _c(1) * _d_l(4), _c(1) * _d_l(5), _c(2) * _d_l(6), _c(2) * _d_l(7), _c(2) * _d_l(8), _c(3) * _d_l(9), _c(3) * _d_l(10), _c(3) * _d_l(11)};
-//    c_float u[12] = {_c(0) * _d_u(0), _c(0) * _d_u(1), _c(0) * _d_u(2), _c(1) * _d_u(3), _c(1) * _d_u(4), _c(1) * _d_u(5), _c(2) * _d_u(6), _c(2) * _d_u(7), _c(2) * _d_u(8), _c(3) * _d_u(9), _c(3) * _d_u(10), _c(3) * _d_u(11)};
-//
-//    //    // Workspace structures
-//    //    OSQPWorkspace *work;
-//    //    OSQPSettings *settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
-//    //    OSQPData *data = (OSQPData *) c_malloc(sizeof (OSQPData));
-//
-//    // Populate data
-//    if (data) {
-//        data->n = n;
-//        data->m = m;
-//        data->P = csc_matrix(data->n, data->n, P_nnz, P_x, P_i, P_p);
-//        data->q = q;
-//        data->A = csc_matrix(data->m, data->n, A_nnz, A_x, A_i, A_p);
-//        data->l = l;
-//        data->u = u;
-//    }
-//
-//    // Define solver settings as default
-//    if (settings) {
-//        osqp_set_default_settings(settings);
-//        settings->alpha = 0.1; // Change alpha parameter
-//    }
-//
-//    // Setup workspace
-//    exitflag = osqp_setup(&work, data, settings);
-//
-//    // Solve Problem
-//    osqp_solve(work);
-//
-//    cout << "[RL] x = " << work->solution->x[0] << ", y = " << work->solution->x[1] << ", z = " << work->solution->x[2] << endl;
-//    cout << "[RR] x = " << work->solution->x[3] << ", y = " << work->solution->x[4] << ", z = " << work->solution->x[5] << endl;
-//    cout << "[FL] x = " << work->solution->x[6] << ", y = " << work->solution->x[7] << ", z = " << work->solution->x[8] << endl;
-//    cout << "[FR] x = " << work->solution->x[9] << ", y = " << work->solution->x[10] << ", z = " << work->solution->x[11] << endl;
-//
-//    //    cout << "solution = " << work->solution->x[1] << endl;
-//    //    cout << "solution = " << work->solution->x[2] << endl;
-//
-//    //    // Cleanup
-//    //    if (data) {
-//    //        if (data->A) c_free(data->A);
-//    //        if (data->P) c_free(data->P);
-//    //        c_free(data);
-//    //    }
-//    //    if (settings) c_free(settings);
-//
-//    // ==================== OSQP TEST END =================== //
+    // Selection matrix
+    S_mat.block<6, 19>(0, 0) = MatrixNd::Zero(6, 19);
+    S_mat.block<13, 6>(6, 0) = MatrixNd::Zero(13, 6);
+    S_mat.block<13, 13>(6, 6) = MatrixNd::Identity(13, 13);
+
+    des_x_2dot << 0, 0, 0;
+    des_w_dot << 0, 0, 0;
+
+    _m = 48.5; //kg
+    //    _I_g << 1.7214, -0.0038, -0.1540,
+    //            -0.0038, 4.9502, -0.0006,
+    //            -0.1540, -0.0006, 5.1152;
+
+    _I_g << 1.7214, 0, 0,
+            0, 4.9502, 0,
+            0, 0, 5.1152;
+
+    _A.block<3, 3>(0, 0) = MatrixNd::Identity(3, 3);
+    _A.block<3, 3>(0, 3) = MatrixNd::Identity(3, 3);
+    _A.block<3, 3>(0, 6) = MatrixNd::Identity(3, 3);
+    _A.block<3, 3>(0, 9) = MatrixNd::Identity(3, 3);
+
+    tar_RL_foot_pos_local = tar_init_RL_foot_pos - init_base_pos;
+    tar_RR_foot_pos_local = tar_init_RR_foot_pos - init_base_pos;
+    tar_FL_foot_pos_local = tar_init_FL_foot_pos - init_base_pos;
+    tar_FR_foot_pos_local = tar_init_FR_foot_pos - init_base_pos;
+
+    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
+            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
+            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
+
+    _A.block<3, 12>(3, 0) = p_com_oross_pro;
+
+    _g << 0, 0, 9.81;
+
+    _b << _m * (des_x_2dot + _g),
+            _I_g*des_w_dot;
+
+    fx_max = 100;
+    fx_min = -100;
+    fy_max = 100;
+    fy_min = -100;
+    fz_max = 1000;
+    fz_min = 0;
+
+    _d_u << fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max;
+    _d_l << fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min;
+
+    _P = _A.transpose() * _S * _A + _alpha*_W;
+    _q = -_A.transpose() * _S*_b;
+
+    // ===================== OSQP  ====================== //
+
+    
+    int jj = 0;
+    int kk = 0;
+    int max_jj = 0;
+    
+    // ===================== P_x ====================== //
+    for(unsigned int i = 0;i<P_nnz;++i){
+        P_x[i] = _P(jj,kk);
+        jj = jj + 1;
+        
+        if(jj > max_jj){
+            jj = 0;
+            kk = kk + 1;
+            max_jj = max_jj + 1;
+        }  
+//        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
+    }
+    
+    // ===================== P_i ====================== //
+    jj = 0;
+    max_jj = 0;
+    
+    for(unsigned int i = 0;i<P_nnz;++i){
+        P_i[i] = jj;
+        jj = jj + 1;
+        
+        if(jj > max_jj){
+            jj = 0;
+            max_jj = max_jj + 1;
+        }  
+        
+//        cout << "i = " << i << ", P_i = " << P_i[i] << endl; 
+    }
+    
+    // ===================== P_p ====================== //
+    P_p[0] = 0;
+    for(unsigned int i = 1;i<A_nnz+1;++i){
+        P_p[i] = P_p[i-1] + i;
+        
+//        cout << "i = " << i-1 << ", P_p = " << P_p[i-1] << endl; 
+    }
+//    cout << "i = " << A_nnz << ", P_p = " << P_p[A_nnz] << endl;
+    
+    // ===================== A_x ====================== //
+    
+    for(unsigned int i = 0;i<A_nnz;++i){
+        A_x[i] = 1;
+        
+//        cout << "i = " << i << ", A_x = " << A_x[i] << endl; 
+    }
+    
+    // ===================== A_i ====================== //
+
+    for(unsigned int i = 0;i<A_nnz;++i){
+        A_i[i] = i;
+
+//        cout << "i = " << i << ", A_i = " << A_i[i] << endl; 
+    }
+    
+    // ===================== A_p ====================== //
+    jj = 0;
+    for(unsigned int i = 0;i<A_nnz+1;++i){
+        A_p[i] = jj;
+
+        jj = jj + 1;
+        
+//        cout << "i = " << i << ", A_p = " << A_p[i] << endl; 
+    }
+//        cout << "i = " << A_nnz << ", A_p = " << A_p[A_nnz] << endl; 
+    // ===================== G_l & G_u ====================== //
+    
+    c_vec << _c(0),_c(0),_c(0),_c(1),_c(1),_c(1),_c(2),_c(2),_c(2),_c(3),_c(3),_c(3);
+    
+//    cout << "c_vec = " << c_vec.transpose() << endl;
+        
+    for(unsigned int i = 0;i<A_nnz;++i){
+        l[i] = c_vec(i)*_d_l(i);
+        u[i] = c_vec(i)*_d_u(i);
+        
+//        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
+//        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
+//        cout << "==============================" << endl;
+    }
+
+    for(unsigned int i = 0;i<A_nnz;++i){
+        q[i] = _q(i);
+    }
+    
+    // Populate data
+    if (QP_data) {
+        QP_data->n = n;
+        QP_data->m = m;
+        QP_data->P = csc_matrix(QP_data->n, QP_data->n, P_nnz, P_x, P_i, P_p);
+        QP_data->q = q;
+        QP_data->A = csc_matrix(QP_data->m, QP_data->n, A_nnz, A_x, A_i, A_p);
+        QP_data->l = l;
+        QP_data->u = u;
+    }
+
+    // Define solver settings as default
+    if (QP_settings) {
+        osqp_set_default_settings(QP_settings);
+        QP_settings->alpha = 1; // Change alpha parameter
+    }
+
+    // Setup workspace
+    QP_exitflag = osqp_setup(&QP_work, QP_data, QP_settings);
+
+    // Solve Problem
+    osqp_solve(QP_work);
+
+    cout << "[RL] x = " << QP_work->solution->x[0] << ", y = " << QP_work->solution->x[1] << ", z = " << QP_work->solution->x[2] << endl;
+    cout << "[RR] x = " << QP_work->solution->x[3] << ", y = " << QP_work->solution->x[4] << ", z = " << QP_work->solution->x[5] << endl;
+    cout << "[FL] x = " << QP_work->solution->x[6] << ", y = " << QP_work->solution->x[7] << ", z = " << QP_work->solution->x[8] << endl;
+    cout << "[FR] x = " << QP_work->solution->x[9] << ", y = " << QP_work->solution->x[10] << ", z = " << QP_work->solution->x[11] << endl;
+
+    //    cout << "solution = " << work->solution->x[1] << endl;
+    //    cout << "solution = " << work->solution->x[2] << endl;
+
+    //    // Cleanup
+    //    if (data) {
+    //        if (data->A) c_free(data->A);
+    //        if (data->P) c_free(data->P);
+    //        c_free(data);
+    //    }
+    //    if (settings) c_free(settings);
+
+    // ==================== OSQP TEST END =================== //
 
 }
 
-VectorNd CRobot::Get_COM(VectorNd base, VectorNd q)
-{
-    const double m_body = 24.333;
-    const double m_hp = 1.4;
-    const double m_thigh = 3.209;
-    const double m_calf = 0.634;
-    const double m_leg = m_hp + m_thigh + m_calf;
-    const double m_robot = m_leg * 4 + m_body;
 
-    // Transformation & Rotation matrix (Base)
-    R_w2base_R << 1, 0, 0, 0,
-            0, cos(base(3)), -sin(base(3)), 0,
-            0, sin(base(3)), cos(base(3)), 0,
-            0, 0, 0, 1;
-    R_w2base_P << cos(base(4)), 0, sin(base(4)), 0,
-            0, 1, 0, 0,
-            -sin(base(4)), 0, cos(base(4)), 0,
-            0, 0, 0, 1;
-    R_w2base_Y << cos(base(5)), -sin(base(5)), 0, 0,
-            sin(base(5)), cos(base(5)), 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
-
-    R_w2base = R_w2base_Y * R_w2base_P*R_w2base_R;
-    T_w2base << 1, 0, 0, base(0),
-            0, 1, 0, base(1),
-            0, 0, 1, base(2),
-            0, 0, 0, 1;
-
-    // Transformation & Rotation matrix (Leg)
-    // RL
-    TR_RL_base2hp << 1, 0, 0, -0.35,
-            0, cos(q(0)), -sin(q(0)), 0.115,
-            0, sin(q(0)), cos(q(0)), -0.053,
-            0, 0, 0, 1;
-
-    TR_RL_hp2thigh << cos(q(1)), 0, sin(q(1)), 0.0,
-            0, 1, 0, 0.105,
-            -sin(q(1)), 0, cos(q(1)), 0.0,
-            0, 0, 0, 1;
-
-    TR_RL_thigh2calf << cos(q(2)), 0, sin(q(2)), 0.0,
-            0, 1, 0, 0.0,
-            -sin(q(2)), 0, cos(q(2)), -0.305,
-            0, 0, 0, 1;
-
-    p_RL_base2hp_com = TR_RL_base2hp*p_RL_hp_com;
-    p_RL_base2thigh_com = TR_RL_base2hp * TR_RL_hp2thigh*p_RL_thigh_com;
-    p_RL_base2calf_com = TR_RL_base2hp * TR_RL_hp2thigh * TR_RL_thigh2calf*p_RL_calf_com;
-
-    p_RL_com = (m_hp * p_RL_base2hp_com + m_thigh * p_RL_base2thigh_com + m_calf * p_RL_base2calf_com) / (m_leg);
-
-    //    cout << "p_RL_com = " << p_RL_com << endl;
-
-    // RR
-    TR_RR_base2hp << 1, 0, 0, -0.35,
-            0, cos(q(3)), -sin(q(3)), -0.115,
-            0, sin(q(3)), cos(q(3)), -0.053,
-            0, 0, 0, 1;
-
-    TR_RR_hp2thigh << cos(q(4)), 0, sin(q(4)), 0.0,
-            0, 1, 0, -0.105,
-            -sin(q(4)), 0, cos(q(4)), 0.0,
-            0, 0, 0, 1;
-
-    TR_RR_thigh2calf << cos(q(5)), 0, sin(q(5)), 0.0,
-            0, 1, 0, 0.0,
-            -sin(q(5)), 0, cos(q(5)), -0.305,
-            0, 0, 0, 1;
-
-    p_RR_base2hp_com = TR_RR_base2hp*p_RR_hp_com;
-    p_RR_base2thigh_com = TR_RR_base2hp * TR_RR_hp2thigh*p_RR_thigh_com;
-    p_RR_base2calf_com = TR_RR_base2hp * TR_RR_hp2thigh * TR_RR_thigh2calf*p_RR_calf_com;
-
-    p_RR_com = (m_hp * p_RR_base2hp_com + m_thigh * p_RR_base2thigh_com + m_calf * p_RR_base2calf_com) / (m_leg);
-
-    //    cout << "p_RR_com = " << p_RR_com << endl;
-
-    // FL
-    TR_FL_base2hp << 1, 0, 0, 0.35,
-            0, cos(q(0)), -sin(q(0)), 0.115,
-            0, sin(q(0)), cos(q(0)), -0.053,
-            0, 0, 0, 1;
-
-    TR_FL_hp2thigh << cos(q(1)), 0, sin(q(1)), 0.0,
-            0, 1, 0, 0.105,
-            -sin(q(1)), 0, cos(q(1)), 0.0,
-            0, 0, 0, 1;
-
-    TR_FL_thigh2calf << cos(q(2)), 0, sin(q(2)), 0.0,
-            0, 1, 0, 0.0,
-            -sin(q(2)), 0, cos(q(2)), -0.305,
-            0, 0, 0, 1;
-
-
-    p_FL_base2hp_com = TR_FL_base2hp*p_FL_hp_com;
-    p_FL_base2thigh_com = TR_FL_base2hp * TR_FL_hp2thigh*p_FL_thigh_com;
-    p_FL_base2calf_com = TR_FL_base2hp * TR_FL_hp2thigh * TR_FL_thigh2calf*p_FL_calf_com;
-
-    p_FL_com = (m_hp * p_FL_base2hp_com + m_thigh * p_FL_base2thigh_com + m_calf * p_FL_base2calf_com) / (m_leg);
-
-    //    cout << "p_FL_com = " << p_FL_com << endl;
-
-    // FR
-    TR_FR_base2hp << 1, 0, 0, 0.35,
-            0, cos(q(3)), -sin(q(3)), -0.115,
-            0, sin(q(3)), cos(q(3)), -0.053,
-            0, 0, 0, 1;
-
-    TR_FR_hp2thigh << cos(q(4)), 0, sin(q(4)), 0.0,
-            0, 1, 0, -0.105,
-            -sin(q(4)), 0, cos(q(4)), 0.0,
-            0, 0, 0, 1;
-
-    TR_FR_thigh2calf << cos(q(5)), 0, sin(q(5)), 0.0,
-            0, 1, 0, 0.0,
-            -sin(q(5)), 0, cos(q(5)), -0.305,
-            0, 0, 0, 1;
-
-    p_FR_base2hp_com = TR_FR_base2hp*p_FR_hp_com;
-    p_FR_base2thigh_com = TR_FR_base2hp * TR_FR_hp2thigh*p_FR_thigh_com;
-    p_FR_base2calf_com = TR_FR_base2hp * TR_FR_hp2thigh * TR_FR_thigh2calf*p_FR_calf_com;
-
-    p_FR_com = (m_hp * p_FR_base2hp_com + m_thigh * p_FR_base2thigh_com + m_calf * p_FR_base2calf_com) / (m_leg);
-
-    //    cout << "p_FR_com = " << p_FR_com << endl;
-
-    // COM from base
-    p_robot_com_from_base = (m_body * p_base2body_com + m_leg * (p_RL_com + p_RR_com + p_FL_com + p_FR_com)) / (m_robot);
-    p_robot_com_from_w = T_w2base * R_w2base*p_robot_com_from_base;
-    p_robot_com = p_robot_com_from_w.block<3, 1>(0, 0);
-
-    cout << "p_robot_com = " << p_robot_com << endl;
-
-    return p_robot_com;
-}
 
 void CRobot::Get_Opt_F(void)
 {
-//    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
-//            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
-//            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
-//
-////        p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
-////                act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
-////                -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
-//
-//
-//    _A.block<3, 12>(3, 0) = p_com_oross_pro;
-//
-////    Get_act_com();
-//
-//    des_x_2dot = com_acc*2.0 + Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
-////    des_x_2dot = Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
-//    des_w_dot = Kp_w * (base_ori - act_base_ori) + Kd_w * (base_ori_dot - act_base_ori_dot);
-//
-//    //    des_x_2dot << 0,0,0;
-//    //    des_w_dot << 0,0,0;
-//
-//    _b << _m * (des_x_2dot + _g),
-//            _I_g*des_w_dot;
-//
-//    _P = _A.transpose() * _S * _A + _alpha*_W;
-//    _q = -_A.transpose() * _S*_b;
-//
-//    // ===================== OSQP  ====================== //
-//
-//    tmp_P_x << _P(0, 0),
-//            _P(0, 1), _P(1, 1),
-//            _P(0, 2), _P(1, 2), _P(2, 2),
-//            _P(0, 3), _P(1, 3), _P(2, 3), _P(3, 3),
-//            _P(0, 4), _P(1, 4), _P(2, 4), _P(3, 4), _P(4, 4),
-//            _P(0, 5), _P(1, 5), _P(2, 5), _P(3, 5), _P(4, 5), _P(5, 5),
-//            _P(0, 6), _P(1, 6), _P(2, 6), _P(3, 6), _P(4, 6), _P(5, 6), _P(6, 6),
-//            _P(0, 7), _P(1, 7), _P(2, 7), _P(3, 7), _P(4, 7), _P(5, 7), _P(6, 7), _P(7, 7),
-//            _P(0, 8), _P(1, 8), _P(2, 8), _P(3, 8), _P(4, 8), _P(5, 8), _P(6, 8), _P(7, 8), _P(8, 8),
-//            _P(0, 9), _P(1, 9), _P(2, 9), _P(3, 9), _P(4, 9), _P(5, 9), _P(6, 9), _P(7, 9), _P(8, 9), _P(9, 9),
-//            _P(0, 10), _P(1, 10), _P(2, 10), _P(3, 10), _P(4, 10), _P(5, 10), _P(6, 10), _P(7, 10), _P(8, 10), _P(9, 10), _P(10, 10),
-//            _P(0, 11), _P(1, 11), _P(2, 11), _P(3, 11), _P(4, 11), _P(5, 11), _P(6, 11), _P(7, 11), _P(8, 11), _P(9, 11), _P(10, 11), _P(11, 11);
-//
-//    for (unsigned int i = 0; i < 78; ++i) {
-//        P_x[i] = tmp_P_x(i);
-//    }
-//
-//    new_c << _c(0), _c(0), _c(0), _c(1), _c(1), _c(1), _c(2), _c(2), _c(2), _c(3), _c(3), _c(3);
-//
-//    for (unsigned int i = 0; i < 12; ++i) {
-//        q[i] = _q(i);
-//        l[i] = new_c(i) * _d_l(i);
-//        u[i] = new_c(i) * _d_u(i);
-//    }
-//
-//    // Update problem
-//    osqp_update_P(work, P_x, OSQP_NULL, 78);
-//    osqp_update_lin_cost(work, q);
-//    osqp_update_bounds(work, l, u);
-//
-//    // Solve updated problem
-//    osqp_solve(work);
-//
-//    for (unsigned int i = 0; i < 12; ++i) {
-//        Fc(i + 7) = fc_weight * work->solution->x[i];
-//        //        Fc(i + 7) = work->solution->x[i];
-//    }
+    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
+            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
+            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
+
+//        p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
+//                act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
+//                -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
+
+
+    _A.block<3, 12>(3, 0) = p_com_oross_pro;
+
+//    Get_act_com();
+
+    des_x_2dot = com_acc*1.0 + Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
+//    des_x_2dot = Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
+    des_w_dot = Kp_w * (base_ori - act_base_ori) + Kd_w * (base_ori_dot - act_base_ori_dot);
+
+    //    des_x_2dot << 0,0,0;
+    //    des_w_dot << 0,0,0;
+
+    _b << _m * (des_x_2dot + _g),
+            _I_g*des_w_dot;
+
+    _P = _A.transpose() * _S * _A + _alpha*_W;
+    _q = -_A.transpose() * _S*_b;
+
+    // ===================== OSQP  ====================== //
+
+    int jj = 0;
+    int kk = 0;
+    int max_jj = 0;
+    
+    // ===================== P_x ====================== //
+    for(unsigned int i = 0;i<P_nnz;++i){
+        P_x[i] = _P(jj,kk);
+        jj = jj + 1;
+        
+        if(jj > max_jj){
+            jj = 0;
+            kk = kk + 1;
+            max_jj = max_jj + 1;
+        }  
+//        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
+    }
+    
+    c_vec << _c(0), _c(0), _c(0), _c(1), _c(1), _c(1), _c(2), _c(2), _c(2), _c(3), _c(3), _c(3);
+
+    for (unsigned int i = 0; i < A_nnz; ++i) {
+        q[i] = _q(i);
+        l[i] = c_vec(i) * _d_l(i);
+        u[i] = c_vec(i) * _d_u(i);
+    }
+
+    // Update problem
+    osqp_update_P(QP_work, P_x, OSQP_NULL, 78);
+    osqp_update_lin_cost(QP_work, q);
+    osqp_update_bounds(QP_work, l, u);
+
+    // Solve updated problem
+    osqp_solve(QP_work);
+
+    for (unsigned int i = 0; i < A_nnz; ++i) {
+        Fc(i + 7) = fc_weight * QP_work->solution->x[i];
+    }
 }
 
 void CRobot::WalkReady_Pos_Traj(void)
@@ -1238,7 +1198,7 @@ void CRobot::WalkReady_Pos_Traj(void)
     }
 }
 
-void CRobot::MPC_Init(void)
+void CRobot::MPC_Con_Init(void)
 {
 // ================ MPC INIT ================== //
     
@@ -1255,7 +1215,7 @@ void CRobot::MPC_Init(void)
     Q_tilda = Kron(MatrixNd::Identity(Np,Np),_Q);
     R_tilda = Kron(MatrixNd::Identity(Nc,Nc),_R);
  
-    y_ini = C*x_ini;
+//    y_ini = C*x_ini;
     
     for(int i=0;i<Np;++i){
         tmp_Ax = pow_mat(PHI,i);
@@ -1282,7 +1242,7 @@ void CRobot::MPC_Init(void)
     H = Bx_tilda.transpose()*Q_bar*Bx_tilda + R_tilda;
     
     H = (H + H.transpose())/2;
-    cout << "new H = " << endl << H << endl;
+//    cout << "new H = " << endl << H << endl;
  
     // ================= Constraints ================= //
 
@@ -1309,34 +1269,106 @@ void CRobot::MPC_Init(void)
     // ================= Constraints END ================= //
     
     // ================= OSQP Setting ================= //
-    c_float tmp_H_x[55] = { H(0,0),
-                            H(0,1),H(1,1),
-                            H(0,2),H(1,2),H(2,2),
-                            H(0,3),H(1,3),H(2,3),H(3,3),
-                            H(0,4),H(1,4),H(2,4),H(3,4),H(4,4),
-                            H(0,5),H(1,5),H(2,5),H(3,5),H(4,5),H(5,5),
-                            H(0,6),H(1,6),H(2,6),H(3,6),H(4,6),H(5,6),H(6,6),
-                            H(0,7),H(1,7),H(2,7),H(3,7),H(4,7),H(5,7),H(6,7),H(7,7),
-                            H(0,8),H(1,8),H(2,8),H(3,8),H(4,8),H(5,8),H(6,8),H(7,8),H(8,8),
-                            H(0,9),H(1,9),H(2,9),H(3,9),H(4,9),H(5,9),H(6,9),H(7,9),H(8,9),H(9,9)};
     
-    cout << "tmp_H_x = " << tmp_H_x[0] << endl;
+    int jj = 0;
+    int kk = 0;
+    int max_jj = 0;
     
-    for(unsigned int i =0;i<55;++i){
-        H_x[i] = tmp_H_x[i];
+    // ===================== H_x ====================== //
+    for(unsigned int i = 0;i<H_nnz;++i){
+        H_x[i] = H(jj,kk);
+        jj = jj + 1;
+        
+        if(jj > max_jj){
+            jj = 0;
+            kk = kk + 1;
+            max_jj = max_jj + 1;
+        }  
+//        cout << "i = " << i << ", H_x = " << H_x[i] << endl; 
     }
     
-    cout << "H_x[54] = " << H_x[54] << endl;
+    // ===================== H_i ====================== //
+    jj = 0;
+    max_jj = 0;
+    
+    for(unsigned int i = 0;i<H_nnz;++i){
+        H_i[i] = jj;
+        jj = jj + 1;
+        
+        if(jj > max_jj){
+            jj = 0;
+            max_jj = max_jj + 1;
+        }  
+        
+//        cout << "i = " << i << ", H_i = " << H_i[i] << endl; 
+    }
+    
+    // ===================== H_p ====================== //
+    H_p[0] = 0;
+    for(unsigned int i = 1;i<Np+1;++i){
+        H_p[i] = H_p[i-1] + i;
+        
+//        cout << "i = " << i-1 << ", H_p = " << H_p[i-1] << endl; 
+    }
+    
+    // ===================== G_x ====================== //
+    
+    for(unsigned int i = 0;i<Np;++i){
+        G_x[i] = 0;
+        
+//        cout << "i = " << i << ", G_x = " << G_x[i] << endl; 
+    }
+    
+    // ===================== G_i ====================== //
+
+    for(unsigned int i = 0;i<Np;++i){
+        G_i[i] = i;
+
+//        cout << "i = " << i << ", G_i = " << G_i[i] << endl; 
+    }
+    
+    // ===================== G_p ====================== //
+    jj = 0;
+    for(unsigned int i = 0;i<Np+1;++i){
+        G_p[i] = jj;
+
+        jj = jj + 1;
+        
+//        cout << "i = " << i << ", G_p = " << G_p[i] << endl; 
+    }
+    
+    // ===================== G_l & G_u ====================== //
+    
+    for(unsigned int i = 0;i<Np;++i){
+        G_l[i] = -input_constraint;
+        G_u[i] =  input_constraint;
+        
+//        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
+//        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
+//        cout << "==============================" << endl;
+    }
+    
+    
+    
+    
+//    cout << "tmp_H_x = " << tmp_H_x[0] << endl;
+//    
+//    for(unsigned int i =0;i<465;++i){
+//        H_x[i] = tmp_H_x[i];
+//    }
+    
+//    cout << "H_x[54] = " << H_x[54] << endl;
     
 //    c_float ff[10] = {f(0), f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8), f(9)};
     act_state_x << act_com_pos(1), act_com_vel(1), act_com_acc(1);
     f = (act_state_x.transpose()*Ax_tilda.transpose()*Q_bar*Bx_tilda - ref_tilda.transpose()*Q_tilda*C_tilda*Bx_tilda).transpose();
     
-    cout << "f = " << f << endl;
-    for(unsigned int i =0;i<10;++i){
+//    cout << "f = " << f.transpose() << endl;
+    
+    for(unsigned int i =0;i<Np;++i){
         ff[i] = f(i);
     }
-    cout << "ff = " << ff[0] << endl;
+//    cout << "ff = " << ff[0] << endl;
     // ===================== Constraint ===================== //
     
 //    MatrixNd Gy = MatrixNd::Identity(output_num*Np, output_num*Np);
@@ -1354,35 +1386,37 @@ void CRobot::MPC_Init(void)
     // ==================== OSQP ======================= //
     
     // Exitflag
-    exitflag = 0;
+    MPC_exitflag = 0;
        
     cout << "[1]" << endl;
     // Populate data
-    if (data) {
-        data->n = G_n;
-        data->m = G_m;
-        data->P = csc_matrix(data->n, data->n, H_nnz, H_x, H_i, H_p);
-        data->q = ff;
-        data->A = csc_matrix(data->m, data->n, G_nnz, G_x, G_i, G_p);
-        data->l = G_l;
-        data->u = G_u;
+    if (MPC_data) {
+        MPC_data->n = G_n;
+        MPC_data->m = G_m;
+        MPC_data->P = csc_matrix(MPC_data->n, MPC_data->n, H_nnz, H_x, H_i, H_p);
+        MPC_data->q = ff;
+        MPC_data->A = csc_matrix(MPC_data->m, MPC_data->n, G_nnz, G_x, G_i, G_p);
+        MPC_data->l = G_l;
+        MPC_data->u = G_u;
     }
 
     cout << "[2]" << endl;
     // Define solver settings as default
-    if (settings) {
-        osqp_set_default_settings(settings);
-        settings->alpha = 1; // Change alpha parameter
+    if (MPC_settings) {
+        osqp_set_default_settings(MPC_settings);
+        MPC_settings->alpha = 1; // Change alpha parameter
         cout << "[2-1]" << endl;
     }
 
     cout << "[3]" << endl;
     
     // Setup workspace
-    exitflag = osqp_setup(&work, data, settings);
+    MPC_exitflag = osqp_setup(&MPC_work, MPC_data, MPC_settings);
 
+    cout << "[4]" << endl;
+    
     // Solve Problem
-    osqp_solve(work);
+    osqp_solve(MPC_work);
 
 //    cout << "u(0) = " << work->solution->x[0] << endl;
 //    cout << "u(1) = " << work->solution->x[1] << endl;
@@ -1394,19 +1428,15 @@ void CRobot::MPC_Init(void)
 //    cout << "[FR] x = " << work->solution->x[9] << ", y = " << work->solution->x[10] << ", z = " << work->solution->x[11] << endl;
 
     
-    cout << "[4]" << endl;
+    cout << "[5] MPC Init Done !!!" << endl;
 }
 
 void CRobot::Test_Function(void)
 {
-//    static double lpf_input_u = 0;
-//    VectorNd dist = VectorNd::Zero(3);
-    
-    if (test_cnt == 0) {
-
+    if (test_phase == 0) {
         // ============ Initialize ============ //
 //            cout << "[0]" << endl;
-        test_phase = 0;
+        test_phase = 1;
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
         contact_num = 4;
@@ -1427,43 +1457,15 @@ void CRobot::Test_Function(void)
         for(int i=0;i<6;++i){
             c_state_x1[i] = 0;
         }
+        
+        tar_Fc_y = 0;
 
     }
-
-//        else if (test_cnt <= (unsigned int) (0.5 * 3 / dt)) {
-//    
-//            com_pos(2) = tar_init_com_pos(2) + (0.03) * (sin(PI2 / (0.5 * 1)*(double) (test_cnt) * dt));
-//            com_vel(2) = (0.03) * (cos(PI2 / (0.5 * 1)*(double) (test_cnt) * dt));
-//    
-//            base_pos = com_pos + base_offset;
-//            base_vel = com_vel;
-//    
-//            RL_foot_pos = tar_init_RL_foot_pos;
-//            RR_foot_pos = tar_init_RR_foot_pos;
-//            FL_foot_pos = tar_init_FL_foot_pos;
-//            FR_foot_pos = tar_init_FR_foot_pos;
-//    
-//            test_cnt++;
-//    
-//            if (test_cnt == (unsigned int) (0.5 * 3 / dt)) {
-//                cout << "!! Up & Down Done !!" << endl;
-//                moving_done_flag = true;
-//            }
-//        }
-
-    else {
-        
-//            cout << "[1]" << endl;
-        
-//        cout << "test_cnt = " << test_cnt << endl;
-
-        test_phase = 1;
+    else {       
+//        test_phase = 1;
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
         contact_num = 4;
-
-//        com_pos = tar_init_com_pos;
-//        com_vel = tar_init_com_vel;
 
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
@@ -1477,23 +1479,14 @@ void CRobot::Test_Function(void)
 
         act_state_x << act_com_pos(1), act_com_vel(1), act_com_acc(1);
         act_output_y = C*act_state_x;
+   
+        cout << "test_cnt % Ts_cnt = " << test_cnt % Ts_cnt  << endl;
         
-        cout << "test_cnt % 150 = " << test_cnt % 150  << endl;
-        if(test_cnt % 150 == 149){
+        if(test_cnt % Ts_cnt == 0){
+           cout <<  "=============================================" << endl;
+            pre_state_x = next_state_x;
             
-
-    //        if(test_cnt%1000 == 999){
-    //            dist << 0, 0, 1;//1/48*50;
-    //            
-    //            cout << "dist = 1 !!!!!!!!!!!!!!!!!!!" << endl;
-    //        }
-    //        else{
-    //            dist << 0,0,0;
-    //        }
-
-    //        act_state_x  = new_state_x + dist;//<< 0 , 0, 0;
-
-            pre_state_x = new_state_x;
+            cout << "pre_state_x = " << pre_state_x.transpose() << endl;
             
             cout << "act_state_x = " << act_state_x.transpose() << endl;
             cout << "act_output_y = " << act_output_y << endl;
@@ -1503,77 +1496,74 @@ void CRobot::Test_Function(void)
             //========== reference generation ========== //
             ref_tilda << ref_tilda.block(1,0,Np-1,1), new_ref;  // ref : ZMP
 
-    //            cout << "ref_tilda = " << ref_tilda.transpose() << endl;
-
-    //            cout << "test= " << act_state_x.transpose()*Ax_tilda.transpose()*Q_bar*Bx_tilda - ref_tilda.transpose()*Q_tilda*C_tilda*Bx_tilda << endl;
-
-    //            act_state_x << 0.01,0.01,0;
-    //        if(act_output_y(0) > 0.02){
-    //            act_state_x << act_com_pos(1), act_com_vel(1), act_com_acc(1);
-    //        }
-    //        else{
-    //            act_state_x << 0, 0, 0;
-    //        }
-
             f = (act_state_x.transpose()*Ax_tilda.transpose()*Q_bar*Bx_tilda - ref_tilda.transpose()*Q_tilda*C_tilda*Bx_tilda).transpose();
 
-    //            cout << "f = " << f << endl;
-    //            gy_new = gy - Gy*C_tilda*Ax_tilda*state_x;
-    //            bk << gy_new , gu;
-
-            for(unsigned int i =0;i<10;++i){
+            for(unsigned int i =0;i<Np;++i){
                 ff[i] = f(i);
             }
 
-            osqp_update_lin_cost(work, ff);
+            osqp_update_lin_cost(MPC_work, ff);
 
             // Solve updated problem
-            osqp_solve(work);
+            osqp_solve(MPC_work);
 
             cout << "ZMP error = " << -act_output_y << endl;
-            input_u = work->solution->x[0];
+            input_u = MPC_work->solution->x[0];
             cout << "input_u = " << input_u << endl;
 
-    //        lpf_input_u = (1 - 0.0005)*lpf_input_u + 0.0005*input_u;
+            next_state_x = PHI*act_state_x + GAM*input_u;
+            next_output_y = C*next_state_x;
 
-            new_state_x = PHI*act_state_x + GAM*input_u;
-
-            cout << "new_state_x = " << new_state_x.transpose() << endl;
-            cout <<  "===============================" << endl;
+            cout << "next_state_x = " << next_state_x.transpose() << endl;
+            cout << "next_output_y = " << next_output_y.transpose() << endl;
             
-//            com_pos(1) = new_state_x(0);
-//            com_vel(1) = 0;//new_state_x(1);
-//            com_acc(1) = 0;//new_state_x(2);
+            tar_Fc_y = tar_Fc_y + 48.5*input_u*Ts; // mass = 48.5kg
+//            tar_Fc_y = 0;
             
-            init_x[0] = pre_state_x(0);
-            init_x[1] = pre_state_x(1);
-            init_x[2] = pre_state_x(2);
-
-            final_x[0] = new_state_x(0);
-            final_x[1] = new_state_x(1);
-            final_x[2] = new_state_x(2);
-
-            coefficient_5thPoly(init_x, final_x, Ts, c_state_x1);
+            cout << "tar_Fc_y = " << tar_Fc_y << endl;
+            cout <<  "=============================================" << endl;
+            
+//            init_x[0] = pre_state_x(0);
+//            init_x[1] = pre_state_x(1);
+//            init_x[2] = pre_state_x(2);
+//
+//            final_x[0] = next_state_x(0);
+//            final_x[1] = next_state_x(1);
+//            final_x[2] = next_state_x(2);
+//
+//            coefficient_5thPoly(init_x, final_x, Ts, c_state_x1);
 
         }
-        else{
-            com_pos(1) = fifth_order_poly(c_state_x1, (double)(test_cnt%150)*dt);
-            com_vel(1) = fifth_order_poly_dot(c_state_x1, (double)(test_cnt%150)*dt);
-            com_acc(1) = fifth_order_poly_2dot(c_state_x1, (double)(test_cnt%150)*dt);
-        }
-      
+
+//        com_pos(1) = next_state_x(0);//fifth_order_poly(c_state_x1, (double)(test_cnt%Ts_cnt)*dt);
+//        com_vel(1) = next_state_x(1);//fifth_order_poly_dot(c_state_x1, (double)(test_cnt%Ts_cnt)*dt);
+//        com_acc(1) = next_state_x(2);//fifth_order_poly_2dot(c_state_x1, (double)(test_cnt%Ts_cnt)*dt);
+
+        tar_state_x << com_pos(1),com_vel(1),com_acc(1);
+        tar_output_y = C*tar_state_x;
+        
+//        if(com_pos(1) > 0.05){
+//            com_pos(1) = 0.05;
+//            com_vel(1) = 0.0;
+//            com_acc(1) = 0.0;
+//            
+//            cout << "com position limit is over." << endl;
+//        }
         cout << "com_pos(1) = " << com_pos(1) << endl;
+        cout << "com_vel(1) = " << com_vel(1) << endl;
+        cout << "com_acc(1) = " << com_acc(1) << endl;
         cout << "---------------------------" << endl;
-
+        
+        test_cnt++;
     }
 
     base_pos = com_pos + base_offset;
 
-    test_cnt++;
-
-    tmp_data1[33] = input_u;
+    tmp_data1[33] = input_u*0.01;
     tmp_data1[34] = act_output_y(0);
-
+    tmp_data1[35] = (double)(test_cnt % Ts_cnt)/Ts_cnt*0.01;
+    tmp_data1[36] = tar_output_y(0);
+    tmp_data1[37] = tar_Fc_y;
     //    // waist
     //    target_pos[6] = 0;
 }
@@ -3034,7 +3024,6 @@ void CRobot::Get_act_com(void)
         tmp_act_base_vel(0) = -(actual_EP_vel[0] + actual_EP_vel[3] + actual_EP_vel[6] + actual_EP_vel[9]) / 4;
         tmp_act_base_vel(1) = -(actual_EP_vel[1] + actual_EP_vel[4] + actual_EP_vel[7] + actual_EP_vel[10]) / 4;
         tmp_act_base_vel(2) = -(actual_EP_vel[2] + actual_EP_vel[5] + actual_EP_vel[8] + actual_EP_vel[11]) / 4;
-
     }
     
     act_base_pos = (1 - vel_alpha)*act_base_pos + vel_alpha*tmp_act_base_pos;
@@ -3046,13 +3035,14 @@ void CRobot::Get_act_com(void)
     //    cout << "act_RL_foot_pos_local[2] = " << act_RL_foot_pos_local[2] << endl;
     //    cout << "===============================================================" << endl;
 
-
-
     act_com_pos = act_base_pos - base_offset;
     act_com_vel = act_base_vel; //(0.90*lpf_base_alpha)*pre_act_com_vel + ((1 - 0.90)*lpf_base_alpha)*act_base_vel;
 
-    act_com_acc = (act_com_vel - pre_act_com_vel)/dt;
+    
+    tmp_act_com_acc = (act_com_vel - pre_act_com_vel)/dt;
     pre_act_com_vel = act_com_vel;
+    
+    act_com_acc = (1 - 0.02)*act_com_acc + 0.02*tmp_act_com_acc;
 
     //            cout << "IMURoll = " << IMURoll*R2D << endl;
     act_base_ori << IMURoll, IMUPitch, IMUYaw - init_IMUYaw;
@@ -4600,4 +4590,142 @@ double CRobot::fifth_order_poly_2dot(double c[], double t)
     static double y = 0;
     y = 20*c[5]*pow(t, 3) + 12*c[4]*pow(t, 2) + 6*c[3]*pow(t, 1) + 2*c[2];
     return y;
+}
+
+
+VectorNd CRobot::Get_COM(VectorNd base, VectorNd q)
+{
+    const double m_body = 24.333;
+    const double m_hp = 1.4;
+    const double m_thigh = 3.209;
+    const double m_calf = 0.634;
+    const double m_leg = m_hp + m_thigh + m_calf;
+    const double m_robot = m_leg * 4 + m_body;
+
+    // Transformation & Rotation matrix (Base)
+    R_w2base_R << 1, 0, 0, 0,
+            0, cos(base(3)), -sin(base(3)), 0,
+            0, sin(base(3)), cos(base(3)), 0,
+            0, 0, 0, 1;
+    R_w2base_P << cos(base(4)), 0, sin(base(4)), 0,
+            0, 1, 0, 0,
+            -sin(base(4)), 0, cos(base(4)), 0,
+            0, 0, 0, 1;
+    R_w2base_Y << cos(base(5)), -sin(base(5)), 0, 0,
+            sin(base(5)), cos(base(5)), 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
+
+    R_w2base = R_w2base_Y * R_w2base_P*R_w2base_R;
+    T_w2base << 1, 0, 0, base(0),
+            0, 1, 0, base(1),
+            0, 0, 1, base(2),
+            0, 0, 0, 1;
+
+    // Transformation & Rotation matrix (Leg)
+    // RL
+    TR_RL_base2hp << 1, 0, 0, -0.35,
+            0, cos(q(0)), -sin(q(0)), 0.115,
+            0, sin(q(0)), cos(q(0)), -0.053,
+            0, 0, 0, 1;
+
+    TR_RL_hp2thigh << cos(q(1)), 0, sin(q(1)), 0.0,
+            0, 1, 0, 0.105,
+            -sin(q(1)), 0, cos(q(1)), 0.0,
+            0, 0, 0, 1;
+
+    TR_RL_thigh2calf << cos(q(2)), 0, sin(q(2)), 0.0,
+            0, 1, 0, 0.0,
+            -sin(q(2)), 0, cos(q(2)), -0.305,
+            0, 0, 0, 1;
+
+    p_RL_base2hp_com = TR_RL_base2hp*p_RL_hp_com;
+    p_RL_base2thigh_com = TR_RL_base2hp * TR_RL_hp2thigh*p_RL_thigh_com;
+    p_RL_base2calf_com = TR_RL_base2hp * TR_RL_hp2thigh * TR_RL_thigh2calf*p_RL_calf_com;
+
+    p_RL_com = (m_hp * p_RL_base2hp_com + m_thigh * p_RL_base2thigh_com + m_calf * p_RL_base2calf_com) / (m_leg);
+
+    //    cout << "p_RL_com = " << p_RL_com << endl;
+
+    // RR
+    TR_RR_base2hp << 1, 0, 0, -0.35,
+            0, cos(q(3)), -sin(q(3)), -0.115,
+            0, sin(q(3)), cos(q(3)), -0.053,
+            0, 0, 0, 1;
+
+    TR_RR_hp2thigh << cos(q(4)), 0, sin(q(4)), 0.0,
+            0, 1, 0, -0.105,
+            -sin(q(4)), 0, cos(q(4)), 0.0,
+            0, 0, 0, 1;
+
+    TR_RR_thigh2calf << cos(q(5)), 0, sin(q(5)), 0.0,
+            0, 1, 0, 0.0,
+            -sin(q(5)), 0, cos(q(5)), -0.305,
+            0, 0, 0, 1;
+
+    p_RR_base2hp_com = TR_RR_base2hp*p_RR_hp_com;
+    p_RR_base2thigh_com = TR_RR_base2hp * TR_RR_hp2thigh*p_RR_thigh_com;
+    p_RR_base2calf_com = TR_RR_base2hp * TR_RR_hp2thigh * TR_RR_thigh2calf*p_RR_calf_com;
+
+    p_RR_com = (m_hp * p_RR_base2hp_com + m_thigh * p_RR_base2thigh_com + m_calf * p_RR_base2calf_com) / (m_leg);
+
+    //    cout << "p_RR_com = " << p_RR_com << endl;
+
+    // FL
+    TR_FL_base2hp << 1, 0, 0, 0.35,
+            0, cos(q(0)), -sin(q(0)), 0.115,
+            0, sin(q(0)), cos(q(0)), -0.053,
+            0, 0, 0, 1;
+
+    TR_FL_hp2thigh << cos(q(1)), 0, sin(q(1)), 0.0,
+            0, 1, 0, 0.105,
+            -sin(q(1)), 0, cos(q(1)), 0.0,
+            0, 0, 0, 1;
+
+    TR_FL_thigh2calf << cos(q(2)), 0, sin(q(2)), 0.0,
+            0, 1, 0, 0.0,
+            -sin(q(2)), 0, cos(q(2)), -0.305,
+            0, 0, 0, 1;
+
+
+    p_FL_base2hp_com = TR_FL_base2hp*p_FL_hp_com;
+    p_FL_base2thigh_com = TR_FL_base2hp * TR_FL_hp2thigh*p_FL_thigh_com;
+    p_FL_base2calf_com = TR_FL_base2hp * TR_FL_hp2thigh * TR_FL_thigh2calf*p_FL_calf_com;
+
+    p_FL_com = (m_hp * p_FL_base2hp_com + m_thigh * p_FL_base2thigh_com + m_calf * p_FL_base2calf_com) / (m_leg);
+
+    //    cout << "p_FL_com = " << p_FL_com << endl;
+
+    // FR
+    TR_FR_base2hp << 1, 0, 0, 0.35,
+            0, cos(q(3)), -sin(q(3)), -0.115,
+            0, sin(q(3)), cos(q(3)), -0.053,
+            0, 0, 0, 1;
+
+    TR_FR_hp2thigh << cos(q(4)), 0, sin(q(4)), 0.0,
+            0, 1, 0, -0.105,
+            -sin(q(4)), 0, cos(q(4)), 0.0,
+            0, 0, 0, 1;
+
+    TR_FR_thigh2calf << cos(q(5)), 0, sin(q(5)), 0.0,
+            0, 1, 0, 0.0,
+            -sin(q(5)), 0, cos(q(5)), -0.305,
+            0, 0, 0, 1;
+
+    p_FR_base2hp_com = TR_FR_base2hp*p_FR_hp_com;
+    p_FR_base2thigh_com = TR_FR_base2hp * TR_FR_hp2thigh*p_FR_thigh_com;
+    p_FR_base2calf_com = TR_FR_base2hp * TR_FR_hp2thigh * TR_FR_thigh2calf*p_FR_calf_com;
+
+    p_FR_com = (m_hp * p_FR_base2hp_com + m_thigh * p_FR_base2thigh_com + m_calf * p_FR_base2calf_com) / (m_leg);
+
+    //    cout << "p_FR_com = " << p_FR_com << endl;
+
+    // COM from base
+    p_robot_com_from_base = (m_body * p_base2body_com + m_leg * (p_RL_com + p_RR_com + p_FL_com + p_FR_com)) / (m_robot);
+    p_robot_com_from_w = T_w2base * R_w2base*p_robot_com_from_base;
+    p_robot_com = p_robot_com_from_w.block<3, 1>(0, 0);
+
+    cout << "p_robot_com = " << p_robot_com << endl;
+
+    return p_robot_com;
 }

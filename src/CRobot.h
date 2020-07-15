@@ -224,11 +224,11 @@ public:
     void StateUpdate(void);
     void Get_Opt_F(void);
     VectorNd Get_COM(VectorNd base, VectorNd q);
-    void osqp_init(void);
+    void QP_Con_Init(void);
     void TW_COM_Traj_Gen(void);
     void TW_SF_Traj_Gen(void);
     void Get_CP(void);
-    void MPC_Init(void);
+    void MPC_Con_Init(void);
     void FT_COM_X_Traj_Gen(void);
     double fifth_order_poly(double c[], double t);
     double fifth_order_poly_dot(double c[], double t);
@@ -381,6 +381,7 @@ public:
     VectorNd Fc = VectorNd::Zero(19);
     VectorNd Fc2 = VectorNd::Zero(19);
     VectorNd x_2dot_cp = VectorNd::Zero(19);
+    
 
     VectorNd Kp_EP = VectorNd::Zero(12); //(100,100,100,100,100,100,100,100,100,100,100,100);
     VectorNd Kd_EP = VectorNd::Zero(12); //(1,1,1,1,1,1,1,1,1,1,1,1);
@@ -471,6 +472,7 @@ public:
     VectorNd _d_u = VectorNd::Zero(12);
     VectorNd _d_l = VectorNd::Zero(12);
     VectorNd _c = VectorNd::Zero(4);
+    VectorNd c_vec = VectorNd::Zero(12);
     int contact_num;
 
     // weight
@@ -580,6 +582,7 @@ public:
     double tmp_x_moving_speed, tmp_y_moving_speed;
     VectorNd act_com_vel = VectorNd::Zero(3);
     VectorNd act_com_acc = VectorNd::Zero(3);
+    VectorNd tmp_act_com_acc = VectorNd::Zero(3);
     VectorNd act_com_vel2 = VectorNd::Zero(2);
     VectorNd act_com_pos2 = VectorNd::Zero(2);
     VectorNd lpf_act_com_vel = VectorNd::Zero(3);
@@ -592,8 +595,8 @@ public:
     VectorNd P = VectorNd::Zero(6);
     MatrixNd A = MatrixNd::Zero(6, 6);
 
-    VectorNd tmp_data1 = VectorNd::Zero(50);
-    VectorNd tmp_data2 = VectorNd::Zero(50);
+    VectorNd tmp_data1 = VectorNd::Zero(80);
+    VectorNd tmp_data2 = VectorNd::Zero(80);
     VectorNd computed_tor = VectorNd::Zero(13);
     VectorNd Fc_vsd = VectorNd::Zero(12);
     VectorNd Kp_vsd = VectorNd::Zero(12);
@@ -960,60 +963,78 @@ public:
 
     // Exitflag
 
-    // Workspace structures
-    OSQPWorkspace *work;
-    OSQPSettings *settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
-    OSQPData *data = (OSQPData *) c_malloc(sizeof (OSQPData));
-
     // =============== for QP based balance controller ================= //
-    c_int exitflag = 0;
-//    c_float A_x[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-//    c_int A_nnz = 12;
-//    c_int A_i[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-//    c_int A_p[13] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-//    c_float l[12]; // = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
-//    c_float u[12]; // = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
-//    c_int n = 12;
-//    c_int m = 12;
-//
-//    //	c_float q[12];
-//
-//    c_int P_nnz = 78;
-//    c_int P_i[78] = {0,
-//        0, 1,
-//        0, 1, 2,
-//        0, 1, 2, 3,
-//        0, 1, 2, 3, 4,
-//        0, 1, 2, 3, 4, 5,
-//        0, 1, 2, 3, 4, 5, 6,
-//        0, 1, 2, 3, 4, 5, 6, 7,
-//        0, 1, 2, 3, 4, 5, 6, 7, 8,
-//        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-//        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-//
-//    c_int P_p[13] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78};
-//    c_float P_x[78];
-//    c_float q[12];
+    
+    // Workspace structures
+    OSQPWorkspace *QP_work;
+    OSQPSettings *QP_settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
+    OSQPData *QP_data = (OSQPData *) c_malloc(sizeof (OSQPData));
+    
+    c_int QP_exitflag = 0;
+    
+    c_int P_nnz = 78;
+    c_float P_x[78];
+    c_int P_i[78];
+    c_int P_p[13];
+    c_float q[12];
+   
+    c_float A_x[12];// = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    c_int A_nnz = 12;
+    c_int A_i[12];// = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    c_int A_p[13];// = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    c_float l[12]; // = {_d_l(0), _d_l(1), _d_l(2), _d_l(3), _d_l(4), _d_l(5), _d_l(6), _d_l(7), _d_l(8), _d_l(9), _d_l(10), _d_l(11)};
+    c_float u[12]; // = {_d_u(0), _d_u(1), _d_u(2), _d_u(3), _d_u(4), _d_u(5), _d_u(6), _d_u(7), _d_u(8), _d_u(9), _d_u(10), _d_u(11)};
+    c_int n = 12;
+    c_int m = 12;
 
-    VectorNd tmp_P_x = VectorNd::Zero(78);
-    VectorNd new_c = VectorNd::Zero(12);
+    
+
+
+
+//    VectorNd tmp_P_x = VectorNd::Zero(78);
+//    VectorNd new_c = VectorNd::Zero(12);
     
     // =============== for QP based balance controller END ================= //
     
+    
+    
     // ============== MPC ============== //
+    
+    OSQPWorkspace *MPC_work;
+    OSQPSettings *MPC_settings = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
+    OSQPData *MPC_data = (OSQPData *) c_malloc(sizeof (OSQPData));
+    
+    c_int MPC_exitflag = 0;
+    
     int state_num = 3;
     int output_num = 1;
     int input_num = 1;
 
-    double Ts = 0.15;
-    int Nc = 10;
-    int Np = 10 + 0;
+//    double Ts = 0.15;//0.15;//0.005;//0.15;//0.05;
+//    int Ts_cnt = 150;//150;//5;//150;//50;
+//    int Nc = 10;//10;//300;//10;//30;
+//    int Np = Nc;//10;//300;//10;//30 + 0;
+    
+    double Ts = 0.005;
+    int Ts_cnt = 5;
+    int Nc = 300;
+    int Np = Nc;
+    
+//    double Ts = 0.001;
+//    int Ts_cnt = 1;
+//    int Nc = 500;
+//    int Np = Nc;
+    
+    // it's not worked.
+//    double Ts = 0.001;
+//    int Ts_cnt = 1;
+//    int Nc = 1000;
+//    int Np = Nc;
     
     double h_com = 0.4;
     double g = 9.81;
     double new_ref = 0;
-//    
+    
     MatrixNd PHI = MatrixNd::Zero(3, 3);
     VectorNd GAM = VectorNd::Zero(3);
     MatrixNd C = MatrixNd::Zero(1,3);
@@ -1021,7 +1042,7 @@ public:
     MatrixNd Q_tilda = MatrixNd::Zero(Nc, Nc);
     MatrixNd R_tilda = MatrixNd::Zero(Nc, Nc);
     MatrixNd _Q = MatrixNd::Identity(1, 1);
-    MatrixNd _R = MatrixNd::Identity(1, 1)*pow(10,-6);
+    MatrixNd _R = MatrixNd::Identity(1, 1)*pow(10,-6)*1;
     VectorNd x_ini = VectorNd::Zero(3);
     VectorNd y_ini = VectorNd::Zero(1);
     
@@ -1050,56 +1071,79 @@ public:
     
     double input_u = 0;
 //    VectorNd input_u = VectorNd::Zero(1);
-    VectorNd new_state_x = VectorNd::Zero(3);
+    VectorNd tar_state_x = VectorNd::Zero(3);
+    VectorNd tar_output_y = VectorNd::Zero(3);
+    VectorNd next_state_x = VectorNd::Zero(3);
     VectorNd pre_state_x = VectorNd::Zero(3);
     VectorNd act_state_x = VectorNd::Zero(3);
     VectorNd act_output_y = VectorNd::Zero(1);
+    VectorNd next_output_y = VectorNd::Zero(3);
 //    double act_output_y = 0;
     
 //    double output_constraint = 0.1;
-    double input_constraint = 100.0;
-    
-//    c_float H_x[55];
-//    c_int H_nnz = 55;
-//    c_int H_i[55] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-//    
-//    c_int H_p[11] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
-    
-    c_float H_x[55];
-    c_int H_nnz = 55;
-    c_int H_i[55] = {0,
-                     0, 1,
-                     0, 1, 2,
-                     0, 1, 2, 3,
-                     0, 1, 2, 3, 4,
-                     0, 1, 2, 3, 4, 5,
-                     0, 1, 2, 3, 4, 5, 6,
-                     0, 1, 2, 3, 4, 5, 6, 7,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8,
-                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    
-    c_int H_p[11] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55};
-    
-    c_float G_x[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};//{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};//{1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    c_int G_nnz = 10;
-    c_int G_i[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    c_int G_p[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    c_float G_l[10] = {-input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint};
-    c_float G_u[10] = { input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint};
-    c_int G_n = 10;
-    c_int G_m = 10;
-    
-    c_float ff[10];
+    double input_constraint = 10000.0;
 
+//    c_int H_nnz = 55;//45150; //55
+//    c_float H_x[55];
+//    c_int H_i[55];
+//    c_int H_p[11];// = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55};
+//    c_float G_x[10];
+//    c_int G_nnz = 10;
+//    c_int G_i[10];
+//    c_int G_p[11];
+//    c_float G_l[10];
+//    c_float G_u[10];
+//    c_int G_n = 10;
+//    c_int G_m = 10;
+//    c_float ff[10];
+    
+    c_int H_nnz = 45150;
+    c_float H_x[45150];
+    c_int H_i[45150];
+    c_int H_p[301];
+    c_float G_x[300];
+    c_int G_nnz = 300;
+    c_int G_i[300];
+    c_int G_p[301];
+    c_float G_l[300];
+    c_float G_u[300];
+    c_int G_n = 300;
+    c_int G_m = 300;
+    c_float ff[300];
+    
+    // 500
+//    c_int H_nnz = 125250;
+//    c_float H_x[125250];
+//    c_int H_i[125250];
+//    c_int H_p[501];
+//    c_float G_x[500];
+//    c_int G_nnz = 500;
+//    c_int G_i[500];
+//    c_int G_p[501];
+//    c_float G_l[500];
+//    c_float G_u[500];
+//    c_int G_n = 500;
+//    c_int G_m = 500;
+//    c_float ff[500];
+    
+    // N = 1000, but not works
+//    c_int H_nnz = 500500; //55
+//    c_float H_x[500500];
+//    c_int H_i[500500];
+//    c_int H_p[1001];// = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55};
+//    c_float G_x[1000];// = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};//{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};//{1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+//    c_int G_nnz = 1000;
+//    c_int G_i[1000];// = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+//    c_int G_p[1001];// = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+//    c_float G_l[1000];// = {-input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint, -input_constraint};
+//    c_float G_u[1000];// = { input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint,  input_constraint};
+//    c_int G_n = 1000;
+//    c_int G_m = 1000;
+//    c_float ff[1000];
+
+    double tar_Fc_y;
+    VectorNd MPC_Fc = VectorNd::Zero(19);
+    
 private:
 };
 
