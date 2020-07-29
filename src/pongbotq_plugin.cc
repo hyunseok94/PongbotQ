@@ -320,6 +320,7 @@ namespace gazebo
 
     public:
         //For model load
+        
         void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
         void UpdateAlgorithm();
 
@@ -355,16 +356,6 @@ namespace gazebo
 
 void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
 {
-    //    cout << "keyboard test !" << endl;
-
-    //    char playerName;
-    //    cout << "Enter Player Name : " ;
-    //    cin >> playerName;
-    //    
-    //    char key = getch();
-    //    int value = key;
-
-
     printf("============= [Load] =============\n");
 
     this->model = _model;
@@ -544,18 +535,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
         
         if (PongBotQ.walk_ready_moving_done_flag == true) {
             PongBotQ.test_cnt = 0;
-            
-            
-            
-            // Cleanup
-//            if (PongBotQ.data) {
-//                if (PongBotQ.data->A) c_free(PongBotQ.data->A);
-//                if (PongBotQ.data->P) c_free(PongBotQ.data->P);
-//                c_free(PongBotQ.data);
-//            }
-//            if (PongBotQ.settings) c_free(PongBotQ.settings);
-            
-//            PongBotQ.MPC_Init();
+
             PongBotQ.CommandFlag = TEST_FLAG;     
         }
         else {

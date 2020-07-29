@@ -17,12 +17,12 @@ CRobot::~CRobot()
 
 void CRobot::setRobotModel(Model* getModel)
 {
-	cout << endl << "Set Robot Model Start !!" << endl;
+    cout << endl << "Set Robot Model Start !!" << endl;
     Mode = MODE_SIMULATION;
-//    Mode = MODE_ACTUAL_ROBOT;
+//        Mode = MODE_ACTUAL_ROBOT;
 
     // ============== Controller OnOff ================ //
-    Base_Ori_Con_onoff_flag = false; //false; //true; //true;
+    Base_Ori_Con_onoff_flag = true; //false; //true; //true;
     CP_con_onoff_flag = false; //true; //false;//true;
     // ============== Controller OnOff End ================ //
 
@@ -44,8 +44,17 @@ void CRobot::setRobotModel(Model* getModel)
         tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
         tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105 + 0.0, 0.0;
 
-        Kp_q << 200, 250, 250, 200, 250, 250, 30000, 200, 250, 250, 200, 250, 250;
-        Kd_q << 4, 5, 5, 4, 5, 5, 1000, 4, 5, 5, 4, 5, 5;
+        Kp_q << 300, 300, 300,
+                300, 300, 300,
+                30000,
+                300, 300, 300,
+                300, 300, 300;
+
+        Kd_q << 10, 10, 10,
+                10, 10, 10,
+                1000,
+                10, 10, 10,
+                10, 10, 10;
 
         //        FT_Kp_q << 400, 500, 500, 400, 500, 500, 5000, 400, 500, 500, 400, 500, 500;
         //        FT_Kd_q << 10, 12, 12, 10, 12, 12, 100, 10, 12, 12, 10, 12, 12;
@@ -85,27 +94,51 @@ void CRobot::setRobotModel(Model* getModel)
 
 
         // =========== Walking ============ // 
-        // 10000/472
+
+        //        Kp_t << 6000, 15000, 15000,
+        //                6000, 15000, 15000,
+        //                6000, 15000, 15000,
+        //                6000, 15000, 15000;
+        //               
+        //        Kd_t << 300, 350, 400,
+        //                300, 350, 400,
+        //                300, 350, 400,
+        //                300, 350, 400;
+
         //  2020.06.17
-        Kp_t << 4000, 4000, 4000,
-                4000, 4000, 4000,
-                4000, 4000, 4000,
-                4000, 4000, 4000;
-        
-        Kd_t << 300, 300, 300,
-                300, 300, 300,
-                300, 300, 300,
-                300, 300, 300;
-        
-//        Kp_t << 6000, 15000, 15000,
-//                6000, 15000, 15000,
-//                6000, 15000, 15000,
-//                6000, 15000, 15000;
-//               
-//        Kd_t << 300, 350, 400,
-//                300, 350, 400,
-//                300, 350, 400,
-//                300, 350, 400;
+        //        Kp_t << 4000, 4000, 4000,
+        //                4000, 4000, 4000,
+        //                4000, 4000, 4000,
+        //                4000, 4000, 4000;
+        //        
+        //        Kd_t << 300, 300, 300,
+        //                300, 300, 300,
+        //                300, 300, 300,
+        //                300, 300, 300;
+        //
+        Kp_t << 4000, 2000, 2000,
+                4000, 2000, 2000,
+                4000, 2000, 2000,
+                4000, 2000, 2000;
+
+        Kd_t << 30, 15, 15,
+                30, 15, 15,
+                30, 15, 15,
+                30, 15, 15;
+
+//        Kp_x << 1, 0, 0,
+//                0, 1, 0,
+//                0, 0, 1;
+//        Kd_x << 0.01, 0, 0,
+//                0, 0.01, 0,
+//                0, 0, 0.01;
+//
+//        Kp_w << 100, 0, 0,
+//                0, 100, 0,
+//                0, 0, 0;
+//        Kd_w << 1.0, 0, 0,
+//                0, 1.0, 0,
+//                0, 0, 0.0;
 
         Kp_x << 0, 0, 0,
                 0, 0, 0,
@@ -119,32 +152,32 @@ void CRobot::setRobotModel(Model* getModel)
         Kd_w << 0, 0, 0,
                 0, 0, 0,
                 0, 0, 0;
-        
-//        Kp_x << 1, 0, 0,
-//                0, 1, 0,
-//                0, 0, 1;
-//        Kd_x << 0.01, 0, 0,
-//                0, 0.01, 0,
-//                0, 0, 0.01;
-//        Kp_w << 1000, 0, 0,
-//                0, 100, 0,
-//                0, 0, 0;
-//        Kd_w << 5, 0, 0,
-//                0, 1, 0,
-//                0, 0, 0;
 
-//        Kp_x << 1, 0, 0,
-//                0, 10, 0,
-//                0, 0, 1;
-//        Kd_x << 0.01, 0, 0,
-//                0, 0.1, 0,
-//                0, 0, 0.01;
-//        Kp_w << 1000, 0, 0,
-//                0, 100, 0,
-//                0, 0, 0;
-//        Kd_w << 5, 0, 0,
-//                0, 1, 0,
-//                0, 0, 0;
+        //        Kp_x << 1, 0, 0,
+        //                0, 1, 0,
+        //                0, 0, 1;
+        //        Kd_x << 0.01, 0, 0,
+        //                0, 0.01, 0,
+        //                0, 0, 0.01;
+        //        Kp_w << 1000, 0, 0,
+        //                0, 100, 0,
+        //                0, 0, 0;
+        //        Kd_w << 5, 0, 0,
+        //                0, 1, 0,
+        //                0, 0, 0;
+
+        //        Kp_x << 1, 0, 0,
+        //                0, 10, 0,
+        //                0, 0, 1;
+        //        Kd_x << 0.01, 0, 0,
+        //                0, 0.1, 0,
+        //                0, 0, 0.01;
+        //        Kp_w << 1000, 0, 0,
+        //                0, 100, 0,
+        //                0, 0, 0;
+        //        Kd_w << 5, 0, 0,
+        //                0, 1, 0,
+        //                0, 0, 0;
 
 
         //        alpha_act_com_x = 0.1, alpha_act_com_y = 0.1;
@@ -154,16 +187,16 @@ void CRobot::setRobotModel(Model* getModel)
         w_cp_y2 = 0.8;
         cp_y_max = 0.08, cp_y_min = 0.03;
 
-        BOC_Kp_roll = 0; //0.0010;
-        BOC_Ki_roll = 0; //0.10; //0.003
+        BOC_Kp_roll = 0.0020;
+        BOC_Ki_roll = 0.20; //0.003
         BOC_Kp_pitch = 0; //0.0010;
         BOC_Ki_pitch = 0; //0.10;
 
     }
     else if (Mode == MODE_ACTUAL_ROBOT) {
         com_height = 0.40;
-        foot_height = 0.045;
-        swing_foot_height = 0.07;
+        foot_height = 0.05;
+        swing_foot_height = 0.05;
 
         // global init foot position
         //        tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 + 0.03, 0.0;
@@ -173,35 +206,53 @@ void CRobot::setRobotModel(Model* getModel)
         tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105, -0.0;
         tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105, -0.0;
 
-        Kp_q << 200, 400, 400, 200, 400, 400, 15000, 200, 400, 400, 200, 400, 400;
-        Kd_q << 3, 10, 10, 3, 10, 10, 300, 3, 10, 10, 3, 10, 10;
+        Kp_q << 200, 400, 400,
+                200, 400, 400,
+                15000,
+                200, 400, 400,
+                200, 400, 400;
 
-        //      FT_Kp_q << 300, 500, 500, 300, 500, 500, 5000, 300, 500, 500, 300, 500, 500;
-        //      FT_Kd_q << 5, 12, 12, 5, 12, 12, 100, 5, 12, 12, 5, 12, 12;
+        Kd_q << 5, 10, 10,
+                5, 10, 10,
+                300,
+                5, 10, 10,
+                5, 10, 10;
 
-        //      Kp_t << 1500, 1500, 2500, 1500, 1500, 2500, 1500, 1500, 2500, 1500, 1500, 2500;
-        //      Kd_t << 50, 50, 100, 50, 50, 100, 50, 50, 100, 50, 50, 100;
+        Kp_t << 4000, 3000, 2500,
+                4000, 3000, 2500,
+                4000, 3000, 2500,
+                4000, 3000, 3000;
 
-        //	    Kp_t << 2500, 2500, 5000, 2500, 2500, 5000, 2500, 2500, 5000, 2500, 2500, 5000;
-        //		Kd_t << 100, 100, 200, 100, 100, 200, 100, 100, 200, 100, 100, 200;
+        Kd_t << 50, 30, 30,
+                50, 30, 30,
+                50, 30, 30,
+                50, 30, 40;
 
-        //        Kp_t << 2500, 2500, 4000, 2500, 2500, 4000, 2500, 2500, 4000, 2500, 2500, 4000;
-        //        Kd_t << 100, 100, 150, 100, 100, 150, 100, 100, 150, 100, 100, 150;
+//        Kp_x << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
+//        Kd_x << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
+//        Kp_w << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
+//        Kd_w << 0, 0, 0,
+//                0, 0, 0,
+//                0, 0, 0;
 
-        //        Kp_t << 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 4000;
-        //        Kd_t << 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150;
-
-        //        Kp_t << 1500, 1500, 3500, 1500, 1500, 3500, 1500, 1500, 3500, 1500, 1500, 5500;
-        //        Kd_t << 50, 50, 130, 50, 50, 130, 50, 50, 130, 50, 50, 150;
-
-        //        Kp_t << 2000, 2000, 4000,
-        //        		2000, 2000, 4000,
-        //        		2000, 2000, 4000,
-        //        		2000, 2000, 5200;
-        //        Kd_t << 80, 80, 140,
-        //                80, 80, 140,
-        //                80, 80, 140,
-        //                80, 80, 150;
+		Kp_x << 1, 0, 0,
+				0, 1, 0,
+				0, 0, 1;
+		Kd_x << 0.01, 0, 0,
+				0, 0.01, 0,
+				0, 0, 0.01;
+		Kp_w << 500, 0, 0,
+				0, 400, 0,
+				0, 0, 0;
+		Kd_w << 5.0, 0, 0,
+				0, 4.0, 0,
+				0, 0, 0;
 
 
         //        Kp_t << 2000, 2500, 4000,
@@ -237,69 +288,68 @@ void CRobot::setRobotModel(Model* getModel)
         //                0, 0, 0;
 
         // 2020.06.22
-//        Kp_t << 4000, 4000, 4500,
-//                4000, 4000, 4500,
-//                4000, 4000, 4500,
-//                5000, 4000, 5500;
-//        Kd_t << 150, 150, 150,
-//                150, 150, 150,
-//                150, 150, 150,
-//                170, 150, 200;
-//        
-        Kp_x << 1, 0, 0,
-                0, 1, 0,
-                0, 0, 100;
-        Kd_x << 0.1, 0, 0,
-                0, 0.1, 0,
-                0, 0, 1.0;
-        Kp_w << 800, 0, 0,
-                0, 800, 0,
-                0, 0, 0;
-        Kd_w << 1.0, 0, 0,
-                0, 1, 0,
-                0, 0, 0;
+        //        Kp_t << 4000, 4000, 4500,
+        //                4000, 4000, 4500,
+        //                4000, 4000, 4500,
+        //                5000, 4000, 5500;
+        //        Kd_t << 150, 150, 150,
+        //                150, 150, 150,
+        //                150, 150, 150,
+        //                170, 150, 200;
+
+        //        Kp_t << 5000, 4000, 9500,
+        //                5000, 4000, 9500,
+        //                5000, 4000, 9500,
+        //                5000, 4000, 9500;
+        //        Kd_t << 100, 80, 300,
+        //                100, 80, 300,
+        //                100, 80, 300,
+        //                100, 80, 300;
 
 
-//        Kp_t << 5000, 4000, 9500,
-//                5000, 4000, 9500,
-//                5000, 4000, 9500,
-//                5000, 4000, 9500;
-//        Kd_t << 100, 80, 300,
-//                100, 80, 300,
-//                100, 80, 300,
-//                100, 80, 300;
+        //        Kp_t << 5000, 5000, 4000,
+        //        		5000, 5000, 3000,
+        //        		5000, 5000, 3000,
+        //        		5000, 5000, 4000;
+        //        Kd_t << 100, 100, 80,
+        //                100, 100, 50,
+        //                100, 100, 50,
+        //                100, 100, 80;
 
+        //        Kp_t << 5000, 4000, 4500,
+        //                5000, 4000, 4000,
+        //                5000, 4000, 4000,
+        //                5000, 4000, 4500;
+        //        Kd_t << 60, 50, 55,
+        //                60, 50, 40,
+        //                60, 50, 40,
+        //                60, 50, 55;
 
-//        Kp_t << 5000, 5000, 4000,
-//        		5000, 5000, 3000,
-//        		5000, 5000, 3000,
-//        		5000, 5000, 4000;
-//        Kd_t << 100, 100, 80,
-//                100, 100, 50,
-//                100, 100, 50,
-//                100, 100, 80;
+        // 2020.07.22
+//        Kp_t << 5000, 5000, 3000,
+//                5000, 5000, 2500,
+//                5000, 5000, 2500,
+//                5000, 5000, 3000;
+//        Kd_t << 60, 60, 35,
+//                60, 60, 30,
+//                60, 60, 30,
+//                60, 60, 35;
 
-        Kp_t << 5000, 5000, 2000,
-                5000, 5000, 2000,
-                5000, 5000, 2000,
-                5000, 5000, 2000;
-        Kd_t << 100, 100, 20,
-                100, 100, 20,
-                100, 100, 20,
-                100, 100, 20;
-
-//        Kp_x << 0, 0, 0,
-//                0, 0, 0,
+//        Kp_x << 1, 0, 0,
+//                0, 1, 0,
+//                0, 0, 1;
+//        Kd_x << 0.01, 0, 0,
+//                0, 0.01, 0,
+//                0, 0, 0.01;
+//        Kp_w << 800, 0, 0,
+//                0, 100, 0,
 //                0, 0, 0;
-//        Kd_x << 0, 0, 0,
-//                0, 0, 0,
+//        Kd_w << 8.0, 0, 0,
+//                0, 1.0, 0,
 //                0, 0, 0;
-//        Kp_w << 0, 0, 0,
-//                0, 0, 0,
-//                0, 0, 0;
-//        Kd_w << 0, 0, 0,
-//                0, 0, 0,
-//                0, 0, 0;
+
+
+
 
         //        alpha_act_com_x = 0.01, alpha_act_com_y = 0.01;
         //        weight_cp_x = 0.5, weight_cp_y = 0.9;
@@ -308,12 +358,17 @@ void CRobot::setRobotModel(Model* getModel)
         w_cp_y2 = 1.2;
         cp_y_max = 0.06, cp_y_min = 0.02;
 
-        BOC_Kp_roll = 0; //0.00010;
-        BOC_Ki_roll = 0; //0.010; //0.003
+        BOC_Kp_roll = 0.0010;
+        BOC_Ki_roll = 0.10; //0.003
         BOC_Kp_pitch = 0; //0.00010;
         BOC_Ki_pitch = 0; //0.010;
 
     }
+
+    RL_foot_pos = tar_init_RL_foot_pos;
+    RR_foot_pos = tar_init_RR_foot_pos;
+    FL_foot_pos = tar_init_FL_foot_pos;
+    FR_foot_pos = tar_init_FR_foot_pos;
 
     init_base_pos << 0, 0, com_height;
     init_base_ori << 0, 0, 0;
@@ -349,8 +404,8 @@ void CRobot::setRobotModel(Model* getModel)
 
     VectorNd com_offset = VectorNd::Zero(3);
     VectorNd tmp_init_com_pos = VectorNd::Zero(3);
-        com_offset << -0.0, 0, 0;
-//    com_offset << 0.0, 0, 0;
+    com_offset << 0.03, 0, 0;
+    //    com_offset << 0.0, 0, 0;
     tmp_init_com_pos = Get_COM(base_pos_ori, target_pos);
     init_com_pos = tmp_init_com_pos + com_offset;
 
@@ -437,64 +492,16 @@ void CRobot::setRobotModel(Model* getModel)
     tmp_CTC_Torque = CTC_Torque;
 
     QP_Con_Init();
-    
+
     MPC_Con_Init();
-    
-    
+
+
     cout << endl << "Set Robot Model End !!" << endl;
 }
 
 
 
-MatrixNd CRobot::pow_mat(MatrixNd mat, int x){
-    
-    MatrixNd Out = MatrixNd::Zero(mat.rows(), mat.cols());
-    
-//    cout << "[1] Out = " << Out << endl;
-    
-    if(x == 0){
-        Out = MatrixNd::Identity(mat.rows(), mat.cols());
-    }
-    else{
-        for(int i = 0; i< x ; ++i){
-            if(i == 0){
-                Out = mat;
-            }
-            else{
-                Out = Out*mat;
-            }
-        }
-    }
-    
-//    cout << "[2] Out = " << Out << endl;
-    
-    return Out;
-}
 
-MatrixNd CRobot::Kron(MatrixNd AA, MatrixNd BB){
-
-    MatrixNd Out = MatrixNd::Zero(AA.rows()*BB.rows(), AA.cols()*BB.cols());
-//    cout << "AA = " << AA << endl;
-//    cout << "BB = " << BB << endl;
-//    cout << "Out(0,0) = " << Out(0,0) << endl;
-    
-    for(int i = 0; i<AA.rows(); i++){
-        for(int j = 0; j<AA.cols(); j++){
-            for(int k = 0; k<BB.rows(); k++){
-                for(int l = 0; l<BB.cols(); l++){
-                    Out(i*BB.rows()+k,j*BB.cols()+l) = AA(i,j) * BB(k,l);
-//                    cout << "Out index = " << i+k << j+l << endl;
-//                    cout << i << j<< k << l << endl;
-//                    Out[0,0] = A[0,0] * B[0,0];
-                }
-            }
-        }
-    }
-    
-//    cout << "Out = " << Out << endl;
-    
-   return Out;
-}
 
 // ============================================================================================ //
 
@@ -514,7 +521,7 @@ void CRobot::StateUpdate(void)
     RobotStatedot(AXIS_Yaw) = base_ori_dot(2); //base.currentYawvel;
 
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
-//    	tar_RobotState(6 + nJoint) = target_pos[nJoint];
+        //    	tar_RobotState(6 + nJoint) = target_pos[nJoint];
         RobotState(6 + nJoint) = actual_pos[nJoint];
         RobotStatedot(6 + nJoint) = actual_vel[nJoint];
         RobotState2dot(6 + nJoint) = actual_acc[nJoint];
@@ -528,14 +535,14 @@ void CRobot::StateUpdate(void)
     m_pModel->SetQuaternion(base.ID, QQ, RobotState);
 
     FK2();
-    
+
     Get_act_com();
 }
 
 void CRobot::ComputeTorqueControl()
 {
     // ================= Cal Jacobian ================= //
-//	cout << "1" << endl;
+    //	cout << "1" << endl;
 
     CalcPointJacobian6D(*m_pModel, RobotState, base.ID, Originbase, J_BASE, true);
     CalcPointJacobian6D(*m_pModel, RobotState, front_body.ID, Originbase, J_FRONT_BODY, true);
@@ -544,7 +551,7 @@ void CRobot::ComputeTorqueControl()
     CalcPointJacobian(*m_pModel, RobotState, FL.ID, EP_OFFSET_FL, J_FL, true);
     CalcPointJacobian(*m_pModel, RobotState, FR.ID, EP_OFFSET_FR, J_FR, true);
 
- //   cout << J_RL << endl;
+    //   cout << J_RL << endl;
     J_A.block(0, 0, 6, 19) = J_BASE;
     J_A.block(6, 0, 1, 19) = J_FRONT_BODY.block(2, 0, 1, 19); // only yaw
     J_A.block(7, 0, 3, 19) = J_RL;
@@ -552,75 +559,82 @@ void CRobot::ComputeTorqueControl()
     J_A.block(13, 0, 3, 19) = J_FL;
     J_A.block(16, 0, 3, 19) = J_FR;
 
-//    cout << J_RL.block(0,6,3,3) << endl;
+    //    cout << J_RL.block(0,6,3,3) << endl;
 
-    J_RL2 << J_RL.block(0,6,3,3);
-    J_RR2 << J_RR.block(0,9,3,3);
-    J_FL2 << J_FL.block(0,13,3,3);
-    J_FR2 << J_FR.block(0,16,3,3);
-    
-    act_RL_q_dot << actual_vel[0],actual_vel[1],actual_vel[2];
-    act_RR_q_dot << actual_vel[3],actual_vel[4],actual_vel[5];
-    act_FL_q_dot << actual_vel[7],actual_vel[8],actual_vel[9];
-    act_FR_q_dot << actual_vel[10],actual_vel[11],actual_vel[12];
-    
+    J_RL2 << J_RL.block(0, 6, 3, 3);
+    J_RR2 << J_RR.block(0, 9, 3, 3);
+    J_FL2 << J_FL.block(0, 13, 3, 3);
+    J_FR2 << J_FR.block(0, 16, 3, 3);
+
+    act_RL_q_dot << actual_vel[0], actual_vel[1], actual_vel[2];
+    act_RR_q_dot << actual_vel[3], actual_vel[4], actual_vel[5];
+    act_FL_q_dot << actual_vel[7], actual_vel[8], actual_vel[9];
+    act_FR_q_dot << actual_vel[10], actual_vel[11], actual_vel[12];
+
     act_RL_foot_vel = J_RL2*act_RL_q_dot;
     act_RR_foot_vel = J_RR2*act_RR_q_dot;
     act_FL_foot_vel = J_FL2*act_FL_q_dot;
     act_FR_foot_vel = J_FR2*act_FR_q_dot;
-    
-    actual_EP_vel << act_RL_foot_vel, act_RR_foot_vel, act_FL_foot_vel, act_FR_foot_vel;
-//    act_RR_foot_vel = J_RR2*tar_RR_foot_vel_local;
-//    act_FL_foot_vel = J_FL2*tar_FL_foot_vel_local;
-//    act_FR_foot_vel = J_FR2*tar_FR_foot_vel_local;
 
-//    cout << J_RL2 << endl;
+    actual_EP_vel << act_RL_foot_vel, act_RR_foot_vel, act_FL_foot_vel, act_FR_foot_vel;
+    //    act_RR_foot_vel = J_RR2*tar_RR_foot_vel_local;
+    //    act_FL_foot_vel = J_FL2*tar_FL_foot_vel_local;
+    //    act_FR_foot_vel = J_FR2*tar_FR_foot_vel_local;
+
+    //    cout << J_RL2 << endl;
 
     // ================= Cal Jacobian END ================= //
 
-//    x_dot = J_A*RobotStatedot;
-//    actual_EP_vel = x_dot.block(7, 0, 12, 1);
+    //    x_dot = J_A*RobotStatedot;
+    //    actual_EP_vel = x_dot.block(7, 0, 12, 1);
 
     tar_RL_foot_pos_local = (RL_foot_pos + RL_cp_foot_pos - base_pos) + RL_foot_pos_local_offset;
     tar_RR_foot_pos_local = (RR_foot_pos + RR_cp_foot_pos - base_pos) + RR_foot_pos_local_offset;
     tar_FL_foot_pos_local = (FL_foot_pos + FL_cp_foot_pos - base_pos) + FL_foot_pos_local_offset;
     tar_FR_foot_pos_local = (FR_foot_pos + FR_cp_foot_pos - base_pos) + FR_foot_pos_local_offset;
-    
-//    cout << "target_RL_foot_pos_z = " << tar_RL_foot_pos_local[2] << endl;
-    
+
+    //    cout << "target_RL_foot_pos_z = " << tar_RL_foot_pos_local[2] << endl;
+
     base_vel = com_vel;
-    
+
     tar_RL_foot_vel_local = RL_foot_vel + RL_cp_foot_vel - base_vel;
     tar_RR_foot_vel_local = RR_foot_vel + RR_cp_foot_vel - base_vel;
     tar_FL_foot_vel_local = FL_foot_vel + FL_cp_foot_vel - base_vel;
     tar_FR_foot_vel_local = FR_foot_vel + FR_cp_foot_vel - base_vel;
-    
-//    cout << "RL_foot_vel[2] = " << RL_foot_vel[2] << endl;
-//    cout << "RL_cp_foot_vel[2] = " << RL_cp_foot_vel[2] << endl;
-//    cout << "base_vel[2] = " << base_vel[2] << endl;
-//    cout << "target_RL_foot_vel_z = " << tar_RL_foot_vel_local[2] << endl;
-//    
-//    cout << "==========================" << endl;
+
+    //    cout << "RL_foot_vel[2] = " << RL_foot_vel[2] << endl;
+    //    cout << "RL_cp_foot_vel[2] = " << RL_cp_foot_vel[2] << endl;
+    //    cout << "base_vel[2] = " << base_vel[2] << endl;
+    //    cout << "target_RL_foot_vel_z = " << tar_RL_foot_vel_local[2] << endl;
+    //    
+    //    cout << "==========================" << endl;
 
     target_EP << tar_RL_foot_pos_local, tar_RR_foot_pos_local, tar_FL_foot_pos_local, tar_FR_foot_pos_local;
     actual_EP << act_RL_foot_pos_local, act_RR_foot_pos_local, act_FL_foot_pos_local, act_FR_foot_pos_local;
 
     target_EP_vel << tar_RL_foot_vel_local, tar_RR_foot_vel_local, tar_FL_foot_vel_local, tar_FR_foot_vel_local;
-    
+
     target_pos = IK1(target_EP);
 
-    tar_RL_q_dot = J_RL2.inverse()*tar_RL_foot_vel_local;
-    tar_RR_q_dot = J_RR2.inverse()*tar_RR_foot_vel_local;
-    tar_FL_q_dot = J_FL2.inverse()*tar_FL_foot_vel_local;
-    tar_FR_q_dot = J_FR2.inverse()*tar_FR_foot_vel_local;
+    tar_RL_q_dot = J_RL2.inverse() * tar_RL_foot_vel_local;
+    tar_RR_q_dot = J_RR2.inverse() * tar_RR_foot_vel_local;
+    tar_FL_q_dot = J_FL2.inverse() * tar_FL_foot_vel_local;
+    tar_FR_q_dot = J_FR2.inverse() * tar_FR_foot_vel_local;
 
-    target_vel << tar_RL_q_dot, tar_RR_q_dot, 0 ,tar_FL_q_dot, tar_FR_q_dot;
+    target_vel << tar_RL_q_dot, tar_RR_q_dot, 0, tar_FL_q_dot, tar_FR_q_dot;
 
     for (unsigned int i = 0; i < 12; ++i) {
 
-        pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(target_EP_vel[i] - actual_EP_vel[i]); // + target_EP_offset[i];
+        //    pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(target_EP_vel[i] - actual_EP_vel[i]); // + target_EP_offset[i];
+        pd_con_task[i + 7] = Kp_t[i]*(target_EP[i] - actual_EP[i]) + Kd_t[i]*(0 - actual_EP_vel[i]);
 
         tmp_data1[i] = Fc(i + 7);
+    }
+
+    for (unsigned int i = 0; i < 13; ++i) {
+        pd_con_joint[i + 6] = Kp_q[i]*(target_pos[i] - actual_pos[i]) + Kd_q[i]*(target_vel[i] - actual_vel[i]);
+
+        tmp_data1[i + 12] = (target_pos[i] - actual_pos[i]) * R2D;
     }
 
     CompositeRigidBodyAlgorithm(*m_pModel, RobotState, M_term, true);
@@ -629,12 +643,13 @@ void CRobot::ComputeTorqueControl()
     C_term = hatNonLinearEffects - G_term;
 
     //	Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
-    
-    MPC_Fc << 0,0,0,0,0,0,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0;
 
-//    cout << "Torque by MPC_FC = " << - J_A.transpose() * (MPC_Fc) << endl;
-    
-    CTC_Torque = fc_weight * (C_term + G_term - J_A.transpose() * (Fc - pd_con_task + MPC_Fc*10));
+    //    MPC_Fc << 0,0,0,0,0,0,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0, 0,tar_Fc_y/4,0;
+
+    //    cout << "Torque by MPC_FC = " << - J_A.transpose() * (MPC_Fc) << endl;
+
+    //    CTC_Torque = fc_weight * (C_term + G_term - J_A.transpose() * (Fc - pd_con_task + MPC_Fc*10));
+    CTC_Torque = fc_weight * (C_term + G_term - J_A.transpose() * (Fc - pd_con_task)) + pd_con_joint;
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
@@ -643,14 +658,14 @@ void CRobot::ComputeTorqueControl()
     tmp_data2[0] = (double) tmp_cnt5*dt;
 
     tmp_cnt5++;
-    
+
     tmp_data2[1] = com_pos(0);
     tmp_data2[2] = com_pos(1);
     tmp_data2[3] = com_pos(2);
     tmp_data2[4] = act_com_pos(0);
     tmp_data2[5] = act_com_pos(1);
     tmp_data2[6] = act_com_pos(2);
-    
+
     tmp_data2[29] = com_vel(0);
     tmp_data2[30] = com_vel(1);
     tmp_data2[31] = com_vel(2);
@@ -660,85 +675,85 @@ void CRobot::ComputeTorqueControl()
     tmp_data2[41] = tmp_com_vel(0);
     tmp_data2[42] = tmp_com_vel(1);
     tmp_data2[43] = tmp_com_vel(2);
-    
+
     tmp_data2[44] = actual_EP_vel[0];
     tmp_data2[45] = actual_EP_vel[3];
     tmp_data2[46] = actual_EP_vel[6];
     tmp_data2[47] = actual_EP_vel[9];
 
     tmp_data2[7] = base_ori(0) * R2D; // [deg]
-    tmp_data2[8] = base_ori(1) * R2D; 
-    tmp_data2[9] = base_ori(2) * R2D; 
+    tmp_data2[8] = base_ori(1) * R2D;
+    tmp_data2[9] = base_ori(2) * R2D;
     tmp_data2[10] = act_base_ori(0) * R2D; // [deg]
-    tmp_data2[11] = act_base_ori(1) * R2D; 
-    tmp_data2[12] = act_base_ori(2) * R2D; 
-    
+    tmp_data2[11] = act_base_ori(1) * R2D;
+    tmp_data2[12] = act_base_ori(2) * R2D;
+
     tmp_data2[35] = base_ori_dot(0) * R2D; // [deg/s]
-    tmp_data2[36] = base_ori_dot(1) * R2D; 
-    tmp_data2[37] = base_ori_dot(2) * R2D; 
+    tmp_data2[36] = base_ori_dot(1) * R2D;
+    tmp_data2[37] = base_ori_dot(2) * R2D;
     tmp_data2[38] = act_base_ori_dot(0) * R2D; // [deg/s]
     tmp_data2[39] = act_base_ori_dot(1) * R2D;
     tmp_data2[40] = act_base_ori_dot(2) * R2D;
 
-    tmp_data2[13] = RL_foot_pos(0);//tar_RL_foot_pos_local(0); //RL_foot_pos(0);
-    tmp_data2[14] = RL_foot_pos(1);//tar_RL_foot_pos_local(1); //RL_foot_pos(1);
-    tmp_data2[15] = RL_foot_pos(2);//tar_RL_foot_pos_local(2); //RL_foot_pos(2);
-    tmp_data2[16] = RR_foot_pos(0);//tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
-    tmp_data2[17] = RR_foot_pos(1);//tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
-    tmp_data2[18] = RR_foot_pos(2);//tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
-    tmp_data2[19] = FL_foot_pos(0);//tar_RL_foot_pos_local(0); //RL_foot_pos(0);
-    tmp_data2[20] = FL_foot_pos(1);//tar_RL_foot_pos_local(1); //RL_foot_pos(1);
-    tmp_data2[21] = FL_foot_pos(2);//tar_RL_foot_pos_local(2); //RL_foot_pos(2);
-    tmp_data2[22] = FR_foot_pos(0);//tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
-    tmp_data2[23] = FR_foot_pos(1);//tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
-    tmp_data2[24] = FR_foot_pos(2);//tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
+    tmp_data2[13] = RL_foot_pos(0); //tar_RL_foot_pos_local(0); //RL_foot_pos(0);
+    tmp_data2[14] = RL_foot_pos(1); //tar_RL_foot_pos_local(1); //RL_foot_pos(1);
+    tmp_data2[15] = RL_foot_pos(2); //tar_RL_foot_pos_local(2); //RL_foot_pos(2);
+    tmp_data2[16] = RR_foot_pos(0); //tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
+    tmp_data2[17] = RR_foot_pos(1); //tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
+    tmp_data2[18] = RR_foot_pos(2); //tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
+    tmp_data2[19] = FL_foot_pos(0); //tar_RL_foot_pos_local(0); //RL_foot_pos(0);
+    tmp_data2[20] = FL_foot_pos(1); //tar_RL_foot_pos_local(1); //RL_foot_pos(1);
+    tmp_data2[21] = FL_foot_pos(2); //tar_RL_foot_pos_local(2); //RL_foot_pos(2);
+    tmp_data2[22] = FR_foot_pos(0); //tar_RR_foot_pos_local(0); //act_RL_foot_pos(0);
+    tmp_data2[23] = FR_foot_pos(1); //tar_RR_foot_pos_local(1); //act_RL_foot_pos(1);
+    tmp_data2[24] = FR_foot_pos(2); //tar_RR_foot_pos_local(2); //act_RL_foot_pos(2);
 
     tmp_data2[25] = joint[0].torque;
     tmp_data2[26] = joint[1].torque;
     tmp_data2[27] = joint[2].torque;
-    
-    tmp_data2[28] = ft_phase*0.1;
-    
+
+    tmp_data2[28] = ft_phase * 0.1;
+
     tmp_data2[48] = com_acc(0);
     tmp_data2[49] = com_acc(1);
     tmp_data2[50] = com_acc(2);
-    
+
     tmp_data2[51] = act_com_acc(0);
     tmp_data2[52] = act_com_acc(1);
     tmp_data2[53] = act_com_acc(2);
 
-    
 
 
 
-//    tmp_data2[28] = IMURoll * R2D;
-//    tmp_data2[29] = IMUPitch * R2D;
 
-//    tmp_data1[12] = tar_FL_foot_pos_local(0);
-//    tmp_data1[13] = tar_FL_foot_pos_local(1);
-//    tmp_data1[14] = tar_FL_foot_pos_local(2);
-//    tmp_data1[15] = tar_FR_foot_pos_local(0);
-//    tmp_data1[16] = tar_FR_foot_pos_local(1);
-//    tmp_data1[17] = tar_FR_foot_pos_local(2);
+    //    tmp_data2[28] = IMURoll * R2D;
+    //    tmp_data2[29] = IMUPitch * R2D;
 
-//    tmp_data1[18] = target_EP_vel[0];
-//    tmp_data1[19] = target_EP_vel[1];
-//    tmp_data1[20] = target_EP_vel[2];
+    //    tmp_data1[12] = tar_FL_foot_pos_local(0);
+    //    tmp_data1[13] = tar_FL_foot_pos_local(1);
+    //    tmp_data1[14] = tar_FL_foot_pos_local(2);
+    //    tmp_data1[15] = tar_FR_foot_pos_local(0);
+    //    tmp_data1[16] = tar_FR_foot_pos_local(1);
+    //    tmp_data1[17] = tar_FR_foot_pos_local(2);
 
-    tmp_data1[21] = RL_foot_vel[0];//base_pos[0];
-    tmp_data1[22] = RL_foot_vel[1];
-    tmp_data1[23] = RL_foot_vel[2];
-    tmp_data1[24] = RR_foot_vel[0];//base_pos[0];
-    tmp_data1[25] = RR_foot_vel[1];
-    tmp_data1[26] = RR_foot_vel[2];
-    tmp_data1[27] = FL_foot_vel[0];//base_pos[0];
-    tmp_data1[28] = FL_foot_vel[1];
-    tmp_data1[29] = FL_foot_vel[2];
-    tmp_data1[30] = FR_foot_vel[0];//base_pos[0];
-    tmp_data1[31] = FR_foot_vel[1];
-    tmp_data1[32] = FR_foot_vel[2];
-    
-    
+    //    tmp_data1[18] = target_EP_vel[0];
+    //    tmp_data1[19] = target_EP_vel[1];
+    //    tmp_data1[20] = target_EP_vel[2];
+
+    //    tmp_data1[21] = RL_foot_vel[0];//base_pos[0];
+    //    tmp_data1[22] = RL_foot_vel[1];
+    //    tmp_data1[23] = RL_foot_vel[2];
+    //    tmp_data1[24] = RR_foot_vel[0];//base_pos[0];
+    //    tmp_data1[25] = RR_foot_vel[1];
+    //    tmp_data1[26] = RR_foot_vel[2];
+    //    tmp_data1[27] = FL_foot_vel[0];//base_pos[0];
+    //    tmp_data1[28] = FL_foot_vel[1];
+    //    tmp_data1[29] = FL_foot_vel[2];
+    //    tmp_data1[30] = FR_foot_vel[0];//base_pos[0];
+    //    tmp_data1[31] = FR_foot_vel[1];
+    //    tmp_data1[32] = FR_foot_vel[2];
+
+
     //    tmp_data1[22] = target_EP_vel[2];
 
     //    tmp_data1[12] = base_ori_dot(0);
@@ -800,6 +815,7 @@ void CRobot::ComputeTorqueControl()
 
 void CRobot::QP_Con_Init(void)
 {
+    cout << "QP Init Start !! " << endl;
     // Selection matrix
     S_mat.block<6, 19>(0, 0) = MatrixNd::Zero(6, 19);
     S_mat.block<13, 6>(6, 0) = MatrixNd::Zero(13, 6);
@@ -838,109 +854,148 @@ void CRobot::QP_Con_Init(void)
     _b << _m * (des_x_2dot + _g),
             _I_g*des_w_dot;
 
-    fx_max = 100;
-    fx_min = -100;
-    fy_max = 100;
-    fy_min = -100;
-    fz_max = 1000;
-    fz_min = 0;
-
-    _d_u << fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max, fx_max, fy_max, fz_max;
-    _d_l << fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min, fx_min, fy_min, fz_min;
+    //    fx_max = 50;
+    //    fx_min = -50;
+    //    fy_max = 50;
+    //    fy_min = -50;
 
     _P = _A.transpose() * _S * _A + _alpha*_W;
     _q = -_A.transpose() * _S*_b;
 
     // ===================== OSQP  ====================== //
 
-    
+
     int jj = 0;
     int kk = 0;
     int max_jj = 0;
-    
+
     // ===================== P_x ====================== //
-    for(unsigned int i = 0;i<P_nnz;++i){
-        P_x[i] = _P(jj,kk);
+    for (unsigned int i = 0; i < P_nnz; ++i) {
+        P_x[i] = _P(jj, kk);
         jj = jj + 1;
-        
-        if(jj > max_jj){
+
+        if (jj > max_jj) {
             jj = 0;
             kk = kk + 1;
             max_jj = max_jj + 1;
-        }  
-//        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
+        }
+        //        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
     }
-    
+
     // ===================== P_i ====================== //
     jj = 0;
     max_jj = 0;
-    
-    for(unsigned int i = 0;i<P_nnz;++i){
+
+    for (unsigned int i = 0; i < P_nnz; ++i) {
         P_i[i] = jj;
         jj = jj + 1;
-        
-        if(jj > max_jj){
+
+        if (jj > max_jj) {
             jj = 0;
             max_jj = max_jj + 1;
-        }  
-        
-//        cout << "i = " << i << ", P_i = " << P_i[i] << endl; 
+        }
+        //        cout << "i = " << i << ", P_i = " << P_i[i] << endl; 
     }
-    
+
     // ===================== P_p ====================== //
     P_p[0] = 0;
-    for(unsigned int i = 1;i<A_nnz+1;++i){
-        P_p[i] = P_p[i-1] + i;
-        
-//        cout << "i = " << i-1 << ", P_p = " << P_p[i-1] << endl; 
+    for (unsigned int i = 1; i < A_nnz + 1; ++i) {
+        P_p[i] = P_p[i - 1] + i;
+
+        //        cout << "i = " << i-1 << ", P_p = " << P_p[i-1] << endl; 
     }
-//    cout << "i = " << A_nnz << ", P_p = " << P_p[A_nnz] << endl;
-    
+    //    cout << "i = " << A_nnz << ", P_p = " << P_p[A_nnz] << endl;
+
     // ===================== A_x ====================== //
-    
-    for(unsigned int i = 0;i<A_nnz;++i){
+
+    for (unsigned int i = 0; i < A_nnz; ++i) {
         A_x[i] = 1;
-        
-//        cout << "i = " << i << ", A_x = " << A_x[i] << endl; 
+
+        //        cout << "i = " << i << ", A_x = " << A_x[i] << endl; 
     }
-    
+
     // ===================== A_i ====================== //
 
-    for(unsigned int i = 0;i<A_nnz;++i){
+    for (unsigned int i = 0; i < A_nnz; ++i) {
         A_i[i] = i;
 
-//        cout << "i = " << i << ", A_i = " << A_i[i] << endl; 
+        //        cout << "i = " << i << ", A_i = " << A_i[i] << endl; 
     }
-    
+
     // ===================== A_p ====================== //
     jj = 0;
-    for(unsigned int i = 0;i<A_nnz+1;++i){
+    for (unsigned int i = 0; i < A_nnz + 1; ++i) {
         A_p[i] = jj;
 
         jj = jj + 1;
-        
-//        cout << "i = " << i << ", A_p = " << A_p[i] << endl; 
+
+        //        cout << "i = " << i << ", A_p = " << A_p[i] << endl; 
     }
-//        cout << "i = " << A_nnz << ", A_p = " << A_p[A_nnz] << endl; 
+    //        cout << "i = " << A_nnz << ", A_p = " << A_p[A_nnz] << endl; 
     // ===================== G_l & G_u ====================== //
-    
-    c_vec << _c(0),_c(0),_c(0),_c(1),_c(1),_c(1),_c(2),_c(2),_c(2),_c(3),_c(3),_c(3);
-    
-//    cout << "c_vec = " << c_vec.transpose() << endl;
-        
-    for(unsigned int i = 0;i<A_nnz;++i){
-        l[i] = c_vec(i)*_d_l(i);
-        u[i] = c_vec(i)*_d_u(i);
-        
-//        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
-//        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
-//        cout << "==============================" << endl;
+
+    //    fz_max = 500;
+    //    fz_min = 0;
+
+
+
+    if (_c(0) == 0) {
+        fz_RL_max = 0;
+        fz_RL_min = 0;
+    }
+    else {
+        fz_RL_max = 500;
+        fz_RL_min = 0;
     }
 
-    for(unsigned int i = 0;i<A_nnz;++i){
+    if (_c(1) == 0) {
+        fz_RR_max = 0;
+        fz_RR_min = 0;
+    }
+    else {
+        fz_RR_max = 500;
+        fz_RR_min = 0;
+    }
+
+    if (_c(2) == 0) {
+        fz_FL_max = 0;
+        fz_FL_min = 0;
+    }
+    else {
+        fz_FL_max = 500;
+        fz_FL_min = 0;
+    }
+
+    if (_c(3) == 0) {
+        fz_FR_max = 0;
+        fz_FR_min = 0;
+    }
+    else {
+        fz_FR_max = 500;
+        fz_FR_min = 0;
+    }
+
+    _d_u << mu * abs(Fc(2 + 7)), mu * abs(Fc(2 + 7)), fz_RL_max, mu * abs(Fc(5 + 7)), mu * abs(Fc(5 + 7)), fz_RR_max, mu * abs(Fc(8 + 7)), mu * abs(Fc(8 + 7)), fz_FL_max, mu * abs(Fc(11 + 7)), mu * abs(Fc(11 + 7)), fz_FR_max;
+    _d_l << -mu * abs(Fc(2 + 7)), -mu * abs(Fc(2 + 7)), fz_RL_min, -mu * abs(Fc(5 + 7)), -mu * abs(Fc(5 + 7)), fz_RR_min, -mu * abs(Fc(8 + 7)), -mu * abs(Fc(8 + 7)), fz_FL_min, -mu * abs(Fc(11 + 7)), -mu * abs(Fc(11 + 7)), fz_FR_min;
+
+
+    //    c_vec << _c(0),_c(0),_c(0),_c(1),_c(1),_c(1),_c(2),_c(2),_c(2),_c(3),_c(3),_c(3);
+
+    //    cout << "c_vec = " << c_vec.transpose() << endl;
+
+    for (unsigned int i = 0; i < A_nnz; ++i) {
+        l[i] = _d_l(i);
+        u[i] = _d_u(i);
+
+        //        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
+        //        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
+        //        cout << "==============================" << endl;
+    }
+
+    for (unsigned int i = 0; i < A_nnz; ++i) {
         q[i] = _q(i);
     }
-    
+
     // Populate data
     if (QP_data) {
         QP_data->n = n;
@@ -964,11 +1019,13 @@ void CRobot::QP_Con_Init(void)
     // Solve Problem
     osqp_solve(QP_work);
 
+
     cout << "[RL] x = " << QP_work->solution->x[0] << ", y = " << QP_work->solution->x[1] << ", z = " << QP_work->solution->x[2] << endl;
     cout << "[RR] x = " << QP_work->solution->x[3] << ", y = " << QP_work->solution->x[4] << ", z = " << QP_work->solution->x[5] << endl;
     cout << "[FL] x = " << QP_work->solution->x[6] << ", y = " << QP_work->solution->x[7] << ", z = " << QP_work->solution->x[8] << endl;
     cout << "[FR] x = " << QP_work->solution->x[9] << ", y = " << QP_work->solution->x[10] << ", z = " << QP_work->solution->x[11] << endl;
 
+    cout << "QP Init Done !! " << endl;
     //    cout << "solution = " << work->solution->x[1] << endl;
     //    cout << "solution = " << work->solution->x[2] << endl;
 
@@ -984,25 +1041,23 @@ void CRobot::QP_Con_Init(void)
 
 }
 
-
-
 void CRobot::Get_Opt_F(void)
 {
     p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
             tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
             -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
 
-//        p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
-//                act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
-//                -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
+    //        p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
+    //                act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
+    //                -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
 
 
     _A.block<3, 12>(3, 0) = p_com_oross_pro;
 
-//    Get_act_com();
+    //    Get_act_com();
 
-    des_x_2dot = com_acc*1.0 + Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
-//    des_x_2dot = Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
+    des_x_2dot = com_acc * 1.0 + Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
+    //    des_x_2dot = Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
     des_w_dot = Kp_w * (base_ori - act_base_ori) + Kd_w * (base_ori_dot - act_base_ori_dot);
 
     //    des_x_2dot << 0,0,0;
@@ -1019,27 +1074,83 @@ void CRobot::Get_Opt_F(void)
     int jj = 0;
     int kk = 0;
     int max_jj = 0;
-    
+
     // ===================== P_x ====================== //
-    for(unsigned int i = 0;i<P_nnz;++i){
-        P_x[i] = _P(jj,kk);
+    for (unsigned int i = 0; i < P_nnz; ++i) {
+        P_x[i] = _P(jj, kk);
         jj = jj + 1;
-        
-        if(jj > max_jj){
+
+        if (jj > max_jj) {
             jj = 0;
             kk = kk + 1;
             max_jj = max_jj + 1;
-        }  
-//        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
+        }
+        //        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
     }
-    
-    c_vec << _c(0), _c(0), _c(0), _c(1), _c(1), _c(1), _c(2), _c(2), _c(2), _c(3), _c(3), _c(3);
+
+    // ===================== Constraints ====================== //
+    if (_c(0) == 0) {
+        fz_RL_max = 0;
+        fz_RL_min = 0;
+    }
+    else {
+        fz_RL_max = 500;
+        fz_RL_min = 0;
+    }
+
+    if (_c(1) == 0) {
+        fz_RR_max = 0;
+        fz_RR_min = 0;
+    }
+    else {
+        fz_RR_max = 500;
+        fz_RR_min = 0;
+    }
+
+    if (_c(2) == 0) {
+        fz_FL_max = 0;
+        fz_FL_min = 0;
+    }
+    else {
+        fz_FL_max = 500;
+        fz_FL_min = 0;
+    }
+
+    if (_c(3) == 0) {
+        fz_FR_max = 0;
+        fz_FR_min = 0;
+    }
+    else {
+        fz_FR_max = 500;
+        fz_FR_min = 0;
+    }
+
+    _d_u << mu * abs(Fc(2 + 7)), mu * abs(Fc(2 + 7)), fz_RL_max, mu * abs(Fc(5 + 7)), mu * abs(Fc(5 + 7)), fz_RR_max, mu * abs(Fc(8 + 7)), mu * abs(Fc(8 + 7)), fz_FL_max, mu * abs(Fc(11 + 7)), mu * abs(Fc(11 + 7)), fz_FR_max;
+    _d_l << -mu * abs(Fc(2 + 7)), -mu * abs(Fc(2 + 7)), fz_RL_min, -mu * abs(Fc(5 + 7)), -mu * abs(Fc(5 + 7)), fz_RR_min, -mu * abs(Fc(8 + 7)), -mu * abs(Fc(8 + 7)), fz_FL_min, -mu * abs(Fc(11 + 7)), -mu * abs(Fc(11 + 7)), fz_FR_min;
+
+    //    cout << "mu*abs(Fc(2+7)) = " << mu*abs(Fc(2+7)) << endl;
+
+    //    c_vec << _c(0),_c(0),_c(0),_c(1),_c(1),_c(1),_c(2),_c(2),_c(2),_c(3),_c(3),_c(3);
+
+    //    cout << "c_vec = " << c_vec.transpose() << endl;
 
     for (unsigned int i = 0; i < A_nnz; ++i) {
-        q[i] = _q(i);
-        l[i] = c_vec(i) * _d_l(i);
-        u[i] = c_vec(i) * _d_u(i);
+        l[i] = _d_l(i);
+        u[i] = _d_u(i);
+
+        //        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
+        //        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
+        //        cout << "==============================" << endl;
     }
+    //    c_vec << _c(0), _c(0), _c(0), _c(1), _c(1), _c(1), _c(2), _c(2), _c(2), _c(3), _c(3), _c(3);
+    //    _d_u << mu*abs(Fc(2)), mu*abs(Fc(2)), fz_max, mu*abs(Fc(5)), mu*abs(Fc(5)), fz_max, mu*abs(Fc(8)), mu*abs(Fc(8)), fz_max, mu*abs(Fc(11)), mu*abs(Fc(11)), fz_max;
+    //    _d_l << -mu*abs(Fc(2)), -mu*abs(Fc(2)), fz_min, -mu*abs(Fc(5)), -mu*abs(Fc(5)), fz_min, -mu*abs(Fc(8)), -mu*abs(Fc(8)), fz_min, -mu*abs(Fc(11)), -mu*abs(Fc(11)), fz_min;
+    //
+    //    for (unsigned int i = 0; i < A_nnz; ++i) {
+    //        q[i] = _q(i);
+    //        l[i] = c_vec(i) * _d_l(i);
+    //        u[i] = c_vec(i) * _d_u(i);
+    //    }
 
     // Update problem
     osqp_update_P(QP_work, P_x, OSQP_NULL, 78);
@@ -1052,27 +1163,31 @@ void CRobot::Get_Opt_F(void)
     for (unsigned int i = 0; i < A_nnz; ++i) {
         Fc(i + 7) = fc_weight * QP_work->solution->x[i];
     }
+
+    //    cout << "F RL x = " << Fc(7) << endl;
+    //    
+    //    cout << "===============" << endl;
 }
 
 void CRobot::WalkReady_Pos_Traj(void)
 {
-    
-//    if(wr_cnt == 1){
-//        pos_alpha = 1; 
-//        vel_alpha = 1; 
-//    }
-//    else if(){
-//        pos_alpha = 0.02; 
-//        vel_alpha = 0.02; 
-//    }
-    
+
+    //    if(wr_cnt == 1){
+    //        pos_alpha = 1; 
+    //        vel_alpha = 1; 
+    //    }
+    //    else if(){
+    //        pos_alpha = 0.02; 
+    //        vel_alpha = 0.02; 
+    //    }
+
     if (wr_cnt == 0) {
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
         contact_num = 4;
 
         // Global
-        
+
         init_RL_foot_pos = act_RL_foot_pos;
         init_RR_foot_pos = act_RR_foot_pos;
         init_FL_foot_pos = act_FL_foot_pos;
@@ -1080,17 +1195,17 @@ void CRobot::WalkReady_Pos_Traj(void)
 
         com_pos = init_com_pos;
         com_vel = init_com_vel;
-        
+
         RL_foot_pos = init_RL_foot_pos;
         RR_foot_pos = init_RR_foot_pos;
         FL_foot_pos = init_FL_foot_pos;
         FR_foot_pos = init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
         FR_foot_vel = tar_init_FR_foot_vel;
-        
+
 
         // waist
         init_pos[6] = actual_pos[6];
@@ -1105,10 +1220,10 @@ void CRobot::WalkReady_Pos_Traj(void)
             fc_weight = 0;
         }
 
-        
+
         // for actual pos & vel
-        pos_alpha = 1; 
-        vel_alpha = 1; 
+        pos_alpha = 1;
+        vel_alpha = 1;
 
         wr_cnt++;
     }
@@ -1126,7 +1241,7 @@ void CRobot::WalkReady_Pos_Traj(void)
         RR_foot_vel = (tar_init_RR_foot_pos - init_RR_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (wr_cnt) * dt));
         FL_foot_vel = (tar_init_FL_foot_pos - init_FL_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (wr_cnt) * dt));
         FR_foot_vel = (tar_init_FR_foot_pos - init_FR_foot_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (wr_cnt) * dt));
-        
+
         // waist
         target_pos[6] = init_pos[6] + (0 - init_pos[6]) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (wr_cnt) * dt));
 
@@ -1137,23 +1252,23 @@ void CRobot::WalkReady_Pos_Traj(void)
             fc_weight = 1 / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (wr_cnt) * dt));
         }
 
-        if(wr_cnt == 1){
-            pos_alpha = 0.02; 
-            vel_alpha = 0.02; 
+        if (wr_cnt == 1) {
+            pos_alpha = 0.02;
+            vel_alpha = 0.02;
         }
-        
+
 
         wr_cnt++;
     }
     else if (wr_cnt <= walk_ready_cnt * 2) {
         com_pos = init_com_pos + (tar_init_com_pos - init_com_pos) / 2.0 * (1 - cos(PI2 / (walk_ready_time * 2)*(double) (wr_cnt - walk_ready_cnt) * dt));
         com_vel = (tar_init_com_pos - init_com_pos)*(PI2 / (walk_ready_time * 2)) / 2.0 * (sin(PI2 / (walk_ready_time * 2)*(double) (wr_cnt - walk_ready_cnt) * dt));
-        
+
         RL_foot_pos = tar_init_RL_foot_pos;
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -1181,7 +1296,7 @@ void CRobot::WalkReady_Pos_Traj(void)
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -1200,194 +1315,267 @@ void CRobot::WalkReady_Pos_Traj(void)
 
 void CRobot::MPC_Con_Init(void)
 {
-// ================ MPC INIT ================== //
-    
-    cout << "<< MPC INIT >>" << endl;
-        
-    PHI << 1, Ts, Ts*Ts/2,
-           0,  1,   Ts,
-           0,  0,    1;
-   
-    GAM << Ts*Ts*Ts/6, Ts*Ts/2, Ts;  
-   
-    C << 1, 0, -h_com/g;
-    
-    Q_tilda = Kron(MatrixNd::Identity(Np,Np),_Q);
-    R_tilda = Kron(MatrixNd::Identity(Nc,Nc),_R);
- 
-//    y_ini = C*x_ini;
-    
-    for(int i=0;i<Np;++i){
-        tmp_Ax = pow_mat(PHI,i);
-        
-        Ax_tilda.block(i*state_num,0,state_num,state_num) = tmp_Ax;
+    // ================ MPC INIT ================== //
+
+    cout << "<< MPC INIT Start >>" << endl;
+
+    I_g << 1.7214, 0, 0,
+            0, 4.9502, 0,
+            0, 0, 5.1152;
+
+    inv_I_g = I_g.inverse();
+
+
+    PHI << 1, 0, 0, 0, 0, 0, Ts, 0, 0, 0, 0, 0, 0,
+            0, 1, 0, 0, 0, 0, 0, Ts, 0, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0, 0, 0, Ts, 0, 0, 0, 0,
+            0, 0, 0, 1, 0, 0, 0, 0, 0, Ts, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0, 0, Ts, 0, 0,
+            0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, Ts, -Ts * Ts / 2,
+            0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -Ts,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+
+    //cout << "PHI = " << endl << PHI << endl;
+
+    GAM << -(Ts * Ts * (RL_foot_pos(1) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (RL_foot_pos(0) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (RL_foot_pos(0) * inv_I_g(0, 1) - RL_foot_pos(1) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (RR_foot_pos(1) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (RR_foot_pos(0) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (RR_foot_pos(0) * inv_I_g(0, 1) - RR_foot_pos(1) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FL_foot_pos(1) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (FL_foot_pos(0) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FL_foot_pos(0) * inv_I_g(0, 1) - FL_foot_pos(1) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FR_foot_pos(1) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (FR_foot_pos(0) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FR_foot_pos(0) * inv_I_g(0, 1) - FR_foot_pos(1) * inv_I_g(0, 0))) / 2,
+            -(Ts * Ts * (RL_foot_pos(1) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (RL_foot_pos(0) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (RL_foot_pos(0) * inv_I_g(1, 1) - RL_foot_pos(1) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (RR_foot_pos(1) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (RR_foot_pos(0) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (RR_foot_pos(0) * inv_I_g(1, 1) - RR_foot_pos(1) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FL_foot_pos(1) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (FL_foot_pos(0) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FL_foot_pos(0) * inv_I_g(1, 1) - FL_foot_pos(1) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FR_foot_pos(1) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (FR_foot_pos(0) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FR_foot_pos(0) * inv_I_g(1, 1) - FR_foot_pos(1) * inv_I_g(1, 0))) / 2,
+            -(Ts * Ts * (RL_foot_pos(1) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (RL_foot_pos(0) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (RL_foot_pos(0) * inv_I_g(2, 1) - RL_foot_pos(1) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (RR_foot_pos(1) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (RR_foot_pos(0) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (RR_foot_pos(0) * inv_I_g(2, 1) - RR_foot_pos(1) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FL_foot_pos(1) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (FL_foot_pos(0) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FL_foot_pos(0) * inv_I_g(2, 1) - FL_foot_pos(1) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FR_foot_pos(1) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (FR_foot_pos(0) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FR_foot_pos(0) * inv_I_g(2, 1) - FR_foot_pos(1) * inv_I_g(2, 0))) / 2,
+            Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0,
+            0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0,
+            0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass),
+            -Ts * (RL_foot_pos(1) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 1)), Ts * (RL_foot_pos(0) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 0)), -Ts * (RL_foot_pos(0) * inv_I_g(0, 1) - RL_foot_pos(1) * inv_I_g(0, 0)), -Ts * (RR_foot_pos(1) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 1)), Ts * (RR_foot_pos(0) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 0)), -Ts * (RR_foot_pos(0) * inv_I_g(0, 1) - RR_foot_pos(1) * inv_I_g(0, 0)), -Ts * (FL_foot_pos(1) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 1)), Ts * (FL_foot_pos(0) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 0)), -Ts * (FL_foot_pos(0) * inv_I_g(0, 1) - FL_foot_pos(1) * inv_I_g(0, 0)), -Ts * (FR_foot_pos(1) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 1)), Ts * (FR_foot_pos(0) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 0)), -Ts * (FR_foot_pos(0) * inv_I_g(0, 1) - FR_foot_pos(1) * inv_I_g(0, 0)),
+            -Ts * (RL_foot_pos(1) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 1)), Ts * (RL_foot_pos(0) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 0)), -Ts * (RL_foot_pos(0) * inv_I_g(1, 1) - RL_foot_pos(1) * inv_I_g(1, 0)), -Ts * (RR_foot_pos(1) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 1)), Ts * (RR_foot_pos(0) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 0)), -Ts * (RR_foot_pos(0) * inv_I_g(1, 1) - RR_foot_pos(1) * inv_I_g(1, 0)), -Ts * (FL_foot_pos(1) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 1)), Ts * (FL_foot_pos(0) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 0)), -Ts * (FL_foot_pos(0) * inv_I_g(1, 1) - FL_foot_pos(1) * inv_I_g(1, 0)), -Ts * (FR_foot_pos(1) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 1)), Ts * (FR_foot_pos(0) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 0)), -Ts * (FR_foot_pos(0) * inv_I_g(1, 1) - FR_foot_pos(1) * inv_I_g(1, 0)),
+            -Ts * (RL_foot_pos(1) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 1)), Ts * (RL_foot_pos(0) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 0)), -Ts * (RL_foot_pos(0) * inv_I_g(2, 1) - RL_foot_pos(1) * inv_I_g(2, 0)), -Ts * (RR_foot_pos(1) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 1)), Ts * (RR_foot_pos(0) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 0)), -Ts * (RR_foot_pos(0) * inv_I_g(2, 1) - RR_foot_pos(1) * inv_I_g(2, 0)), -Ts * (FL_foot_pos(1) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 1)), Ts * (FL_foot_pos(0) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 0)), -Ts * (FL_foot_pos(0) * inv_I_g(2, 1) - FL_foot_pos(1) * inv_I_g(2, 0)), -Ts * (FR_foot_pos(1) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 1)), Ts * (FR_foot_pos(0) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 0)), -Ts * (FR_foot_pos(0) * inv_I_g(2, 1) - FR_foot_pos(1) * inv_I_g(2, 0)),
+            Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0,
+            0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0,
+            0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+
+    //cout << "GAM = " << endl << GAM << endl;
+
+
+    _Q_vec << 0.1, 0.1, 0.1, // body ori
+            2, 2, 2, // com pos
+            0.1, 0.1, 0.1, // body ori dot
+            0.1, 0.1, 0.1, 0; // com vel
+
+    for (unsigned int i = 0; i < output_num; ++i) {
+        _Q(i, i) = _Q_vec(i);
     }
-    
-    for(int i=0;i<Np-1;++i){
-        Bx_element = pow_mat(PHI,i)*GAM;
-        
-        MatrixNd tmp_Bx = MatrixNd::Zero((Np - i+1)*state_num, (Np - i+1)*input_num);
-        tmp_Bx = Kron(MatrixNd::Identity(Nc-(i+1),Nc-(i+1)),Bx_element);
 
-        tmp_Bx2 << MatrixNd::Zero(state_num*(i+1),input_num*Nc),
-                    tmp_Bx, MatrixNd::Zero(state_num*(Np - (i+1)),input_num*(i+1));
-        
-        Bx_tilda = Bx_tilda + tmp_Bx2;    
+    //cout << "_Q = " << _Q << endl;
+    //cout << "_R = " << _R << endl;
+
+    Q_tilda = Kron(MatrixNd::Identity(Np, Np), _Q);
+    //cout << "Q_tilda = " << Q_tilda << endl;
+
+    R_tilda = Kron(MatrixNd::Identity(Nc, Nc), _R);
+    //cout << "R_tilda = " << R_tilda << endl;
+
+    ref_y << 0, 0, 0, // body ori
+            0.5, 0, 0.4, // com pos
+            0, 0, 0, // body ori dot
+            0, 0, 0, g; // com vel
+
+
+
+    //_Q = _Q_vec.asDiagonal();
+    //    Q_tilda = Kron(MatrixNd::Identity(Np,Np),_Q);
+    //    R_tilda = Kron(MatrixNd::Identity(Nc,Nc),_R);
+    // 
+    ////    y_ini = C*x_ini;
+
+    for (int i = 0; i < Np; ++i) {
+        tmp_Ax = pow_mat(PHI, i);
+
+        Ax_tilda.block(i*state_num, 0, state_num, state_num) = tmp_Ax;
     }
 
-    C_tilda = Kron(MatrixNd::Identity(Np,Np),C);
+    //    cout << "Ax_tilda = " << Ax_tilda << endl;
 
-    Q_bar = C_tilda.transpose()*Q_tilda*C_tilda;
-    
-    H = Bx_tilda.transpose()*Q_bar*Bx_tilda + R_tilda;
-    
-    H = (H + H.transpose())/2;
-//    cout << "new H = " << endl << H << endl;
- 
+    for (int i = 0; i < Np - 1; ++i) {
+        Bx_element = pow_mat(PHI, i) * GAM;
+
+        MatrixNd tmp_Bx = MatrixNd::Zero((Np - i + 1) * state_num, (Np - i + 1) * input_num);
+        tmp_Bx = Kron(MatrixNd::Identity(Nc - (i + 1), Nc - (i + 1)), Bx_element);
+
+        tmp_Bx2 << MatrixNd::Zero(state_num * (i + 1), input_num * Nc),
+                tmp_Bx, MatrixNd::Zero(state_num * (Np - (i + 1)), input_num * (i + 1));
+
+        Bx_tilda = Bx_tilda + tmp_Bx2;
+    }
+
+    //    cout << "Bx_tilda = " << Bx_tilda << endl;
+
+    C_tilda = Kron(MatrixNd::Identity(Np, Np), C);
+
+    Q_bar = C_tilda.transpose() * Q_tilda*C_tilda;
+
+    H = Bx_tilda.transpose() * Q_bar * Bx_tilda + R_tilda;
+
+    H = (H + H.transpose()) / 2;
+    //    cout << "new H = " << endl << H << endl;
+
+    cout << "H.cols = " << H.cols() << ", H.rows = " << H.rows() << endl;
     // ================= Constraints ================= //
 
 
-////    Gy_tmp = Kron(MatrixNd::Identity(Np,Np),MatrixNd::Identity(output_num,output_num));
-//    Gy_tmp = Kron(MatrixNd::Identity(Np,Np),MatrixNd::Zero(output_num,output_num));
-//    Gy <<  Gy_tmp, -Gy_tmp;
-//    gy << output_constraint*Kron(VectorNd::Ones(Np,1),VectorNd::Ones(output_num,1)), output_constraint*Kron(VectorNd::Ones(Np,1),VectorNd::Ones(output_num,1));
-//        
-//    Gy_new = Gy*C_tilda*Bx_tilda;
-//    
-//    gy_new = gy - Gy*C_tilda*Ax_tilda*state_x;
-//    
-//    Gu_tmp = Kron(MatrixNd::Identity(Nc,Nc),MatrixNd::Identity(input_num,input_num));
-//    Gu <<  Gu_tmp, -Gu_tmp;
-//    gu << input_constraint*Kron(VectorNd::Ones(Nc,1),VectorNd::Ones(input_num,1)), input_constraint*Kron(VectorNd::Ones(Nc,1),VectorNd::Ones(input_num,1));
-//
-//    G << Gy_new , Gu;
-//    bk << gy_new , gu;
-//    
-////    cout << "G = " << endl << G << endl;
-////    cout << "bk = " << endl << bk << endl;
-    
+    ////    Gy_tmp = Kron(MatrixNd::Identity(Np,Np),MatrixNd::Identity(output_num,output_num));
+    //    Gy_tmp = Kron(MatrixNd::Identity(Np,Np),MatrixNd::Zero(output_num,output_num));
+    //    Gy <<  Gy_tmp, -Gy_tmp;
+    //    gy << output_constraint*Kron(VectorNd::Ones(Np,1),VectorNd::Ones(output_num,1)), output_constraint*Kron(VectorNd::Ones(Np,1),VectorNd::Ones(output_num,1));
+    //        
+    //    Gy_new = Gy*C_tilda*Bx_tilda;
+    //    
+    //    gy_new = gy - Gy*C_tilda*Ax_tilda*state_x;
+    //    
+    //    Gu_tmp = Kron(MatrixNd::Identity(Nc,Nc),MatrixNd::Identity(input_num,input_num));
+    //    Gu <<  Gu_tmp, -Gu_tmp;
+    //    gu << input_constraint*Kron(VectorNd::Ones(Nc,1),VectorNd::Ones(input_num,1)), input_constraint*Kron(VectorNd::Ones(Nc,1),VectorNd::Ones(input_num,1));
+    //
+    //    G << Gy_new , Gu;
+    //    bk << gy_new , gu;
+    //    
+    ////    cout << "G = " << endl << G << endl;
+    ////    cout << "bk = " << endl << bk << endl;
+
     // ================= Constraints END ================= //
-    
+
     // ================= OSQP Setting ================= //
-    
+
     int jj = 0;
     int kk = 0;
     int max_jj = 0;
-    
+
     // ===================== H_x ====================== //
-    for(unsigned int i = 0;i<H_nnz;++i){
-        H_x[i] = H(jj,kk);
+    for (unsigned int i = 0; i < H_nnz; ++i) {
+        H_x[i] = H(jj, kk);
         jj = jj + 1;
-        
-        if(jj > max_jj){
+
+        if (jj > max_jj) {
             jj = 0;
             kk = kk + 1;
             max_jj = max_jj + 1;
-        }  
-//        cout << "i = " << i << ", H_x = " << H_x[i] << endl; 
+        }
+        //        cout << "i = " << i << ", H_x = " << H_x[i] << endl; 
     }
-    
+
     // ===================== H_i ====================== //
     jj = 0;
     max_jj = 0;
-    
-    for(unsigned int i = 0;i<H_nnz;++i){
+
+    for (unsigned int i = 0; i < H_nnz; ++i) {
         H_i[i] = jj;
         jj = jj + 1;
-        
-        if(jj > max_jj){
+
+        if (jj > max_jj) {
             jj = 0;
             max_jj = max_jj + 1;
-        }  
-        
-//        cout << "i = " << i << ", H_i = " << H_i[i] << endl; 
+        }
+
+        //        cout << "i = " << i << ", H_i = " << H_i[i] << endl; 
     }
-    
+
     // ===================== H_p ====================== //
     H_p[0] = 0;
-    for(unsigned int i = 1;i<Np+1;++i){
-        H_p[i] = H_p[i-1] + i;
-        
-//        cout << "i = " << i-1 << ", H_p = " << H_p[i-1] << endl; 
+    for (unsigned int i = 1; i < Nc * input_num + 1; ++i) {
+        H_p[i] = H_p[i - 1] + i;
+
+        //        cout << "i = " << i-1 << ", H_p = " << H_p[i-1] << endl; 
     }
-    
+
     // ===================== G_x ====================== //
-    
-    for(unsigned int i = 0;i<Np;++i){
-        G_x[i] = 0;
-        
-//        cout << "i = " << i << ", G_x = " << G_x[i] << endl; 
+
+    for (unsigned int i = 0; i < Nc * input_num; ++i) {
+        G_x[i] = 1;
+
+        //        cout << "i = " << i << ", G_x = " << G_x[i] << endl; 
     }
-    
+
     // ===================== G_i ====================== //
 
-    for(unsigned int i = 0;i<Np;++i){
+    for (unsigned int i = 0; i < Nc * input_num; ++i) {
         G_i[i] = i;
 
-//        cout << "i = " << i << ", G_i = " << G_i[i] << endl; 
+        //        cout << "i = " << i << ", G_i = " << G_i[i] << endl; 
     }
-    
+
     // ===================== G_p ====================== //
     jj = 0;
-    for(unsigned int i = 0;i<Np+1;++i){
+    for (unsigned int i = 0; i < Nc * input_num + 1; ++i) {
         G_p[i] = jj;
 
         jj = jj + 1;
-        
-//        cout << "i = " << i << ", G_p = " << G_p[i] << endl; 
+
+        //        cout << "i = " << i << ", G_p = " << G_p[i] << endl; 
     }
-    
+
     // ===================== G_l & G_u ====================== //
-    
-    for(unsigned int i = 0;i<Np;++i){
-        G_l[i] = -input_constraint;
-        G_u[i] =  input_constraint;
-        
-//        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
-//        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
-//        cout << "==============================" << endl;
+
+    double tmp_Fext_z = 100;
+    double max_Fext_z = 1000;
+    input_const << mu * abs(tmp_Fext_z), mu * abs(tmp_Fext_z), max_Fext_z, mu * abs(tmp_Fext_z), mu * abs(tmp_Fext_z), max_Fext_z, mu * abs(tmp_Fext_z), mu * abs(tmp_Fext_z), max_Fext_z, mu * abs(tmp_Fext_z), mu * abs(tmp_Fext_z), max_Fext_z;
+    jj = 0;
+    for (unsigned int i = 0; i < Nc * input_num; ++i) {
+        G_l[i] = -input_const(jj);
+        G_u[i] = input_const(jj);
+
+        jj++;
+        if (jj == 12) {
+            jj = 0;
+        }
+
+        //        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
+        //        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
+        //        cout << "==============================" << endl;
     }
-    
-    
-    
-    
-//    cout << "tmp_H_x = " << tmp_H_x[0] << endl;
-//    
-//    for(unsigned int i =0;i<465;++i){
-//        H_x[i] = tmp_H_x[i];
-//    }
-    
-//    cout << "H_x[54] = " << H_x[54] << endl;
-    
-//    c_float ff[10] = {f(0), f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8), f(9)};
-    act_state_x << act_com_pos(1), act_com_vel(1), act_com_acc(1);
-    f = (act_state_x.transpose()*Ax_tilda.transpose()*Q_bar*Bx_tilda - ref_tilda.transpose()*Q_tilda*C_tilda*Bx_tilda).transpose();
-    
-//    cout << "f = " << f.transpose() << endl;
-    
-    for(unsigned int i =0;i<Np;++i){
+
+
+
+    //    ref_y << 0, 0, 0,        // body ori
+    //        0.5, 0, 0.4,     // com pos
+    //         0, 0, 0,        // body ori dot
+    //         0, 0, 0, g;     // com vel
+
+    act_state_x << act_base_ori(0), act_base_ori(1), act_base_ori(2),
+            act_com_pos(0), act_com_pos(1), act_com_pos(2),
+            act_base_ori_dot(0), act_base_ori_dot(1), act_base_ori_dot(2),
+            act_com_vel(0), act_com_vel(1), act_com_vel(2), g;
+
+    f = (act_state_x.transpose() * Ax_tilda.transpose() * Q_bar * Bx_tilda - ref_tilda.transpose() * Q_tilda * C_tilda * Bx_tilda).transpose();
+
+    //    cout << "f = " << f.transpose() << endl;
+
+    cout << "f.rows = " << f.rows() << ", f.cols = " << f.cols() << endl;
+
+    for (unsigned int i = 0; i < Nc * input_num; ++i) {
         ff[i] = f(i);
     }
-//    cout << "ff = " << ff[0] << endl;
-    // ===================== Constraint ===================== //
-    
-//    MatrixNd Gy = MatrixNd::Identity(output_num*Np, output_num*Np);
-//    MatrixNd Gy_new = MatrixNd::Identity(output_num*Np, output_num*Np);
-//    MatrixNd gy = MatrixNd::Ones(output_num*Np, 1);
-//    MatrixNd gy_new = MatrixNd::Identity(output_num*Np, 1);
-//    
-//    gy = gy*output_constraint;
-//    Gy_new = Gy*C_tilda*Bx_tilda;
-//    gy_new = gy - Gy*C_tilda*Ax_tilda*state_x;
-//    
-//    cout << "Gy_new = " << endl << Gy_new << endl;
-//    cout << "gy_new = " << endl << gy_new << endl;
-    
+    ////    cout << "ff = " << ff[0] << endl;
+    //    // ===================== Constraint ===================== //
+    //    
+    ////    MatrixNd Gy = MatrixNd::Identity(output_num*Np, output_num*Np);
+    ////    MatrixNd Gy_new = MatrixNd::Identity(output_num*Np, output_num*Np);
+    ////    MatrixNd gy = MatrixNd::Ones(output_num*Np, 1);
+    ////    MatrixNd gy_new = MatrixNd::Identity(output_num*Np, 1);
+    ////    
+    ////    gy = gy*output_constraint;
+    ////    Gy_new = Gy*C_tilda*Bx_tilda;
+    ////    gy_new = gy - Gy*C_tilda*Ax_tilda*state_x;
+    ////    
+    ////    cout << "Gy_new = " << endl << Gy_new << endl;
+    ////    cout << "gy_new = " << endl << gy_new << endl;
+    //    
     // ==================== OSQP ======================= //
-    
+
     // Exitflag
     MPC_exitflag = 0;
-       
+
     cout << "[1]" << endl;
     // Populate data
     if (MPC_data) {
@@ -1398,6 +1586,9 @@ void CRobot::MPC_Con_Init(void)
         MPC_data->A = csc_matrix(MPC_data->m, MPC_data->n, G_nnz, G_x, G_i, G_p);
         MPC_data->l = G_l;
         MPC_data->u = G_u;
+
+        //        cout << "G_n = " << G_n << ", G_m = " << G_m << endl;
+
     }
 
     cout << "[2]" << endl;
@@ -1409,33 +1600,202 @@ void CRobot::MPC_Con_Init(void)
     }
 
     cout << "[3]" << endl;
-    
+
     // Setup workspace
     MPC_exitflag = osqp_setup(&MPC_work, MPC_data, MPC_settings);
 
     cout << "[4]" << endl;
-    
+
     // Solve Problem
     osqp_solve(MPC_work);
 
-//    cout << "u(0) = " << work->solution->x[0] << endl;
-//    cout << "u(1) = " << work->solution->x[1] << endl;
-//    cout << "u(2) = " << work->solution->x[2] << endl;
-//    
-//    cout << "u(0) = " << work->solution->x[0] << ", u(1) = " << work->solution->x[1] << ", u(2) = " << work->solution->x[2] << endl;
-//    cout << "[RR] x = " << work->solution->x[3] << ", y = " << work->solution->x[4] << ", z = " << work->solution->x[5] << endl;
-//    cout << "[FL] x = " << work->solution->x[6] << ", y = " << work->solution->x[7] << ", z = " << work->solution->x[8] << endl;
-//    cout << "[FR] x = " << work->solution->x[9] << ", y = " << work->solution->x[10] << ", z = " << work->solution->x[11] << endl;
+    //    cout << "u(0) = " << work->solution->x[0] << endl;
+    //    cout << "u(1) = " << work->solution->x[1] << endl;
+    //    cout << "u(2) = " << work->solution->x[2] << endl;
+    //    
+    cout << "[RL] x = " << MPC_work->solution->x[0] << ", y = " << MPC_work->solution->x[1] << ", z = " << MPC_work->solution->x[2] << endl;
+    cout << "[RR] x = " << MPC_work->solution->x[3] << ", y = " << MPC_work->solution->x[4] << ", z = " << MPC_work->solution->x[5] << endl;
+    cout << "[FL] x = " << MPC_work->solution->x[6] << ", y = " << MPC_work->solution->x[7] << ", z = " << MPC_work->solution->x[8] << endl;
+    cout << "[FR] x = " << MPC_work->solution->x[9] << ", y = " << MPC_work->solution->x[10] << ", z = " << MPC_work->solution->x[11] << endl;
 
-    
+
     cout << "[5] MPC Init Done !!!" << endl;
+}
+
+void CRobot::MPC_process(void)
+{
+    GAM << -(Ts * Ts * (RL_foot_pos(1) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (RL_foot_pos(0) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (RL_foot_pos(0) * inv_I_g(0, 1) - RL_foot_pos(1) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (RR_foot_pos(1) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (RR_foot_pos(0) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (RR_foot_pos(0) * inv_I_g(0, 1) - RR_foot_pos(1) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FL_foot_pos(1) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (FL_foot_pos(0) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FL_foot_pos(0) * inv_I_g(0, 1) - FL_foot_pos(1) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FR_foot_pos(1) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 1))) / 2, (Ts * Ts * (FR_foot_pos(0) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 0))) / 2, -(Ts * Ts * (FR_foot_pos(0) * inv_I_g(0, 1) - FR_foot_pos(1) * inv_I_g(0, 0))) / 2,
+            -(Ts * Ts * (RL_foot_pos(1) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (RL_foot_pos(0) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (RL_foot_pos(0) * inv_I_g(1, 1) - RL_foot_pos(1) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (RR_foot_pos(1) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (RR_foot_pos(0) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (RR_foot_pos(0) * inv_I_g(1, 1) - RR_foot_pos(1) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FL_foot_pos(1) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (FL_foot_pos(0) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FL_foot_pos(0) * inv_I_g(1, 1) - FL_foot_pos(1) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FR_foot_pos(1) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 1))) / 2, (Ts * Ts * (FR_foot_pos(0) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 0))) / 2, -(Ts * Ts * (FR_foot_pos(0) * inv_I_g(1, 1) - FR_foot_pos(1) * inv_I_g(1, 0))) / 2,
+            -(Ts * Ts * (RL_foot_pos(1) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (RL_foot_pos(0) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (RL_foot_pos(0) * inv_I_g(2, 1) - RL_foot_pos(1) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (RR_foot_pos(1) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (RR_foot_pos(0) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (RR_foot_pos(0) * inv_I_g(2, 1) - RR_foot_pos(1) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FL_foot_pos(1) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (FL_foot_pos(0) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FL_foot_pos(0) * inv_I_g(2, 1) - FL_foot_pos(1) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FR_foot_pos(1) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 1))) / 2, (Ts * Ts * (FR_foot_pos(0) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 0))) / 2, -(Ts * Ts * (FR_foot_pos(0) * inv_I_g(2, 1) - FR_foot_pos(1) * inv_I_g(2, 0))) / 2,
+            Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0,
+            0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0,
+            0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass), 0, 0, Ts * Ts / (2 * mass),
+            -Ts * (RL_foot_pos(1) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 1)), Ts * (RL_foot_pos(0) * inv_I_g(0, 2) - RL_foot_pos(2) * inv_I_g(0, 0)), -Ts * (RL_foot_pos(0) * inv_I_g(0, 1) - RL_foot_pos(1) * inv_I_g(0, 0)), -Ts * (RR_foot_pos(1) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 1)), Ts * (RR_foot_pos(0) * inv_I_g(0, 2) - RR_foot_pos(2) * inv_I_g(0, 0)), -Ts * (RR_foot_pos(0) * inv_I_g(0, 1) - RR_foot_pos(1) * inv_I_g(0, 0)), -Ts * (FL_foot_pos(1) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 1)), Ts * (FL_foot_pos(0) * inv_I_g(0, 2) - FL_foot_pos(2) * inv_I_g(0, 0)), -Ts * (FL_foot_pos(0) * inv_I_g(0, 1) - FL_foot_pos(1) * inv_I_g(0, 0)), -Ts * (FR_foot_pos(1) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 1)), Ts * (FR_foot_pos(0) * inv_I_g(0, 2) - FR_foot_pos(2) * inv_I_g(0, 0)), -Ts * (FR_foot_pos(0) * inv_I_g(0, 1) - FR_foot_pos(1) * inv_I_g(0, 0)),
+            -Ts * (RL_foot_pos(1) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 1)), Ts * (RL_foot_pos(0) * inv_I_g(1, 2) - RL_foot_pos(2) * inv_I_g(1, 0)), -Ts * (RL_foot_pos(0) * inv_I_g(1, 1) - RL_foot_pos(1) * inv_I_g(1, 0)), -Ts * (RR_foot_pos(1) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 1)), Ts * (RR_foot_pos(0) * inv_I_g(1, 2) - RR_foot_pos(2) * inv_I_g(1, 0)), -Ts * (RR_foot_pos(0) * inv_I_g(1, 1) - RR_foot_pos(1) * inv_I_g(1, 0)), -Ts * (FL_foot_pos(1) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 1)), Ts * (FL_foot_pos(0) * inv_I_g(1, 2) - FL_foot_pos(2) * inv_I_g(1, 0)), -Ts * (FL_foot_pos(0) * inv_I_g(1, 1) - FL_foot_pos(1) * inv_I_g(1, 0)), -Ts * (FR_foot_pos(1) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 1)), Ts * (FR_foot_pos(0) * inv_I_g(1, 2) - FR_foot_pos(2) * inv_I_g(1, 0)), -Ts * (FR_foot_pos(0) * inv_I_g(1, 1) - FR_foot_pos(1) * inv_I_g(1, 0)),
+            -Ts * (RL_foot_pos(1) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 1)), Ts * (RL_foot_pos(0) * inv_I_g(2, 2) - RL_foot_pos(2) * inv_I_g(2, 0)), -Ts * (RL_foot_pos(0) * inv_I_g(2, 1) - RL_foot_pos(1) * inv_I_g(2, 0)), -Ts * (RR_foot_pos(1) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 1)), Ts * (RR_foot_pos(0) * inv_I_g(2, 2) - RR_foot_pos(2) * inv_I_g(2, 0)), -Ts * (RR_foot_pos(0) * inv_I_g(2, 1) - RR_foot_pos(1) * inv_I_g(2, 0)), -Ts * (FL_foot_pos(1) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 1)), Ts * (FL_foot_pos(0) * inv_I_g(2, 2) - FL_foot_pos(2) * inv_I_g(2, 0)), -Ts * (FL_foot_pos(0) * inv_I_g(2, 1) - FL_foot_pos(1) * inv_I_g(2, 0)), -Ts * (FR_foot_pos(1) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 1)), Ts * (FR_foot_pos(0) * inv_I_g(2, 2) - FR_foot_pos(2) * inv_I_g(2, 0)), -Ts * (FR_foot_pos(0) * inv_I_g(2, 1) - FR_foot_pos(1) * inv_I_g(2, 0)),
+            Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0,
+            0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0,
+            0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass, 0, 0, Ts / mass,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+
+    for (int i = 0; i < Np - 1; ++i) {
+        Bx_element = pow_mat(PHI, i) * GAM;
+
+        MatrixNd tmp_Bx = MatrixNd::Zero((Np - i + 1) * state_num, (Np - i + 1) * input_num);
+        tmp_Bx = Kron(MatrixNd::Identity(Nc - (i + 1), Nc - (i + 1)), Bx_element);
+
+        tmp_Bx2 << MatrixNd::Zero(state_num * (i + 1), input_num * Nc),
+                tmp_Bx, MatrixNd::Zero(state_num * (Np - (i + 1)), input_num * (i + 1));
+
+        Bx_tilda = Bx_tilda + tmp_Bx2;
+    }
+
+    H = Bx_tilda.transpose() * Q_bar * Bx_tilda + R_tilda;
+
+    H = (H + H.transpose()) / 2;
+
+    static int jjj = 0;
+    static int kkk = 0;
+    static int max_jjj = 0;
+
+    jjj = 0;
+    kkk = 0;
+    max_jjj = 0;
+
+    // ===================== H_x ====================== //
+    for (unsigned int i = 0; i < H_nnz; ++i) {
+        H_x[i] = H(jjj, kkk);
+        jjj = jjj + 1;
+
+        if (jjj > max_jjj) {
+            jjj = 0;
+            kkk = kkk + 1;
+            max_jjj = max_jjj + 1;
+        }
+        //        cout << "i = " << i << ", H_x = " << H_x[i] << endl; 
+    }
+
+    // ===================== G_l & G_u ====================== //
+    //    const double mu = 0.6; // static friction coefficient 
+    //    double tmp_Fext_z = 100;
+
+    input_const << mu * abs(Fc(9)), mu * abs(Fc(9)), max_Fext_z, mu * abs(Fc(12)), mu * abs(Fc(12)), max_Fext_z, mu * abs(Fc(15)), mu * abs(Fc(15)), max_Fext_z, mu * abs(Fc(18)), mu * abs(Fc(18)), max_Fext_z;
+    jjj = 0;
+    for (unsigned int i = 0; i < Nc * input_num; ++i) {
+        G_l[i] = -input_const(jjj);
+        G_u[i] = input_const(jjj);
+
+        jjj++;
+        if (jjj == 12) {
+            jjj = 0;
+        }
+
+        //        cout << "i = " << i << ", G_l = " << G_l[i] << endl; 
+        //        cout << "i = " << i << ", G_u = " << G_u[i] << endl;
+        //        cout << "==============================" << endl;
+    }
+
+    act_state_x << act_base_ori(0), act_base_ori(1), act_base_ori(2),
+            act_com_pos(0), act_com_pos(1), act_com_pos(2),
+            act_base_ori_dot(0), act_base_ori_dot(1), act_base_ori_dot(2),
+            act_com_vel(0), act_com_vel(1), act_com_vel(2), g;
+
+    f = (act_state_x.transpose() * Ax_tilda.transpose() * Q_bar * Bx_tilda - ref_tilda.transpose() * Q_tilda * C_tilda * Bx_tilda).transpose();
+
+    //    cout << "f = " << f.transpose() << endl;
+    //    cout << "f.rows = " << f.rows() << ", f.cols = " << f.cols() << endl;
+
+    for (unsigned int i = 0; i < Nc * input_num; ++i) {
+        ff[i] = f(i);
+    }
+
+
+    // ==================================================================== //
+    //    p_com_oross_pro << 0, -tar_RL_foot_pos_local(2), tar_RL_foot_pos_local(1), 0, -tar_RR_foot_pos_local(2), tar_RR_foot_pos_local(1), 0, -tar_FL_foot_pos_local(2), tar_FL_foot_pos_local(1), 0, -tar_FR_foot_pos_local(2), tar_FR_foot_pos_local(1),
+    //            tar_RL_foot_pos_local(2), 0, -tar_RL_foot_pos_local(0), tar_RR_foot_pos_local(2), 0, -tar_RR_foot_pos_local(0), tar_FL_foot_pos_local(2), 0, -tar_FL_foot_pos_local(0), tar_FR_foot_pos_local(2), 0, -tar_FR_foot_pos_local(0),
+    //            -tar_RL_foot_pos_local(1), tar_RL_foot_pos_local(0), 0, -tar_RR_foot_pos_local(1), tar_RR_foot_pos_local(0), 0, -tar_FL_foot_pos_local(1), tar_FL_foot_pos_local(0), 0, -tar_FR_foot_pos_local(1), tar_FR_foot_pos_local(0), 0;
+    //
+    ////        p_com_oross_pro << 0, -act_RL_foot_pos_local(2), act_RL_foot_pos_local(1), 0, -act_RR_foot_pos_local(2), act_RR_foot_pos_local(1), 0, -act_FL_foot_pos_local(2), act_FL_foot_pos_local(1), 0, -act_FR_foot_pos_local(2), act_FR_foot_pos_local(1),
+    ////                act_RL_foot_pos_local(2), 0, -act_RL_foot_pos_local(0), act_RR_foot_pos_local(2), 0, -act_RR_foot_pos_local(0), act_FL_foot_pos_local(2), 0, -act_FL_foot_pos_local(0), act_FR_foot_pos_local(2), 0, -act_FR_foot_pos_local(0),
+    ////                -act_RL_foot_pos_local(1), act_RL_foot_pos_local(0), 0, -act_RR_foot_pos_local(1), act_RR_foot_pos_local(0), 0, -act_FL_foot_pos_local(1), act_FL_foot_pos_local(0), 0, -act_FR_foot_pos_local(1), act_FR_foot_pos_local(0), 0;
+    //
+    //
+    //    _A.block<3, 12>(3, 0) = p_com_oross_pro;
+    //
+    ////    Get_act_com();
+    //
+    //    des_x_2dot = com_acc*1.0 + Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
+    ////    des_x_2dot = Kp_x * (com_pos - act_com_pos) + Kd_x * (com_vel - act_com_vel);
+    //    des_w_dot = Kp_w * (base_ori - act_base_ori) + Kd_w * (base_ori_dot - act_base_ori_dot);
+    //
+    //    //    des_x_2dot << 0,0,0;
+    //    //    des_w_dot << 0,0,0;
+    //
+    //    _b << _m * (des_x_2dot + _g),
+    //            _I_g*des_w_dot;
+    //
+    //    _P = _A.transpose() * _S * _A + _alpha*_W;
+    //    _q = -_A.transpose() * _S*_b;
+    //
+    //    // ===================== OSQP  ====================== //
+    //
+    //    int jj = 0;
+    //    int kk = 0;
+    //    int max_jj = 0;
+    //    
+    //    // ===================== P_x ====================== //
+    //    for(unsigned int i = 0;i<P_nnz;++i){
+    //        P_x[i] = _P(jj,kk);
+    //        jj = jj + 1;
+    //        
+    //        if(jj > max_jj){
+    //            jj = 0;
+    //            kk = kk + 1;
+    //            max_jj = max_jj + 1;
+    //        }  
+    ////        cout << "i = " << i << ", P_x = " << P_x[i] << endl; 
+    //    }
+    //    
+    //    c_vec << _c(0), _c(0), _c(0), _c(1), _c(1), _c(1), _c(2), _c(2), _c(2), _c(3), _c(3), _c(3);
+    //
+    //    for (unsigned int i = 0; i < A_nnz; ++i) {
+    //        q[i] = _q(i);
+    //        l[i] = c_vec(i) * _d_l(i);
+    //        u[i] = c_vec(i) * _d_u(i);
+    //    }
+
+    //    if (MPC_data) {
+    //        MPC_data->n = G_n;
+    //        MPC_data->m = G_m;
+    //        MPC_data->P = csc_matrix(MPC_data->n, MPC_data->n, H_nnz, H_x, H_i, H_p);
+    //        MPC_data->q = ff;
+    //        MPC_data->A = csc_matrix(MPC_data->m, MPC_data->n, G_nnz, G_x, G_i, G_p);
+    //        MPC_data->l = G_l;
+    //        MPC_data->u = G_u;
+    //        
+    ////        cout << "G_n = " << G_n << ", G_m = " << G_m << endl; 
+    //    }
+
+    // Update problem
+    osqp_update_P(MPC_work, H_x, OSQP_NULL, 7260);
+    osqp_update_lin_cost(MPC_work, ff);
+    osqp_update_bounds(MPC_work, G_l, G_u);
+
+    // Solve updated problem
+    osqp_solve(MPC_work);
+
+    for (unsigned int i = 0; i < input_num; ++i) {
+        Fc(i + 7) = fc_weight * QP_work->solution->x[i];
+    }
+
+    cout << "Fc = " << Fc.transpose() << endl;
 }
 
 void CRobot::Test_Function(void)
 {
     if (test_phase == 0) {
         // ============ Initialize ============ //
-//            cout << "[0]" << endl;
+        //            cout << "[0]" << endl;
         test_phase = 1;
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
@@ -1453,16 +1813,16 @@ void CRobot::Test_Function(void)
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
         FR_foot_vel = tar_init_FR_foot_vel;
-        
-        for(int i=0;i<6;++i){
-            c_state_x1[i] = 0;
-        }
-        
-        tar_Fc_y = 0;
+
+        //        for(int i=0;i<6;++i){
+        //            c_state_x1[i] = 0;
+        //        }
+        //        
+        //        tar_Fc_y = 0;
 
     }
-    else {       
-//        test_phase = 1;
+    else {
+        //        test_phase = 1;
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
         contact_num = 4;
@@ -1477,127 +1837,29 @@ void CRobot::Test_Function(void)
         FL_foot_vel = tar_init_FL_foot_vel;
         FR_foot_vel = tar_init_FR_foot_vel;
 
-        act_state_x << act_com_pos(1), act_com_vel(1), act_com_acc(1);
-        act_output_y = C*act_state_x;
-   
-        cout << "test_cnt % Ts_cnt = " << test_cnt % Ts_cnt  << endl;
-        
-        if(test_cnt % Ts_cnt == 0){
-           cout <<  "=============================================" << endl;
-            pre_state_x = next_state_x;
-            
-            cout << "pre_state_x = " << pre_state_x.transpose() << endl;
-            
-            cout << "act_state_x = " << act_state_x.transpose() << endl;
-            cout << "act_output_y = " << act_output_y << endl;
-
-            new_ref = 0;
-
-            //========== reference generation ========== //
-            ref_tilda << ref_tilda.block(1,0,Np-1,1), new_ref;  // ref : ZMP
-
-            f = (act_state_x.transpose()*Ax_tilda.transpose()*Q_bar*Bx_tilda - ref_tilda.transpose()*Q_tilda*C_tilda*Bx_tilda).transpose();
-
-            for(unsigned int i =0;i<Np;++i){
-                ff[i] = f(i);
-            }
-
-            osqp_update_lin_cost(MPC_work, ff);
-
-            // Solve updated problem
-            osqp_solve(MPC_work);
-
-            cout << "ZMP error = " << -act_output_y << endl;
-            input_u = MPC_work->solution->x[0];
-            cout << "input_u = " << input_u << endl;
-
-            next_state_x = PHI*act_state_x + GAM*input_u;
-            next_output_y = C*next_state_x;
-
-            cout << "next_state_x = " << next_state_x.transpose() << endl;
-            cout << "next_output_y = " << next_output_y.transpose() << endl;
-            
-            tar_Fc_y = tar_Fc_y + 48.5*input_u*Ts; // mass = 48.5kg
-//            tar_Fc_y = 0;
-            
-            cout << "tar_Fc_y = " << tar_Fc_y << endl;
-            cout <<  "=============================================" << endl;
-            
-//            init_x[0] = pre_state_x(0);
-//            init_x[1] = pre_state_x(1);
-//            init_x[2] = pre_state_x(2);
-//
-//            final_x[0] = next_state_x(0);
-//            final_x[1] = next_state_x(1);
-//            final_x[2] = next_state_x(2);
-//
-//            coefficient_5thPoly(init_x, final_x, Ts, c_state_x1);
-
+        if (Mode == MODE_SIMULATION) {
+        	MPC_process();
         }
 
-//        com_pos(1) = next_state_x(0);//fifth_order_poly(c_state_x1, (double)(test_cnt%Ts_cnt)*dt);
-//        com_vel(1) = next_state_x(1);//fifth_order_poly_dot(c_state_x1, (double)(test_cnt%Ts_cnt)*dt);
-//        com_acc(1) = next_state_x(2);//fifth_order_poly_2dot(c_state_x1, (double)(test_cnt%Ts_cnt)*dt);
+        if (sub_ctrl_flag == true) {
+            moving_done_flag = true;
+            _c << 1, 1, 1, 1;
+            contact_num = 4;
+        }
 
-        tar_state_x << com_pos(1),com_vel(1),com_acc(1);
-        tar_output_y = C*tar_state_x;
-        
-//        if(com_pos(1) > 0.05){
-//            com_pos(1) = 0.05;
-//            com_vel(1) = 0.0;
-//            com_acc(1) = 0.0;
-//            
-//            cout << "com position limit is over." << endl;
-//        }
-        cout << "com_pos(1) = " << com_pos(1) << endl;
-        cout << "com_vel(1) = " << com_vel(1) << endl;
-        cout << "com_acc(1) = " << com_acc(1) << endl;
-        cout << "---------------------------" << endl;
-        
         test_cnt++;
     }
 
     base_pos = com_pos + base_offset;
 
-    tmp_data1[33] = input_u*0.01;
-    tmp_data1[34] = act_output_y(0);
-    tmp_data1[35] = (double)(test_cnt % Ts_cnt)/Ts_cnt*0.01;
-    tmp_data1[36] = tar_output_y(0);
-    tmp_data1[37] = tar_Fc_y;
+    //    tmp_data1[33] = input_u*0.01;
+    //    tmp_data1[34] = act_output_y(0);
+    //    tmp_data1[35] = (double)(test_cnt % Ts_cnt)/Ts_cnt*0.01;
+    //    tmp_data1[36] = tar_output_y(0);
+    //    tmp_data1[37] = tar_Fc_y;
+
     //    // waist
     //    target_pos[6] = 0;
-}
-
-void CRobot::FTsensorTransformation()
-{
-    C_I_roll << 1, 0, 0, 0, cos(base.currentRoll), -sin(base.currentRoll), 0, sin(base.currentRoll), cos(base.currentRoll);
-
-    C_I_pitch << cos(base.currentPitch), 0, sin(base.currentPitch), 0, 1, 0, -sin(base.currentPitch), 0, cos(base.currentPitch);
-
-    RL_C_I_HP << 1, 0, 0, 0, cos(actual_pos[0]), -sin(actual_pos[0]), 0, sin(actual_pos[0]), cos(actual_pos[0]);
-    RL_C_HP_HR << cos(actual_pos[1]), 0, sin(actual_pos[1]), 0, 1, 0, -sin(actual_pos[1]), 0, cos(actual_pos[1]);
-    RL_C_HR_KN << cos(actual_pos[2]), 0, sin(actual_pos[2]), 0, 1, 0, -sin(actual_pos[2]), 0, cos(actual_pos[2]);
-    RL_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
-    RL.T_matrix = C_I_roll * C_I_pitch * RL_C_I_HP * RL_C_HP_HR * RL_C_HR_KN * RL_C_KN_TIP;
-
-    RR_C_I_HP << 1, 0, 0, 0, cos(actual_pos[3]), -sin(actual_pos[3]), 0, sin(actual_pos[3]), cos(actual_pos[3]);
-    RR_C_HP_HR << cos(actual_pos[4]), 0, sin(actual_pos[4]), 0, 1, 0, -sin(actual_pos[4]), 0, cos(actual_pos[4]);
-    RR_C_HR_KN << cos(actual_pos[5]), 0, sin(actual_pos[5]), 0, 1, 0, -sin(actual_pos[5]), 0, cos(actual_pos[5]);
-    RR_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
-    RR.T_matrix = C_I_roll * C_I_pitch * RR_C_I_HP * RR_C_HP_HR * RR_C_HR_KN * RR_C_KN_TIP;
-
-    FL_C_I_HP << 1, 0, 0, 0, cos(actual_pos[7]), -sin(actual_pos[7]), 0, sin(actual_pos[7]), cos(actual_pos[7]);
-    FL_C_HP_HR << cos(actual_pos[8]), 0, sin(actual_pos[8]), 0, 1, 0, -sin(actual_pos[8]), 0, cos(actual_pos[8]);
-    FL_C_HR_KN << cos(actual_pos[9]), 0, sin(actual_pos[9]), 0, 1, 0, -sin(actual_pos[9]), 0, cos(actual_pos[9]);
-    FL_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
-    FL.T_matrix = C_I_roll * C_I_pitch * FL_C_I_HP * FL_C_HP_HR * FL_C_HR_KN * FL_C_KN_TIP;
-
-    FR_C_I_HP << 1, 0, 0, 0, cos(actual_pos[10]), -sin(actual_pos[10]), 0, sin(actual_pos[10]), cos(actual_pos[10]);
-    FR_C_HP_HR << cos(actual_pos[11]), 0, sin(actual_pos[11]), 0, 1, 0, -sin(actual_pos[11]), 0, cos(actual_pos[11]);
-    FR_C_HR_KN << cos(actual_pos[12]), 0, sin(actual_pos[12]), 0, 1, 0, -sin(actual_pos[12]), 0, cos(actual_pos[12]);
-    FR_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
-    FR.T_matrix = C_I_roll * C_I_pitch * FR_C_I_HP * FR_C_HP_HR * FR_C_HR_KN * FR_C_KN_TIP;
-
 }
 
 VectorNd CRobot::FK1(VectorNd q)
@@ -1759,7 +2021,7 @@ void CRobot::Get_CP(void)
     tmp_cp_y = (act_com_pos2(1) + w_n * act_com_vel2(1)) * w_cp_y1;
 
     cp_y = (1 - cp_alpha) * cp_y + cp_alpha*tmp_cp_y;
-    tmp_data1[27] = cp_y;
+    //    tmp_data1[27] = cp_y;
 
     //    if(CP_con_onoff_flag == false) cp_y = 0;
 
@@ -1815,7 +2077,7 @@ void CRobot::Trot_Walking4(void)
         moving_done_flag = false;
         _c << 1, 1, 1, 1;
         contact_num = 4;
-        
+
         com_pos = tar_init_com_pos;
         com_vel = tar_init_com_vel;
 
@@ -1823,7 +2085,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -1849,7 +2111,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -1858,15 +2120,15 @@ void CRobot::Trot_Walking4(void)
         if (tmp_t <= dsp_time / 2) {
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-            RR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
-            FL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+            RR_foot_vel[2] = 5 * c_sf_z1[5] * pow(tmp_t, 4) + 4 * c_sf_z1[4] * pow(tmp_t, 3) + 3 * c_sf_z1[3] * pow(tmp_t, 2) + 2 * c_sf_z1[2] * pow(tmp_t, 1) + 1 * c_sf_z1[1];
+            FL_foot_vel[2] = 5 * c_sf_z1[5] * pow(tmp_t, 4) + 4 * c_sf_z1[4] * pow(tmp_t, 3) + 3 * c_sf_z1[3] * pow(tmp_t, 2) + 2 * c_sf_z1[2] * pow(tmp_t, 1) + 1 * c_sf_z1[1];
         }
         else {
             tmp_t2 = tmp_t - dsp_time / 2.0;
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
-            FL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
+            RR_foot_vel[2] = 5 * c_sf_z2[5] * pow(tmp_t2, 4) + 4 * c_sf_z2[4] * pow(tmp_t2, 3) + 3 * c_sf_z2[3] * pow(tmp_t2, 2) + 2 * c_sf_z2[2] * pow(tmp_t2, 1) + 1 * c_sf_z2[1];
+            FL_foot_vel[2] = 5 * c_sf_z2[5] * pow(tmp_t2, 4) + 4 * c_sf_z2[4] * pow(tmp_t2, 3) + 3 * c_sf_z2[3] * pow(tmp_t2, 2) + 2 * c_sf_z2[2] * pow(tmp_t2, 1) + 1 * c_sf_z2[1];
         }
     }
     else if (tw_cnt < step_cnt) {
@@ -1884,7 +2146,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -1927,7 +2189,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -1982,30 +2244,30 @@ void CRobot::Trot_Walking4(void)
         com_pos[1] = c_com_y1[5] * pow(tmp_t, 5) + c_com_y1[4] * pow(tmp_t, 4) + c_com_y1[3] * pow(tmp_t, 3) + c_com_y1[2] * pow(tmp_t, 2) + c_com_y1[1] * pow(tmp_t, 1) + c_com_y1[0];
         com_vel[0] = 5 * c_com_x1[5] * pow(tmp_t, 4) + 4 * c_com_x1[4] * pow(tmp_t, 3) + 3 * c_com_x1[3] * pow(tmp_t, 2) + 2 * c_com_x1[2] * pow(tmp_t, 1) + c_com_x1[1];
         com_vel[1] = 5 * c_com_y1[5] * pow(tmp_t, 4) + 4 * c_com_y1[4] * pow(tmp_t, 3) + 3 * c_com_y1[3] * pow(tmp_t, 2) + 2 * c_com_y1[2] * pow(tmp_t, 1) + c_com_y1[1];
-        
+
         RL_foot_pos[0] = pre_RL_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
         RL_foot_pos[1] = pre_RL_foot_pos[1] + c_sf_y1[5] * pow(tmp_t, 5) + c_sf_y1[4] * pow(tmp_t, 4) + c_sf_y1[3] * pow(tmp_t, 3) + c_sf_y1[2] * pow(tmp_t, 2) + c_sf_y1[1] * pow(tmp_t, 1) + c_sf_y1[0];
         FR_foot_pos[0] = pre_FR_foot_pos[0] + c_sf_x1[5] * pow(tmp_t, 5) + c_sf_x1[4] * pow(tmp_t, 4) + c_sf_x1[3] * pow(tmp_t, 3) + c_sf_x1[2] * pow(tmp_t, 2) + c_sf_x1[1] * pow(tmp_t, 1) + c_sf_x1[0];
         FR_foot_pos[1] = pre_FR_foot_pos[1] + c_sf_y1[5] * pow(tmp_t, 5) + c_sf_y1[4] * pow(tmp_t, 4) + c_sf_y1[3] * pow(tmp_t, 3) + c_sf_y1[2] * pow(tmp_t, 2) + c_sf_y1[1] * pow(tmp_t, 1) + c_sf_y1[0];
-        
-        RL_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t, 4) + 4*c_sf_x1[4] * pow(tmp_t, 3) + 3*c_sf_x1[3] * pow(tmp_t, 2) + 2*c_sf_x1[2] * pow(tmp_t, 1) + 1*c_sf_x1[1];
-        RL_foot_vel[1] = 5*c_sf_y1[5] * pow(tmp_t, 4) + 4*c_sf_y1[4] * pow(tmp_t, 3) + 3*c_sf_y1[3] * pow(tmp_t, 2) + 2*c_sf_y1[2] * pow(tmp_t, 1) + 1*c_sf_y1[1];
-        FR_foot_vel[0] = 5*c_sf_x1[5] * pow(tmp_t, 4) + 4*c_sf_x1[4] * pow(tmp_t, 3) + 3*c_sf_x1[3] * pow(tmp_t, 2) + 2*c_sf_x1[2] * pow(tmp_t, 1) + 1*c_sf_x1[1];
-        FR_foot_vel[1] = 5*c_sf_y1[5] * pow(tmp_t, 4) + 4*c_sf_y1[4] * pow(tmp_t, 3) + 3*c_sf_y1[3] * pow(tmp_t, 2) + 2*c_sf_y1[2] * pow(tmp_t, 1) + 1*c_sf_y1[1];
-        
+
+        RL_foot_vel[0] = 5 * c_sf_x1[5] * pow(tmp_t, 4) + 4 * c_sf_x1[4] * pow(tmp_t, 3) + 3 * c_sf_x1[3] * pow(tmp_t, 2) + 2 * c_sf_x1[2] * pow(tmp_t, 1) + 1 * c_sf_x1[1];
+        RL_foot_vel[1] = 5 * c_sf_y1[5] * pow(tmp_t, 4) + 4 * c_sf_y1[4] * pow(tmp_t, 3) + 3 * c_sf_y1[3] * pow(tmp_t, 2) + 2 * c_sf_y1[2] * pow(tmp_t, 1) + 1 * c_sf_y1[1];
+        FR_foot_vel[0] = 5 * c_sf_x1[5] * pow(tmp_t, 4) + 4 * c_sf_x1[4] * pow(tmp_t, 3) + 3 * c_sf_x1[3] * pow(tmp_t, 2) + 2 * c_sf_x1[2] * pow(tmp_t, 1) + 1 * c_sf_x1[1];
+        FR_foot_vel[1] = 5 * c_sf_y1[5] * pow(tmp_t, 4) + 4 * c_sf_y1[4] * pow(tmp_t, 3) + 3 * c_sf_y1[3] * pow(tmp_t, 2) + 2 * c_sf_y1[2] * pow(tmp_t, 1) + 1 * c_sf_y1[1];
+
         if (tmp_cnt <= dsp_cnt / 2) {
             RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
             FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-            RL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
-            FR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+            RL_foot_vel[2] = 5 * c_sf_z1[5] * pow(tmp_t, 4) + 4 * c_sf_z1[4] * pow(tmp_t, 3) + 3 * c_sf_z1[3] * pow(tmp_t, 2) + 2 * c_sf_z1[2] * pow(tmp_t, 1) + 1 * c_sf_z1[1];
+            FR_foot_vel[2] = 5 * c_sf_z1[5] * pow(tmp_t, 4) + 4 * c_sf_z1[4] * pow(tmp_t, 3) + 3 * c_sf_z1[3] * pow(tmp_t, 2) + 2 * c_sf_z1[2] * pow(tmp_t, 1) + 1 * c_sf_z1[1];
         }
         else {
             tmp_t2 = tmp_t - dsp_time / 2.0;
             RL_foot_pos[2] = tar_init_RL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
             FR_foot_pos[2] = tar_init_FR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-            RL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
-            FR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
-            
+            RL_foot_vel[2] = 5 * c_sf_z2[5] * pow(tmp_t2, 4) + 4 * c_sf_z2[4] * pow(tmp_t2, 3) + 3 * c_sf_z2[3] * pow(tmp_t2, 2) + 2 * c_sf_z2[2] * pow(tmp_t2, 1) + 1 * c_sf_z2[1];
+            FR_foot_vel[2] = 5 * c_sf_z2[5] * pow(tmp_t2, 4) + 4 * c_sf_z2[4] * pow(tmp_t2, 3) + 3 * c_sf_z2[3] * pow(tmp_t2, 2) + 2 * c_sf_z2[2] * pow(tmp_t2, 1) + 1 * c_sf_z2[1];
+
             if (tmp_cnt == dsp_cnt - 1) {
                 pre_com_pos(0) = pre_com_pos[0] + pre_x_moving_speed * (dsp_time) / 2.0 + x_moving_speed * (dsp_time) / 2.0;
                 pre_com_pos(1) = pre_com_pos[1] + pre_y_moving_speed * (dsp_time) / 2.0 + y_moving_speed * (dsp_time) / 2.0;
@@ -2041,8 +2303,8 @@ void CRobot::Trot_Walking4(void)
         com_pos[0] = pre_com_pos(0) + x_moving_speed*tmp_t;
         com_pos[1] = pre_com_pos(1) + y_moving_speed*tmp_t;
         com_pos[2] = pre_com_pos(2);
-        
-//        com_vel = tar_init_com_vel;
+
+        //        com_vel = tar_init_com_vel;
 
         com_vel[0] = x_moving_speed;
         com_vel[1] = y_moving_speed;
@@ -2052,7 +2314,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -2063,7 +2325,7 @@ void CRobot::Trot_Walking4(void)
             pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
             pre_com_pos(1) = pre_com_pos(1) + y_moving_speed*fsp_time;
             pre_com_pos(2) = com_pos(2);
-            
+
             pre_RL_foot_pos = RL_foot_pos;
             pre_RR_foot_pos = RR_foot_pos;
             pre_FL_foot_pos = FL_foot_pos;
@@ -2103,7 +2365,7 @@ void CRobot::Trot_Walking4(void)
         contact_num = 2;
 
         com_pos = pre_com_pos;
-        
+
         com_vel[0] = x_moving_speed;
         com_vel[1] = y_moving_speed;
         com_vel[2] = tar_init_com_vel[2];
@@ -2112,7 +2374,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -2159,30 +2421,30 @@ void CRobot::Trot_Walking4(void)
         com_pos[1] = pre_com_pos(1) + y_moving_speed*tmp_t;
         com_vel[0] = x_moving_speed;
         com_vel[1] = y_moving_speed;
-        
+
         RR_foot_pos[0] = pre_RR_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
         RR_foot_pos[1] = pre_RR_foot_pos[1] + c_sf_y2[5] * pow(tmp_t, 5) + c_sf_y2[4] * pow(tmp_t, 4) + c_sf_y2[3] * pow(tmp_t, 3) + c_sf_y2[2] * pow(tmp_t, 2) + c_sf_y2[1] * pow(tmp_t, 1) + c_sf_y2[0];
         FL_foot_pos[0] = pre_FL_foot_pos[0] + c_sf_x2[5] * pow(tmp_t, 5) + c_sf_x2[4] * pow(tmp_t, 4) + c_sf_x2[3] * pow(tmp_t, 3) + c_sf_x2[2] * pow(tmp_t, 2) + c_sf_x2[1] * pow(tmp_t, 1) + c_sf_x2[0];
         FL_foot_pos[1] = pre_FL_foot_pos[1] + c_sf_y2[5] * pow(tmp_t, 5) + c_sf_y2[4] * pow(tmp_t, 4) + c_sf_y2[3] * pow(tmp_t, 3) + c_sf_y2[2] * pow(tmp_t, 2) + c_sf_y2[1] * pow(tmp_t, 1) + c_sf_y2[0];
 
-        RR_foot_vel[0] = 5*c_sf_x2[5] * pow(tmp_t, 4) + 4*c_sf_x2[4] * pow(tmp_t, 3) + 3*c_sf_x2[3] * pow(tmp_t, 2) + 2*c_sf_x2[2] * pow(tmp_t, 1) + 1*c_sf_x2[1];
-        RR_foot_vel[1] = 5*c_sf_y2[5] * pow(tmp_t, 4) + 4*c_sf_y2[4] * pow(tmp_t, 3) + 3*c_sf_y2[3] * pow(tmp_t, 2) + 2*c_sf_y2[2] * pow(tmp_t, 1) + 1*c_sf_y2[1];
-        FL_foot_vel[0] = 5*c_sf_x2[5] * pow(tmp_t, 4) + 4*c_sf_x2[4] * pow(tmp_t, 3) + 3*c_sf_x2[3] * pow(tmp_t, 2) + 2*c_sf_x2[2] * pow(tmp_t, 1) + 1*c_sf_x2[1];
-        FL_foot_vel[1] = 5*c_sf_y2[5] * pow(tmp_t, 4) + 4*c_sf_y2[4] * pow(tmp_t, 3) + 3*c_sf_y2[3] * pow(tmp_t, 2) + 2*c_sf_y2[2] * pow(tmp_t, 1) + 1*c_sf_y2[1];
-        
+        RR_foot_vel[0] = 5 * c_sf_x2[5] * pow(tmp_t, 4) + 4 * c_sf_x2[4] * pow(tmp_t, 3) + 3 * c_sf_x2[3] * pow(tmp_t, 2) + 2 * c_sf_x2[2] * pow(tmp_t, 1) + 1 * c_sf_x2[1];
+        RR_foot_vel[1] = 5 * c_sf_y2[5] * pow(tmp_t, 4) + 4 * c_sf_y2[4] * pow(tmp_t, 3) + 3 * c_sf_y2[3] * pow(tmp_t, 2) + 2 * c_sf_y2[2] * pow(tmp_t, 1) + 1 * c_sf_y2[1];
+        FL_foot_vel[0] = 5 * c_sf_x2[5] * pow(tmp_t, 4) + 4 * c_sf_x2[4] * pow(tmp_t, 3) + 3 * c_sf_x2[3] * pow(tmp_t, 2) + 2 * c_sf_x2[2] * pow(tmp_t, 1) + 1 * c_sf_x2[1];
+        FL_foot_vel[1] = 5 * c_sf_y2[5] * pow(tmp_t, 4) + 4 * c_sf_y2[4] * pow(tmp_t, 3) + 3 * c_sf_y2[3] * pow(tmp_t, 2) + 2 * c_sf_y2[2] * pow(tmp_t, 1) + 1 * c_sf_y2[1];
+
         if (tmp_cnt <= dsp_cnt / 2) {
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z1[5] * pow(tmp_t, 5) + c_sf_z1[4] * pow(tmp_t, 4) + c_sf_z1[3] * pow(tmp_t, 3) + c_sf_z1[2] * pow(tmp_t, 2) + c_sf_z1[1] * pow(tmp_t, 1) + c_sf_z1[0];
-            RR_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
-            FL_foot_vel[2] = 5*c_sf_z1[5] * pow(tmp_t, 4) + 4*c_sf_z1[4] * pow(tmp_t, 3) + 3*c_sf_z1[3] * pow(tmp_t, 2) + 2*c_sf_z1[2] * pow(tmp_t, 1) + 1*c_sf_z1[1];
+            RR_foot_vel[2] = 5 * c_sf_z1[5] * pow(tmp_t, 4) + 4 * c_sf_z1[4] * pow(tmp_t, 3) + 3 * c_sf_z1[3] * pow(tmp_t, 2) + 2 * c_sf_z1[2] * pow(tmp_t, 1) + 1 * c_sf_z1[1];
+            FL_foot_vel[2] = 5 * c_sf_z1[5] * pow(tmp_t, 4) + 4 * c_sf_z1[4] * pow(tmp_t, 3) + 3 * c_sf_z1[3] * pow(tmp_t, 2) + 2 * c_sf_z1[2] * pow(tmp_t, 1) + 1 * c_sf_z1[1];
         }
         else {
             tmp_t2 = tmp_t - dsp_time / 2.0;
             RR_foot_pos[2] = tar_init_RR_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
             FL_foot_pos[2] = tar_init_FL_foot_pos[2] + c_sf_z2[5] * pow(tmp_t2, 5) + c_sf_z2[4] * pow(tmp_t2, 4) + c_sf_z2[3] * pow(tmp_t2, 3) + c_sf_z2[2] * pow(tmp_t2, 2) + c_sf_z2[1] * pow(tmp_t2, 1) + c_sf_z2[0];
-            RR_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
-            FL_foot_vel[2] = 5*c_sf_z2[5] * pow(tmp_t2, 4) + 4*c_sf_z2[4] * pow(tmp_t2, 3) + 3*c_sf_z2[3] * pow(tmp_t2, 2) + 2*c_sf_z2[2] * pow(tmp_t2, 1) + 1*c_sf_z2[1];
-            
+            RR_foot_vel[2] = 5 * c_sf_z2[5] * pow(tmp_t2, 4) + 4 * c_sf_z2[4] * pow(tmp_t2, 3) + 3 * c_sf_z2[3] * pow(tmp_t2, 2) + 2 * c_sf_z2[2] * pow(tmp_t2, 1) + 1 * c_sf_z2[1];
+            FL_foot_vel[2] = 5 * c_sf_z2[5] * pow(tmp_t2, 4) + 4 * c_sf_z2[4] * pow(tmp_t2, 3) + 3 * c_sf_z2[3] * pow(tmp_t2, 2) + 2 * c_sf_z2[2] * pow(tmp_t2, 1) + 1 * c_sf_z2[1];
+
             if (tmp_cnt == dsp_cnt - 1) {
                 pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*dsp_time;
                 pre_com_pos(1) = pre_com_pos(1) + y_moving_speed*dsp_time;
@@ -2219,7 +2481,7 @@ void CRobot::Trot_Walking4(void)
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -2230,7 +2492,7 @@ void CRobot::Trot_Walking4(void)
             pre_com_pos(0) = pre_com_pos(0) + x_moving_speed*fsp_time;
             pre_com_pos(1) = pre_com_pos(1) + y_moving_speed*fsp_time;
             pre_com_pos(2) = com_pos(2);
-            
+
             pre_RL_foot_pos = RL_foot_pos;
             pre_RR_foot_pos = RR_foot_pos;
             pre_FL_foot_pos = FL_foot_pos;
@@ -2286,16 +2548,16 @@ void CRobot::Trot_Walking4(void)
         // ============ Continuous Walking End ============== //
     }
     else {
-    	_c << 1, 1, 1, 1;
-		contact_num = 4;
+        _c << 1, 1, 1, 1;
+        contact_num = 4;
 
         com_vel = tar_init_com_vel;
-                
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
         FR_foot_vel = tar_init_FR_foot_vel;
-        
+
         if (tw_cnt == step_cnt * 3) {
             moving_done_flag = true;
             _c << 1, 1, 1, 1;
@@ -2316,10 +2578,10 @@ void CRobot::Trot_Walking4(void)
     //    tmp_data1[21] = RR_cp_foot_pos(0);
     //    tmp_data1[22] = cp_x;
 
-//    tmp_data1[23] = RL_cp_foot_pos(1);
-//    tmp_data1[24] = RR_cp_foot_pos(1);
-//    tmp_data1[25] = FL_cp_foot_pos(1);
-//    tmp_data1[26] = FR_cp_foot_pos(1);
+    //    tmp_data1[23] = RL_cp_foot_pos(1);
+    //    tmp_data1[24] = RR_cp_foot_pos(1);
+    //    tmp_data1[25] = FL_cp_foot_pos(1);
+    //    tmp_data1[26] = FR_cp_foot_pos(1);
     //    tmp_data1[27] = cp_y;
     tmp_data1[49] = walking_phase * 0.1;
 
@@ -2805,16 +3067,16 @@ void CRobot::Base_Ori_Con2(void)
     del_L_left = BOC_Kp_roll * (0 - lpf_IMURoll) + BOC_Ki_roll*sum_roll_err;
     del_L_right = -BOC_Kp_roll * (0 - lpf_IMURoll) - BOC_Ki_roll*sum_roll_err;
 
-    // pitch
-    //    lpf_IMUPitch = (1 - IMUPitch_alpha) * lpf_IMUPitch + IMUPitch_alpha*IMUPitch;
-    lpf_IMUPitch = IMUPitch;
-
-    if (del_L_front < limit_foot_z && del_L_front > -limit_foot_z) {
-        sum_pitch_err = sum_pitch_err + (0 - lpf_IMUPitch) * dt;
-    }
-
-    del_L_front = BOC_Kp_pitch * (0 - lpf_IMUPitch) + BOC_Ki_pitch*sum_pitch_err;
-    del_L_rear = -BOC_Kp_pitch * (0 - lpf_IMUPitch) - BOC_Ki_pitch*sum_pitch_err;
+    //    // pitch
+    //    //    lpf_IMUPitch = (1 - IMUPitch_alpha) * lpf_IMUPitch + IMUPitch_alpha*IMUPitch;
+    //    lpf_IMUPitch = IMUPitch;
+    //
+    //    if (del_L_front < limit_foot_z && del_L_front > -limit_foot_z) {
+    //        sum_pitch_err = sum_pitch_err + (0 - lpf_IMUPitch) * dt;
+    //    }
+    //
+    //    del_L_front = BOC_Kp_pitch * (0 - lpf_IMUPitch) + BOC_Ki_pitch*sum_pitch_err;
+    //    del_L_rear = -BOC_Kp_pitch * (0 - lpf_IMUPitch) - BOC_Ki_pitch*sum_pitch_err;
 
     //    cout << "del_L_front = " << del_L_front << ", del_L_rear = " << del_L_rear << endl;
 
@@ -2824,6 +3086,8 @@ void CRobot::Base_Ori_Con2(void)
     RR_foot_pos_local_offset(2) = -del_L_right + del_L_rear;
     FL_foot_pos_local_offset(2) = -del_L_left + del_L_front;
     FR_foot_pos_local_offset(2) = -del_L_right + del_L_front;
+
+    //    cout << "del_L_left = " << del_L_left << ", del_L_right = " << del_L_right << endl;
 
     if (RL_foot_pos_local_offset(2) > limit_foot_z) {
         RL_foot_pos_local_offset(2) = limit_foot_z;
@@ -3001,12 +3265,12 @@ void CRobot::Get_act_com(void)
     //    act_base_vel[2] = -(_c(0) * actual_EP_vel[2] + _c(1) * actual_EP_vel[5] + _c(2) * actual_EP_vel[8] + _c(3) * actual_EP_vel[11]) / contact_num;
 
 
-//    static double pos_alpha = 0.02; 
-//    static double vel_alpha = 0.02; 
-    
-    
-    
-    if(contact_num != 0){
+    //    static double pos_alpha = 0.02; 
+    //    static double vel_alpha = 0.02; 
+
+
+
+    if (contact_num != 0) {
         tmp_act_base_pos(0) = (_c(0) * (RL_foot_pos[0] - act_RL_foot_pos_local[0]) + _c(1) * (RR_foot_pos[0] - act_RR_foot_pos_local[0]) + _c(2) * (FL_foot_pos[0] - act_FL_foot_pos_local[0]) + _c(3) * (FR_foot_pos[0] - act_FR_foot_pos_local[0])) / contact_num;
         tmp_act_base_pos(1) = (_c(0) * (RL_foot_pos[1] - act_RL_foot_pos_local[1]) + _c(1) * (RR_foot_pos[1] - act_RR_foot_pos_local[1]) + _c(2) * (FL_foot_pos[1] - act_FL_foot_pos_local[1]) + _c(3) * (FR_foot_pos[1] - act_FR_foot_pos_local[1])) / contact_num;
         tmp_act_base_pos(2) = (_c(0) * (RL_foot_pos[2] - act_RL_foot_pos_local[2]) + _c(1) * (RR_foot_pos[2] - act_RR_foot_pos_local[2]) + _c(2) * (FL_foot_pos[2] - act_FL_foot_pos_local[2]) + _c(3) * (FR_foot_pos[2] - act_FR_foot_pos_local[2])) / contact_num;
@@ -3014,9 +3278,9 @@ void CRobot::Get_act_com(void)
         tmp_act_base_vel(0) = -(_c(0) * actual_EP_vel[0] + _c(1) * actual_EP_vel[3] + _c(2) * actual_EP_vel[6] + _c(3) * actual_EP_vel[9]) / contact_num;
         tmp_act_base_vel(1) = -(_c(0) * actual_EP_vel[1] + _c(1) * actual_EP_vel[4] + _c(2) * actual_EP_vel[7] + _c(3) * actual_EP_vel[10]) / contact_num;
         tmp_act_base_vel(2) = -(_c(0) * actual_EP_vel[2] + _c(1) * actual_EP_vel[5] + _c(2) * actual_EP_vel[8] + _c(3) * actual_EP_vel[11]) / contact_num;
-        
+
     }
-    else{
+    else {
         tmp_act_base_pos(0) = ((RL_foot_pos[0] - act_RL_foot_pos_local[0]) + (RR_foot_pos[0] - act_RR_foot_pos_local[0]) + (FL_foot_pos[0] - act_FL_foot_pos_local[0]) + (FR_foot_pos[0] - act_FR_foot_pos_local[0])) / 4;
         tmp_act_base_pos(1) = ((RL_foot_pos[1] - act_RL_foot_pos_local[1]) + (RR_foot_pos[1] - act_RR_foot_pos_local[1]) + (FL_foot_pos[1] - act_FL_foot_pos_local[1]) + (FR_foot_pos[1] - act_FR_foot_pos_local[1])) / 4;
         tmp_act_base_pos(2) = ((RL_foot_pos[2] - act_RL_foot_pos_local[2]) + (RR_foot_pos[2] - act_RR_foot_pos_local[2]) + (FL_foot_pos[2] - act_FL_foot_pos_local[2]) + (FR_foot_pos[2] - act_FR_foot_pos_local[2])) / 4;
@@ -3025,10 +3289,10 @@ void CRobot::Get_act_com(void)
         tmp_act_base_vel(1) = -(actual_EP_vel[1] + actual_EP_vel[4] + actual_EP_vel[7] + actual_EP_vel[10]) / 4;
         tmp_act_base_vel(2) = -(actual_EP_vel[2] + actual_EP_vel[5] + actual_EP_vel[8] + actual_EP_vel[11]) / 4;
     }
-    
-    act_base_pos = (1 - vel_alpha)*act_base_pos + vel_alpha*tmp_act_base_pos;
-    act_base_vel = (1 - vel_alpha)*act_base_vel + vel_alpha*tmp_act_base_vel;
-    
+
+    act_base_pos = (1 - vel_alpha) * act_base_pos + vel_alpha*tmp_act_base_pos;
+    act_base_vel = (1 - vel_alpha) * act_base_vel + vel_alpha*tmp_act_base_vel;
+
 
     //    cout << "act_base_pos(0) = " << act_base_pos(0) << ", act_base_pos(1) = " << act_base_pos(1) << ", act_base_pos(2) = " << act_base_pos(2) << endl;
     //    cout << "act_base_pos2(0) = " << act_base_pos2(0) << ", act_base_pos2(1) = " << act_base_pos2(1) << ", act_base_pos2(2) = " << act_base_pos2(2) << endl;
@@ -3038,11 +3302,11 @@ void CRobot::Get_act_com(void)
     act_com_pos = act_base_pos - base_offset;
     act_com_vel = act_base_vel; //(0.90*lpf_base_alpha)*pre_act_com_vel + ((1 - 0.90)*lpf_base_alpha)*act_base_vel;
 
-    
-    tmp_act_com_acc = (act_com_vel - pre_act_com_vel)/dt;
+
+    tmp_act_com_acc = (act_com_vel - pre_act_com_vel) / dt;
     pre_act_com_vel = act_com_vel;
-    
-    act_com_acc = (1 - 0.02)*act_com_acc + 0.02*tmp_act_com_acc;
+
+    act_com_acc = (1 - 0.02) * act_com_acc + 0.02 * tmp_act_com_acc;
 
     //            cout << "IMURoll = " << IMURoll*R2D << endl;
     act_base_ori << IMURoll, IMUPitch, IMUYaw - init_IMUYaw;
@@ -3095,6 +3359,7 @@ void CRobot::Get_act_com(void)
 
 
 // ====================== flying trot trajectory generation ===================== //
+
 void CRobot::Flying_Trot_Running3(void)
 {
     static double com_t = 0;
@@ -3102,11 +3367,11 @@ void CRobot::Flying_Trot_Running3(void)
     static double sf_rr_t = 0, sf_rr_t2 = 0;
     static double tar_rl_foot_pos = 0, tar_rr_foot_pos = 0;
     static bool init_flag = false;
-    
+
     ft_time = (double) ft_cnt*dt;
     base_ori(2) = tmp_base_ori(2);
 
-//    if (CP_con_onoff_flag == true) Get_CP();
+    //    if (CP_con_onoff_flag == true) Get_CP();
 
     if (ft_cnt == 0) {
         //        cout << "=========== ft_phase = 0 ===========" << endl;
@@ -3116,14 +3381,14 @@ void CRobot::Flying_Trot_Running3(void)
         contact_num = 4;
 
         com_t = 0;
-        sf_rl_t = 0; 
+        sf_rl_t = 0;
         sf_rl_t2 = 0;
         sf_rr_t = 0;
         sf_rr_t2 = 0;
         tar_rl_foot_pos = 0;
         tar_rr_foot_pos = 0;
         init_flag = false;
-        
+
         com_pos = tar_init_com_pos;
         com_vel = tar_init_com_vel;
         com_acc = tar_init_com_acc;
@@ -3132,20 +3397,20 @@ void CRobot::Flying_Trot_Running3(void)
         RR_foot_pos = tar_init_RR_foot_pos;
         FL_foot_pos = tar_init_FL_foot_pos;
         FR_foot_pos = tar_init_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
         FR_foot_vel = tar_init_FR_foot_vel;
-        
+
         pre_com_pos = com_pos;
         pre_com_vel = com_vel;
-        
+
         pre_RL_foot_pos = RL_foot_pos;
         pre_RR_foot_pos = RR_foot_pos;
         pre_FL_foot_pos = FL_foot_pos;
         pre_FR_foot_pos = FR_foot_pos;
-        
+
 
         x_moving_speed = 0;
 
@@ -3159,36 +3424,36 @@ void CRobot::Flying_Trot_Running3(void)
         com_t = ft_time;
         sf_rr_t = sf_rr_t + dt;
 
-        com_pos[2] = fifth_order_poly(c_com_z1,com_t);
-        com_vel[2] = fifth_order_poly_dot(c_com_z1,com_t);
-        com_acc[2] = fifth_order_poly_2dot(c_com_z1,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z1, com_t);
+        com_vel[2] = fifth_order_poly_dot(c_com_z1, com_t);
+        com_acc[2] = fifth_order_poly_2dot(c_com_z1, com_t);
 
         RL_foot_pos[2] = tar_init_RL_foot_pos[2];
         FR_foot_pos[2] = tar_init_FR_foot_pos[2];
         RL_foot_vel[2] = tar_init_RL_foot_vel[2];
-                
-        if(sf_rr_t < (ts+tf)/2.0){
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rr_t);
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rr_t);
-            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z1,sf_rr_t);
- 
+
+        if (sf_rr_t < (ts + tf) / 2.0) {
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z1, sf_rr_t);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z1, sf_rr_t);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z1, sf_rr_t);
+
         }
-        else{
-            sf_rr_t2 = sf_rr_t - (ts+tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
-            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z2,sf_rr_t2);
+        else {
+            sf_rr_t2 = sf_rr_t - (ts + tf) / 2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z2, sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z2, sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z2, sf_rr_t2);
         }
-        
+
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
-        if(ft_cnt == ts_cnt - 1){
+
+        if (ft_cnt == ts_cnt - 1) {
             pre_x_moving_speed = x_moving_speed;
             x_moving_speed = tmp_x_moving_speed;
-//            tar_rl_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
-            tar_rl_foot_pos = pre_com_pos[0] - 0.35 + pre_x_moving_speed*tf + (pre_x_moving_speed + x_moving_speed)*ts/2.0 + x_moving_speed*tf + x_moving_speed*ts/2.0;
-            
+            //            tar_rl_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+            tar_rl_foot_pos = pre_com_pos[0] - 0.35 + pre_x_moving_speed * tf + (pre_x_moving_speed + x_moving_speed) * ts / 2.0 + x_moving_speed * tf + x_moving_speed * ts / 2.0;
+
             init_flag = true;
             tar_rr_foot_pos = pre_RR_foot_pos[0];
             sf_rl_t = 0;
@@ -3199,60 +3464,60 @@ void CRobot::Flying_Trot_Running3(void)
         ft_phase = 2;
         _c << 0, 0, 0, 0;
         contact_num = 0;
-//        _c << 1, 0, 0, 1;
-//		contact_num = 2;
+        //        _c << 1, 0, 0, 1;
+        //		contact_num = 2;
         com_t = ft_time - ts;
         sf_rl_t = sf_rl_t + dt;
         sf_rr_t = sf_rr_t + dt;
 
         com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*com_t;
-        com_pos[2] = fifth_order_poly(c_com_z2,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z2, com_t);
 
         com_vel[0] = pre_x_moving_speed;
-        com_vel[2] = fifth_order_poly_dot(c_com_z2,com_t);
-        
-        com_acc[2] = fifth_order_poly_2dot(c_com_z2,com_t);
+        com_vel[2] = fifth_order_poly_dot(c_com_z2, com_t);
 
-        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        
-        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
-        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
-        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rl_t);
-        
-        if(init_flag != true){
-            RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-            FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-            RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        com_acc[2] = fifth_order_poly_2dot(c_com_z2, com_t);
 
-            sf_rr_t2 = sf_rr_t -(ft_step_time + tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
-            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rr_t2);
-        
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rl_t);
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rl_t);
+        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3, sf_rl_t);
+
+        if (init_flag != true) {
+            RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+            FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+            RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+
+            sf_rr_t2 = sf_rr_t - (ft_step_time + tf) / 2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4, sf_rr_t2);
+
         }
-        else{
+        else {
             RR_foot_pos[0] = tar_init_RR_foot_pos[0];
             FL_foot_pos[0] = tar_init_FL_foot_pos[0];
             RR_foot_vel[0] = tar_init_RR_foot_vel[0];
 
-            sf_rr_t2 = sf_rr_t - (ts+tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rr_t2);
-            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z2,sf_rr_t2);
-            
-            if(ft_cnt == ft_step_cnt - 1){
+            sf_rr_t2 = sf_rr_t - (ts + tf) / 2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z2, sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z2, sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z2, sf_rr_t2);
+
+            if (ft_cnt == ft_step_cnt - 1) {
                 init_flag = false;
-            } 
+            }
         }
-        
+
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
-        
+
+
         if (ft_cnt == ft_step_cnt - 1) {
-            
+
             pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*tf;
             pre_com_pos[1] = com_pos[1];
             pre_com_pos[2] = h_2;
@@ -3261,9 +3526,9 @@ void CRobot::Flying_Trot_Running3(void)
             pre_com_vel[1] = com_vel[1];
             pre_com_vel[2] = v_2;
 
-            pre_FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]);// + tar_rr_foot_pos;
-            pre_RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]);//pre_RR_foot_pos[0] + tar_rr_foot_pos;
-                    
+            pre_FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]); // + tar_rr_foot_pos;
+            pre_RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]); //pre_RR_foot_pos[0] + tar_rr_foot_pos;
+
             FT_COM_X_Traj_Gen();
         }
     }
@@ -3275,45 +3540,45 @@ void CRobot::Flying_Trot_Running3(void)
         com_t = ft_time - ft_step_time;
         sf_rl_t = sf_rl_t + dt;
 
-        com_pos[0] = fifth_order_poly(c_com_x1,com_t);
+        com_pos[0] = fifth_order_poly(c_com_x1, com_t);
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = fifth_order_poly(c_com_z3,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z3, com_t);
 
-        com_vel[0] = fifth_order_poly_dot(c_com_x1,com_t);
+        com_vel[0] = fifth_order_poly_dot(c_com_x1, com_t);
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = fifth_order_poly_dot(c_com_z3,com_t);
-        
-        com_acc[2] = fifth_order_poly_2dot(c_com_z3,com_t);
-        
-        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        
+        com_vel[2] = fifth_order_poly_dot(c_com_z3, com_t);
+
+        com_acc[2] = fifth_order_poly_2dot(c_com_z3, com_t);
+
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+
         RR_foot_pos[0] = pre_RR_foot_pos[0];
         FL_foot_pos[0] = pre_FL_foot_pos[0];
         RR_foot_vel[0] = tar_init_RR_foot_vel[0];
-        
+
         RR_foot_pos[2] = tar_init_RR_foot_pos[2];
         FL_foot_pos[2] = tar_init_FL_foot_pos[2];
         RR_foot_vel[2] = tar_init_RR_foot_vel[2];
-        
-        if(sf_rl_t < (ft_step_time + tf)/2.0){
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rl_t);
-            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rl_t);
- 
+
+        if (sf_rl_t < (ft_step_time + tf) / 2.0) {
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rl_t);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rl_t);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z3, sf_rl_t);
+
         }
-        else{
-            sf_rl_t2 = sf_rl_t - (ft_step_time + tf)/2.0;
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
-            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rl_t2);
+        else {
+            sf_rl_t2 = sf_rl_t - (ft_step_time + tf) / 2.0;
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rl_t2);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rl_t2);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4, sf_rl_t2);
         }
-        
+
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
-        
+
+
         if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
             pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
             pre_com_pos[1] = com_pos(1);
@@ -3322,70 +3587,70 @@ void CRobot::Flying_Trot_Running3(void)
             pre_com_vel[0] = x_moving_speed;
             pre_com_vel[1] = com_vel[1];
             pre_com_vel[2] = v_1;
-            
+
             sf_rr_t = 0;
-            
+
             pre_x_moving_speed = x_moving_speed;
             x_moving_speed = tmp_x_moving_speed;
-            
-//            tar_rr_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
-            tar_rr_foot_pos = pre_com_pos[0] - 0.35 + pre_x_moving_speed*tf + (pre_x_moving_speed + x_moving_speed)*ts/2.0 + x_moving_speed*tf + x_moving_speed*ts/2.0;
+
+            //            tar_rr_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+            tar_rr_foot_pos = pre_com_pos[0] - 0.35 + pre_x_moving_speed * tf + (pre_x_moving_speed + x_moving_speed) * ts / 2.0 + x_moving_speed * tf + x_moving_speed * ts / 2.0;
         }
     }
     else if (ft_cnt < 2 * ft_step_cnt) {
         //        cout << "=========== ft_phase = 4 ===========" << endl;
         ft_phase = 4;
-//        _c << 0, 1, 1, 0;
-//		contact_num = 2;
+        //        _c << 0, 1, 1, 0;
+        //		contact_num = 2;
         _c << 0, 0, 0, 0;
         contact_num = 0;
         com_t = ft_time - ft_step_time - ts;
         sf_rl_t = sf_rl_t + dt;
         sf_rr_t = sf_rr_t + dt;
-        
+
         com_pos[0] = pre_com_pos(0) + pre_x_moving_speed*com_t;
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = fifth_order_poly(c_com_z2,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z2, com_t);
 
         com_vel[0] = pre_x_moving_speed;
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = fifth_order_poly_dot(c_com_z2,com_t);
-        
-        com_acc[2] = fifth_order_poly_2dot(c_com_z2,com_t);
+        com_vel[2] = fifth_order_poly_dot(c_com_z2, com_t);
 
-        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rl_t));
-        
-        sf_rl_t2 = sf_rl_t - (ft_step_time + tf)/2.0;
-        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
-        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rl_t2);
-        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rl_t2);
+        com_acc[2] = fifth_order_poly_2dot(c_com_z2, com_t);
 
-        RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        
-        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
-        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
-        RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rr_t);
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rl_t));
+
+        sf_rl_t2 = sf_rl_t - (ft_step_time + tf) / 2.0;
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rl_t2);
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rl_t2);
+        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z4, sf_rl_t2);
+
+        RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+        FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+        RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rr_t);
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rr_t);
+        RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z3, sf_rr_t);
 
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
+
         if (ft_cnt == 2 * ft_step_cnt - 1) {
 
             pre_com_pos(0) = pre_com_pos(0) + pre_x_moving_speed*tf;
             pre_com_pos(1) = com_pos(1);
-            pre_com_pos(2) = h_2; 
+            pre_com_pos(2) = h_2;
 
             pre_com_vel[0] = pre_x_moving_speed;
             pre_com_vel[1] = com_vel[1];
             pre_com_vel[2] = v_2;
 
-            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]);//tar_rl_foot_pos;
-            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]);//pre_RL_foot_pos[0] + tar_rl_foot_pos;
-            
+            pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]); //tar_rl_foot_pos;
+            pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]); //pre_RL_foot_pos[0] + tar_rl_foot_pos;
+
             FT_COM_X_Traj_Gen();
         }
     }
@@ -3397,113 +3662,113 @@ void CRobot::Flying_Trot_Running3(void)
         com_t = ft_time - 2 * ft_step_time;
         sf_rr_t = sf_rr_t + dt;
 
-        com_pos[0] = fifth_order_poly(c_com_x1,com_t);
+        com_pos[0] = fifth_order_poly(c_com_x1, com_t);
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = fifth_order_poly(c_com_z3,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z3, com_t);
 
-        com_vel[0] = fifth_order_poly_dot(c_com_x1,com_t);
+        com_vel[0] = fifth_order_poly_dot(c_com_x1, com_t);
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = fifth_order_poly_dot(c_com_z3,com_t);
+        com_vel[2] = fifth_order_poly_dot(c_com_z3, com_t);
 
-        com_acc[2] = fifth_order_poly_2dot(c_com_z3,com_t);
-        
+        com_acc[2] = fifth_order_poly_2dot(c_com_z3, com_t);
+
         RL_foot_pos[0] = pre_RL_foot_pos[0];
         FR_foot_pos[0] = pre_FR_foot_pos[0];
         RL_foot_vel[0] = tar_init_RL_foot_vel[0];
-        
+
         RL_foot_pos[2] = tar_init_RL_foot_pos[2];
         FR_foot_pos[2] = tar_init_RL_foot_pos[2];
         RL_foot_vel[2] = tar_init_RL_foot_vel[2];
-        
-        RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        
-        if(sf_rr_t < (ft_step_time + tf)/2.0){
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z3,sf_rr_t);
-            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z3,sf_rr_t);
- 
+
+        RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+        FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+        RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+
+        if (sf_rr_t < (ft_step_time + tf) / 2.0) {
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rr_t);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z3, sf_rr_t);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z3, sf_rr_t);
+
         }
-        else{
-            sf_rr_t2 = sf_rr_t - (ft_step_time + tf)/2.0;
-            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
-            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
-            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rr_t2);
+        else {
+            sf_rr_t2 = sf_rr_t - (ft_step_time + tf) / 2.0;
+            RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rr_t2);
+            FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rr_t2);
+            RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4, sf_rr_t2);
         }
-        
+
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
+
         if (ft_cnt == 2 * ft_step_cnt + ts_cnt - 1) {
             //            cout << "test!!!!!!!!!!!!!!!!!!!!!!!!! " << endl;
 
-            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*ts/2.0 + x_moving_speed*ts/2.0;
+            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * ts / 2.0 + x_moving_speed * ts / 2.0;
             pre_com_pos[1] = com_pos(1);
-            pre_com_pos[2] = h_1; 
+            pre_com_pos[2] = h_1;
 
             pre_com_vel[0] = x_moving_speed;
             pre_com_vel[1] = com_vel[1];
             pre_com_vel[2] = v_1;
-                   
+
             sf_rl_t = 0;
-            
+
             if (sub_ctrl_flag == false) {
                 ft_cnt = ts_cnt - 1;
-                
+
                 pre_x_moving_speed = x_moving_speed;
                 x_moving_speed = tmp_x_moving_speed;
 
             }
-            else{
+            else {
                 pre_x_moving_speed = x_moving_speed;
-                x_moving_speed = 0;    
+                x_moving_speed = 0;
             }
-            
-            tar_rl_foot_pos = pre_com_pos[0] - 0.35 + pre_x_moving_speed*tf + (pre_x_moving_speed + x_moving_speed)*ts/2.0 + x_moving_speed*tf + x_moving_speed*ts/2.0;
+
+            tar_rl_foot_pos = pre_com_pos[0] - 0.35 + pre_x_moving_speed * tf + (pre_x_moving_speed + x_moving_speed) * ts / 2.0 + x_moving_speed * tf + x_moving_speed * ts / 2.0;
         }
     }
     else if (ft_cnt < 3 * ft_step_cnt) {
         //        cout << "=========== ft_phase = 6 (Final flight phase) ===========" << endl;
         ft_phase = 6;
-//        _c << 1, 0, 0, 1;
-//		contact_num = 2;
+        //        _c << 1, 0, 0, 1;
+        //		contact_num = 2;
         _c << 0, 0, 0, 0;
         contact_num = 0;
         com_t = ft_time - 2 * ft_step_time - ts;
         sf_rl_t = sf_rl_t + dt;
         sf_rr_t = sf_rr_t + dt;
-        
+
         com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*com_t;
-        com_pos[2] = fifth_order_poly(c_com_z2,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z2, com_t);
 
         com_vel[0] = pre_x_moving_speed;
-        com_vel[2] = fifth_order_poly_dot(c_com_z2,com_t);
+        com_vel[2] = fifth_order_poly_dot(c_com_z2, com_t);
 
-        com_acc[2] = fifth_order_poly_2dot(c_com_z2,com_t);
-        
-        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
-        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
-        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*PI2/(2*(ft_step_time))*(sin(PI2/(2*(ft_step_time))*sf_rl_t));
-        
-        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rl_t);
-        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rl_t);
-        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z1,sf_rl_t);
+        com_acc[2] = fifth_order_poly_2dot(c_com_z2, com_t);
 
-        RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time + tf))*sf_rr_t));
-        RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0])/2.0*PI2/(2*(ft_step_time + tf))*(sin(PI2/(2*(ft_step_time + tf))*sf_rr_t));
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time)) * sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time)) * sf_rl_t));
+        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time))*(sin(PI2 / (2 * (ft_step_time)) * sf_rl_t));
 
-        sf_rr_t2 = sf_rr_t -(ft_step_time + tf)/2.0;
-        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
-        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4,sf_rr_t2);
-        RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4,sf_rr_t2);
+        RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z1, sf_rl_t);
+        FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z1, sf_rl_t);
+        RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z1, sf_rl_t);
+
+        RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+        FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+        RR_foot_vel[0] = (tar_rr_foot_pos - pre_RR_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time + tf))*(sin(PI2 / (2 * (ft_step_time + tf)) * sf_rr_t));
+
+        sf_rr_t2 = sf_rr_t - (ft_step_time + tf) / 2.0;
+        RR_foot_pos[2] = tar_init_RR_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rr_t2);
+        FL_foot_pos[2] = tar_init_FL_foot_pos[2] + fifth_order_poly(c_sf_z4, sf_rr_t2);
+        RR_foot_vel[2] = fifth_order_poly_dot(c_sf_z4, sf_rr_t2);
 
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
-        if (ft_cnt == 3*ft_step_cnt - 1) {
-            
+
+        if (ft_cnt == 3 * ft_step_cnt - 1) {
+
             pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed*tf;
             pre_com_pos[1] = com_pos[1];
             pre_com_pos[2] = h_2;
@@ -3514,78 +3779,78 @@ void CRobot::Flying_Trot_Running3(void)
 
             pre_FL_foot_pos[0] = pre_FL_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]);
             pre_RR_foot_pos[0] = pre_RR_foot_pos[0] + (tar_rr_foot_pos - pre_RR_foot_pos[0]);
-                    
+
             FT_COM_X_Traj_Gen();
-//            // =============== COM =============== //                
-//            init_x[0] = pre_com_pos[0];
-//            init_x[1] = x_moving_speed;
-//            init_x[2] = 0;
-//
-//            final_x[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
-//            final_x[1] = 0;
-//            final_x[2] = 0;
-//
-//            coefficient_5thPoly(init_x, final_x, ts, c_com_x2);            
-        }        
+            //            // =============== COM =============== //                
+            //            init_x[0] = pre_com_pos[0];
+            //            init_x[1] = x_moving_speed;
+            //            init_x[2] = 0;
+            //
+            //            final_x[0] = pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
+            //            final_x[1] = 0;
+            //            final_x[2] = 0;
+            //
+            //            coefficient_5thPoly(init_x, final_x, ts, c_com_x2);            
+        }
     }
-    else if (ft_cnt < 3*ft_step_cnt + ts_cnt) {
+    else if (ft_cnt < 3 * ft_step_cnt + ts_cnt) {
         //        cout << "=========== ft_phase = 7 (Final stance phase) ===========" << endl;
         ft_phase = 7;
         _c << 0, 1, 1, 0;
         contact_num = 2;
-        com_t = ft_time - 3*ft_step_time;
+        com_t = ft_time - 3 * ft_step_time;
         sf_rl_t = sf_rl_t + dt;
 
-        com_pos[0] = fifth_order_poly(c_com_x1,com_t);
+        com_pos[0] = fifth_order_poly(c_com_x1, com_t);
         com_pos[1] = pre_com_pos(1);
-        com_pos[2] = fifth_order_poly(c_com_z4,com_t);
+        com_pos[2] = fifth_order_poly(c_com_z4, com_t);
 
-        com_vel[0] = fifth_order_poly_dot(c_com_x1,com_t);
+        com_vel[0] = fifth_order_poly_dot(c_com_x1, com_t);
         com_vel[1] = pre_com_vel[1];
-        com_vel[2] = fifth_order_poly_dot(c_com_z4,com_t);
-        
-        com_acc[2] = fifth_order_poly_2dot(c_com_z4,com_t);
-        
-        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
-        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*(1-cos(PI2/(2*(ft_step_time))*sf_rl_t));
-        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0])/2.0*PI2/(2*(ft_step_time))*(sin(PI2/(2*(ft_step_time))*sf_rl_t));
-        
-        if(sf_rl_t < (ft_step_time)/2.0){
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rl_t);
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z1,sf_rl_t);
-            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z1,sf_rl_t);
- 
+        com_vel[2] = fifth_order_poly_dot(c_com_z4, com_t);
+
+        com_acc[2] = fifth_order_poly_2dot(c_com_z4, com_t);
+
+        RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time)) * sf_rl_t));
+        FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * (1 - cos(PI2 / (2 * (ft_step_time)) * sf_rl_t));
+        RL_foot_vel[0] = (tar_rl_foot_pos - pre_RL_foot_pos[0]) / 2.0 * PI2 / (2 * (ft_step_time))*(sin(PI2 / (2 * (ft_step_time)) * sf_rl_t));
+
+        if (sf_rl_t < (ft_step_time) / 2.0) {
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z1, sf_rl_t);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z1, sf_rl_t);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z1, sf_rl_t);
+
         }
-        else{
-            sf_rl_t2 = sf_rl_t - (ft_step_time)/2.0;
-            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rl_t2);
-            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z2,sf_rl_t2);
-            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z2,sf_rl_t2);
+        else {
+            sf_rl_t2 = sf_rl_t - (ft_step_time) / 2.0;
+            RL_foot_pos[2] = tar_init_RL_foot_pos[2] + fifth_order_poly(c_sf_z2, sf_rl_t2);
+            FR_foot_pos[2] = tar_init_FR_foot_pos[2] + fifth_order_poly(c_sf_z2, sf_rl_t2);
+            RL_foot_vel[2] = fifth_order_poly_dot(c_sf_z2, sf_rl_t2);
         }
 
         RR_foot_pos[0] = pre_RR_foot_pos[0];
         FL_foot_pos[0] = pre_FL_foot_pos[0];
         RR_foot_vel[0] = tar_init_RR_foot_vel[0];
-        
+
         RR_foot_pos[2] = tar_init_RR_foot_pos[2];
         FL_foot_pos[2] = tar_init_FL_foot_pos[2];
         RR_foot_vel[2] = tar_init_RR_foot_vel[2];
-        
+
         FL_foot_vel = RR_foot_vel;
         FR_foot_vel = RL_foot_vel;
-        
-        if (ft_cnt == 3*ft_step_cnt + ts_cnt - 1) {
-            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;//pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
+
+        if (ft_cnt == 3 * ft_step_cnt + ts_cnt - 1) {
+            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0; //pre_com_pos[0] + x_moving_speed * (ts) / 2.0;
             pre_com_pos[1] = com_pos(1);
             pre_com_pos[2] = h_0;
 
             pre_com_vel[0] = 0;
             pre_com_vel[1] = com_vel[1];
             pre_com_vel[2] = v_0;
-            
+
             pre_FR_foot_pos[0] = pre_FR_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]);
             pre_RL_foot_pos[0] = pre_RL_foot_pos[0] + (tar_rl_foot_pos - pre_RL_foot_pos[0]);
-            
+
             cout << "com_pos = " << pre_com_pos.transpose() << endl;
             cout << "com_vel = " << pre_com_vel.transpose() << endl;
             cout << "RL_foot_pos = " << pre_RL_foot_pos.transpose() << endl;
@@ -3593,22 +3858,22 @@ void CRobot::Flying_Trot_Running3(void)
             cout << "FL_foot_pos = " << pre_FL_foot_pos.transpose() << endl;
             cout << "FR_foot_pos = " << pre_FR_foot_pos.transpose() << endl;
         }
-//        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
-//            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
-//            pre_com_pos[1] = com_pos(1);
-//            pre_com_pos[2] = h_1;
-//
-//            pre_com_vel[0] = x_moving_speed;
-//            pre_com_vel[1] = com_vel[1];
-//            pre_com_vel[2] = v_1;
-//            
-//            sf_rr_t = 0;
-//            
-//            pre_x_moving_speed = x_moving_speed;
-//            x_moving_speed = tmp_x_moving_speed;
-//            
-//            tar_rr_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
-//        }
+        //        if (ft_cnt == ft_step_cnt + ts_cnt - 1) {
+        //            pre_com_pos[0] = pre_com_pos[0] + pre_x_moving_speed * (ts) / 2.0 + x_moving_speed * (ts) / 2.0;
+        //            pre_com_pos[1] = com_pos(1);
+        //            pre_com_pos[2] = h_1;
+        //
+        //            pre_com_vel[0] = x_moving_speed;
+        //            pre_com_vel[1] = com_vel[1];
+        //            pre_com_vel[2] = v_1;
+        //            
+        //            sf_rr_t = 0;
+        //            
+        //            pre_x_moving_speed = x_moving_speed;
+        //            x_moving_speed = tmp_x_moving_speed;
+        //            
+        //            tar_rr_foot_pos = pre_x_moving_speed*(ts + tf) + x_moving_speed*(ts + tf);
+        //        }
     }
     else {
         //        cout << "=========== ft_phase = 8 (Motion Done !!) ===========" << endl;
@@ -3620,12 +3885,12 @@ void CRobot::Flying_Trot_Running3(void)
         com_pos = pre_com_pos;
         com_vel = tar_init_com_vel;
         com_acc = tar_init_com_acc;
-        
+
         RL_foot_pos = pre_RL_foot_pos;
         RR_foot_pos = pre_RR_foot_pos;
         FL_foot_pos = pre_FL_foot_pos;
         FR_foot_pos = pre_FR_foot_pos;
-        
+
         RL_foot_vel = tar_init_RL_foot_vel;
         RR_foot_vel = tar_init_RR_foot_vel;
         FL_foot_vel = tar_init_FL_foot_vel;
@@ -4321,7 +4586,7 @@ void CRobot::FT_COM_SF_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, (ts + tf)/2.0, c_sf_z1);
+    coefficient_5thPoly(init_x, final_x, (ts + tf) / 2.0, c_sf_z1);
 
     init_x[0] = swing_foot_height;
     init_x[1] = 0;
@@ -4331,7 +4596,7 @@ void CRobot::FT_COM_SF_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, (ts + tf)/2.0, c_sf_z2);
+    coefficient_5thPoly(init_x, final_x, (ts + tf) / 2.0, c_sf_z2);
 
     init_x[0] = 0;
     init_x[1] = 0;
@@ -4341,7 +4606,7 @@ void CRobot::FT_COM_SF_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, (ts + 2*tf)/2.0, c_sf_z3);
+    coefficient_5thPoly(init_x, final_x, (ts + 2 * tf) / 2.0, c_sf_z3);
 
     init_x[0] = swing_foot_height;
     init_x[1] = 0;
@@ -4351,7 +4616,7 @@ void CRobot::FT_COM_SF_Z_Traj_Gen()
     final_x[1] = 0;
     final_x[2] = 0;
 
-    coefficient_5thPoly(init_x, final_x, (ts + 2*tf)/2.0, c_sf_z4);
+    coefficient_5thPoly(init_x, final_x, (ts + 2 * tf) / 2.0, c_sf_z4);
 
 }
 
@@ -4574,24 +4839,23 @@ void CRobot::FT_Turning_Traj_Gen2(void)
 double CRobot::fifth_order_poly(double c[], double t)
 {
     static double y = 0;
-    y = c[5]*pow(t, 5) + c[4]*pow(t, 4) + c[3]*pow(t, 3) + c[2]*pow(t, 2) + c[1]*pow(t, 1) + c[0];
+    y = c[5] * pow(t, 5) + c[4] * pow(t, 4) + c[3] * pow(t, 3) + c[2] * pow(t, 2) + c[1] * pow(t, 1) + c[0];
     return y;
 }
 
 double CRobot::fifth_order_poly_dot(double c[], double t)
 {
     static double y = 0;
-    y = 5*c[5]*pow(t, 4) + 4*c[4]*pow(t, 3) + 3*c[3]*pow(t, 2) + 2*c[2]*pow(t, 1) + 1*c[1];
+    y = 5 * c[5] * pow(t, 4) + 4 * c[4] * pow(t, 3) + 3 * c[3] * pow(t, 2) + 2 * c[2] * pow(t, 1) + 1 * c[1];
     return y;
 }
 
 double CRobot::fifth_order_poly_2dot(double c[], double t)
 {
     static double y = 0;
-    y = 20*c[5]*pow(t, 3) + 12*c[4]*pow(t, 2) + 6*c[3]*pow(t, 1) + 2*c[2];
+    y = 20 * c[5] * pow(t, 3) + 12 * c[4] * pow(t, 2) + 6 * c[3] * pow(t, 1) + 2 * c[2];
     return y;
 }
-
 
 VectorNd CRobot::Get_COM(VectorNd base, VectorNd q)
 {
@@ -4728,4 +4992,88 @@ VectorNd CRobot::Get_COM(VectorNd base, VectorNd q)
     cout << "p_robot_com = " << p_robot_com << endl;
 
     return p_robot_com;
+}
+
+void CRobot::FTsensorTransformation()
+{
+    C_I_roll << 1, 0, 0, 0, cos(base.currentRoll), -sin(base.currentRoll), 0, sin(base.currentRoll), cos(base.currentRoll);
+
+    C_I_pitch << cos(base.currentPitch), 0, sin(base.currentPitch), 0, 1, 0, -sin(base.currentPitch), 0, cos(base.currentPitch);
+
+    RL_C_I_HP << 1, 0, 0, 0, cos(actual_pos[0]), -sin(actual_pos[0]), 0, sin(actual_pos[0]), cos(actual_pos[0]);
+    RL_C_HP_HR << cos(actual_pos[1]), 0, sin(actual_pos[1]), 0, 1, 0, -sin(actual_pos[1]), 0, cos(actual_pos[1]);
+    RL_C_HR_KN << cos(actual_pos[2]), 0, sin(actual_pos[2]), 0, 1, 0, -sin(actual_pos[2]), 0, cos(actual_pos[2]);
+    RL_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
+    RL.T_matrix = C_I_roll * C_I_pitch * RL_C_I_HP * RL_C_HP_HR * RL_C_HR_KN * RL_C_KN_TIP;
+
+    RR_C_I_HP << 1, 0, 0, 0, cos(actual_pos[3]), -sin(actual_pos[3]), 0, sin(actual_pos[3]), cos(actual_pos[3]);
+    RR_C_HP_HR << cos(actual_pos[4]), 0, sin(actual_pos[4]), 0, 1, 0, -sin(actual_pos[4]), 0, cos(actual_pos[4]);
+    RR_C_HR_KN << cos(actual_pos[5]), 0, sin(actual_pos[5]), 0, 1, 0, -sin(actual_pos[5]), 0, cos(actual_pos[5]);
+    RR_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
+    RR.T_matrix = C_I_roll * C_I_pitch * RR_C_I_HP * RR_C_HP_HR * RR_C_HR_KN * RR_C_KN_TIP;
+
+    FL_C_I_HP << 1, 0, 0, 0, cos(actual_pos[7]), -sin(actual_pos[7]), 0, sin(actual_pos[7]), cos(actual_pos[7]);
+    FL_C_HP_HR << cos(actual_pos[8]), 0, sin(actual_pos[8]), 0, 1, 0, -sin(actual_pos[8]), 0, cos(actual_pos[8]);
+    FL_C_HR_KN << cos(actual_pos[9]), 0, sin(actual_pos[9]), 0, 1, 0, -sin(actual_pos[9]), 0, cos(actual_pos[9]);
+    FL_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
+    FL.T_matrix = C_I_roll * C_I_pitch * FL_C_I_HP * FL_C_HP_HR * FL_C_HR_KN * FL_C_KN_TIP;
+
+    FR_C_I_HP << 1, 0, 0, 0, cos(actual_pos[10]), -sin(actual_pos[10]), 0, sin(actual_pos[10]), cos(actual_pos[10]);
+    FR_C_HP_HR << cos(actual_pos[11]), 0, sin(actual_pos[11]), 0, 1, 0, -sin(actual_pos[11]), 0, cos(actual_pos[11]);
+    FR_C_HR_KN << cos(actual_pos[12]), 0, sin(actual_pos[12]), 0, 1, 0, -sin(actual_pos[12]), 0, cos(actual_pos[12]);
+    FR_C_KN_TIP << cos(0), 0, sin(0), 0, 1, 0, -sin(0), 0, cos(0);
+    FR.T_matrix = C_I_roll * C_I_pitch * FR_C_I_HP * FR_C_HP_HR * FR_C_HR_KN * FR_C_KN_TIP;
+
+}
+
+MatrixNd CRobot::pow_mat(MatrixNd mat, int x)
+{
+
+    MatrixNd Out = MatrixNd::Zero(mat.rows(), mat.cols());
+
+    //    cout << "[1] Out = " << Out << endl;
+
+    if (x == 0) {
+        Out = MatrixNd::Identity(mat.rows(), mat.cols());
+    }
+    else {
+        for (int i = 0; i < x; ++i) {
+            if (i == 0) {
+                Out = mat;
+            }
+            else {
+                Out = Out*mat;
+            }
+        }
+    }
+
+    //    cout << "[2] Out = " << Out << endl;
+
+    return Out;
+}
+
+MatrixNd CRobot::Kron(MatrixNd AA, MatrixNd BB)
+{
+
+    MatrixNd Out = MatrixNd::Zero(AA.rows() * BB.rows(), AA.cols() * BB.cols());
+    //    cout << "AA = " << AA << endl;
+    //    cout << "BB = " << BB << endl;
+    //    cout << "Out(0,0) = " << Out(0,0) << endl;
+
+    for (int i = 0; i < AA.rows(); i++) {
+        for (int j = 0; j < AA.cols(); j++) {
+            for (int k = 0; k < BB.rows(); k++) {
+                for (int l = 0; l < BB.cols(); l++) {
+                    Out(i * BB.rows() + k, j * BB.cols() + l) = AA(i, j) * BB(k, l);
+                    //                    cout << "Out index = " << i+k << j+l << endl;
+                    //                    cout << i << j<< k << l << endl;
+                    //                    Out[0,0] = A[0,0] * B[0,0];
+                }
+            }
+        }
+    }
+
+    //    cout << "Out = " << Out << endl;
+
+    return Out;
 }
