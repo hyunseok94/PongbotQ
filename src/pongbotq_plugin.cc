@@ -48,11 +48,9 @@ Model* pongbot_q_model = new Model();
 
 //struct input_event event;
 
-namespace gazebo
-{
+namespace gazebo {
 
-    class PongBotQ_plugin : public ModelPlugin
-    {
+    class PongBotQ_plugin : public ModelPlugin {
         physics::LinkPtr REAR_BODY;
         physics::LinkPtr FRONT_BODY;
         physics::LinkPtr RL_HIP;
@@ -91,7 +89,7 @@ namespace gazebo
         physics::JointPtr FR_TIP_JOINT;
 
         physics::ModelPtr model;
-//        physics::LinkPtr REAR_BODY;
+        //        physics::LinkPtr REAR_BODY;
 
         //  PID
         common::PID pid_RL_HR, pid_RL_HP, pid_RL_KN;
@@ -234,6 +232,7 @@ namespace gazebo
 
         //ros::Publisher P_joint_force;
         // DH PARA
+        double TmpData[30];
         //        double TmpData1[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         //        double TmpData2[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         ros::Publisher ros_pub1;
@@ -317,17 +316,21 @@ namespace gazebo
 
         VectorXd Err_EP = VectorXd::Zero(12); //added by HSKIM
         VectorXd Err_pos = VectorXd::Zero(13); //added by HSKIM
-
+        
     public:
         //For model load
-        
+
         void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
         void UpdateAlgorithm();
 
         // Callback function
-        void PongBot_Q_ROSmode(const std_msgs::Int32Ptr &msg);
-        //        void Callback(const std_msgs::Int32Ptr &msg);
-        //        void Callback2(const std_msgs::Float64Ptr &msg);
+        //void PongBot_Q_ROSmode(const std_msgs::Int32Ptr &msg);
+        void Callback(const std_msgs::Int32Ptr &msg);
+        //void Callback2(const std_msgs::Float64Ptr &msg);
+        void Callback2(const std_msgs::Float64Ptr &msg);
+        void Callback3(const std_msgs::Float64Ptr &msg);
+        void Callback4(const std_msgs::Float64Ptr &msg);
+        void Callback5(const std_msgs::Int32Ptr &msg);
         //        void Callback3(const std_msgs::Int32Ptr &msg);
         //        void Callback4(const std_msgs::Int32Ptr &msg);
         //        void Callback5(const std_msgs::Int32Ptr &msg);
@@ -349,18 +352,16 @@ namespace gazebo
         void ROSMsgPublish1();
         void ROSMsgPublish2();
 
-
     };
     GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
 }
 
-void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/)
-{
+void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/) {
     printf("============= [Load] =============\n");
 
     this->model = _model;
-    
-//    this->UPPER_BODY = this->model->GetLink("BODY");
+
+    //    this->UPPER_BODY = this->model->GetLink("BODY");
 
     printf("[1]\n");
     RBDLSetting();
@@ -384,8 +385,7 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
 
 }
 
-void gazebo::PongBotQ_plugin::UpdateAlgorithm()
-{ //* Writing realtime code here!!
+void gazebo::PongBotQ_plugin::UpdateAlgorithm() { //* Writing realtime code here!!
     //********************* Base Pose for rviz *****************************//
     pose = this->model->GetWorldPose();
 
@@ -400,10 +400,10 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     PongBotQ.tmp_com_pos[0] = this->REAR_BODY->GetWorldPose().pos.x;
     PongBotQ.tmp_com_pos[1] = this->REAR_BODY->GetWorldPose().pos.y;
     PongBotQ.tmp_com_pos[2] = this->REAR_BODY->GetWorldPose().pos.z;
-        
-    PongBotQ.tmp_com_vel[0]=(PongBotQ.tmp_com_pos[0] - PongBotQ.tmp_pre_com_pos[0])/PongBotQ.dt;
-    PongBotQ.tmp_com_vel[1]=(PongBotQ.tmp_com_pos[1] - PongBotQ.tmp_pre_com_pos[1])/PongBotQ.dt;
-    PongBotQ.tmp_com_vel[2]=(PongBotQ.tmp_com_pos[2] - PongBotQ.tmp_pre_com_pos[2])/PongBotQ.dt;
+
+    PongBotQ.tmp_com_vel[0] = (PongBotQ.tmp_com_pos[0] - PongBotQ.tmp_pre_com_pos[0]) / PongBotQ.dt;
+    PongBotQ.tmp_com_vel[1] = (PongBotQ.tmp_com_pos[1] - PongBotQ.tmp_pre_com_pos[1]) / PongBotQ.dt;
+    PongBotQ.tmp_com_vel[2] = (PongBotQ.tmp_com_pos[2] - PongBotQ.tmp_pre_com_pos[2]) / PongBotQ.dt;
 
     PongBotQ.tmp_pre_com_pos[0] = PongBotQ.tmp_com_pos[0];
     PongBotQ.tmp_pre_com_pos[1] = PongBotQ.tmp_com_pos[1];
@@ -442,195 +442,238 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 
     //* ControlMode
     switch (PongBotQ.ControlMode) {
-    case CTRLMODE_NONE:
-        //          cout << "============= [CTRLMODE_NONE] ==========" << endl;
-        //          PongBotQ.CommandFlag = TORQUE_OFF;
-        //          PongBotQ.CommandFlag = NO_ACT;
-        break;
+        case CTRLMODE_NONE:
+            //          cout << "============= [CTRLMODE_NONE] ==========" << endl;
+            //          PongBotQ.CommandFlag = TORQUE_OFF;
+            //          PongBotQ.CommandFlag = NO_ACT;
+            break;
 
-    case CTRLMODE_INITIALIZE:
-        cout << "============= [CTRLMODE_INITIALIZE] ==========" << endl;
+        case CTRLMODE_INITIALIZE:
+            cout << "============= [CTRLMODE_INITIALIZE] ==========" << endl;
 
-        PongBotQ.CommandFlag = NO_ACT_WITH_CTC;
-        PongBotQ.ControlMode = CTRLMODE_NONE;
-        break;
+            PongBotQ.CommandFlag = NO_ACT_WITH_CTC;
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+            break;
 
-    case CTRLMODE_HOME_POS:
-        cout << "============= [CTRLMODE_HOME_POS] ==========" << endl;
-        PongBotQ.CommandFlag = GOTO_HOME_POS;
-        PongBotQ.ControlMode = CTRLMODE_NONE;
-        break;
+        case CTRLMODE_HOME_POS:
+            cout << "============= [CTRLMODE_HOME_POS] ==========" << endl;
+            PongBotQ.CommandFlag = GOTO_HOME_POS;
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+            break;
 
-    case CTRLMODE_WALK_READY:
-        cout << "============= [CTRLMODE_WALK_READY] ==========" << endl;
+        case CTRLMODE_WALK_READY:
+            cout << "============= [CTRLMODE_WALK_READY] ==========" << endl;
 
-        PongBotQ.wr_cnt = 0;
+            PongBotQ.wr_cnt = 0;
 
-        PongBotQ.com_pos = PongBotQ.init_com_pos;
-        PongBotQ.com_vel << 0, 0, 0;
-        PongBotQ.base_pos = PongBotQ.com_pos + PongBotQ.base_offset;
-        PongBotQ.base_vel << 0, 0, 0;
-        PongBotQ.base_ori << 0, 0, 0;
-        PongBotQ.base_ori_dot << 0, 0, 0;
-
-
-        //        for (unsigned int i = 0; i < 13; ++i) {
-        //            //                    PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
-        //            PongBotQ.pre_target_pos[i] = PongBotQ.actual_pos[i];
-        //        }
-
-        PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
-        PongBotQ.ControlMode = CTRLMODE_NONE;
-
-        //        PongBotQ.target_pos = PongBotQ.actual_pos;
-        break;
-
-    case CTRLMODE_TROT_WALKING:
-        cout << "============= [CTRLMODE_TROT_WALKING] ==========" << endl;
-
-        if (PongBotQ.walk_ready_moving_done_flag == true) {
-            PongBotQ.tw_cnt = 0;
-            PongBotQ.CommandFlag = NOMAL_TROT_WALKING;
-        }
-        else {
-            cout << " ======== not yet walk ready ======== " << endl;
-        }
-        PongBotQ.ControlMode = CTRLMODE_NONE;
-
-        break;
+            PongBotQ.com_pos = PongBotQ.init_com_pos;
+            PongBotQ.com_vel << 0, 0, 0;
+            PongBotQ.base_pos = PongBotQ.com_pos + PongBotQ.base_offset;
+            PongBotQ.base_vel << 0, 0, 0;
+            PongBotQ.base_ori << 0, 0, 0;
+            PongBotQ.base_ori_dot << 0, 0, 0;
 
 
-    case CTRLMODE_FLYING_TROT:
-        cout << "============= [CTRLMODE_FLYING_TROT] ==========" << endl;
+            //        for (unsigned int i = 0; i < 13; ++i) {
+            //            //                    PongBotQ.pre_target_pos[i] = PongBotQ.init_target_pos[i] * D2R;
+            //            PongBotQ.pre_target_pos[i] = PongBotQ.actual_pos[i];
+            //        }
 
-        if (PongBotQ.walk_ready_moving_done_flag == true) {
-            PongBotQ.ft_cnt = 0;
-            PongBotQ.CommandFlag = FLYING_TROT_RUNNING;
-        }
-        else {
-            cout << " ======== not yet walk ready ======== " << endl;
-        }
-        PongBotQ.ControlMode = CTRLMODE_NONE;
+            PongBotQ.CommandFlag = GOTO_WALK_READY_POS;
+            PongBotQ.ControlMode = CTRLMODE_NONE;
 
-        break;
+            //        PongBotQ.target_pos = PongBotQ.actual_pos;
+            break;
 
-    case CTRLMODE_PRONK_JUMP:
-        cout << "============= [CTRLMODE_STANDING_JUMP] ==========" << endl;
+        case CTRLMODE_TROT_WALKING:
+            cout << "============= [CTRLMODE_TROT_WALKING] ==========" << endl;
 
-        if (PongBotQ.walk_ready_moving_done_flag == true) {
-//            PongBotQ.moving_cnt = 0;
-//            PongBotQ.JUMP_PHASE = 0;
-//            PongBotQ.jump_num = 0;
-//
-//            PongBotQ.CommandFlag = PRONK_JUMP;
-        }
-        else {
-            cout << " ======== not yet walk ready ======== " << endl;
-        }
-        PongBotQ.ControlMode = CTRLMODE_NONE;
-        break;
+            if (PongBotQ.walk_ready_moving_done_flag == true) {
+                PongBotQ.tw_cnt = 0;
+                PongBotQ.CommandFlag = NOMAL_TROT_WALKING;
+            } else {
+                cout << " ======== not yet walk ready ======== " << endl;
+            }
+            PongBotQ.ControlMode = CTRLMODE_NONE;
 
-    case CTRLMODE_TEST:
-        cout << "============= [CTRLMODE_TEST] ==========" << endl;
-        
-        if (PongBotQ.walk_ready_moving_done_flag == true) {
-            PongBotQ.test_cnt = 0;
+            break;
 
-            PongBotQ.CommandFlag = TEST_FLAG;     
-        }
-        else {
-            cout << " ======== not yet walk ready ======== " << endl;
-        }
-        
-        PongBotQ.ControlMode = CTRLMODE_NONE;
-             
-        break;
+
+        case CTRLMODE_FLYING_TROT:
+            cout << "============= [CTRLMODE_FLYING_TROT] ==========" << endl;
+
+            if (PongBotQ.walk_ready_moving_done_flag == true) {
+                PongBotQ.ft_cnt = 0;
+                PongBotQ.CommandFlag = FLYING_TROT_RUNNING;
+            } else {
+                cout << " ======== not yet walk ready ======== " << endl;
+            }
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+
+            break;
+
+        case CTRLMODE_PRONK_JUMP:
+            cout << "============= [CTRLMODE_STANDING_JUMP] ==========" << endl;
+
+            if (PongBotQ.walk_ready_moving_done_flag == true) {
+                //            PongBotQ.moving_cnt = 0;
+                //            PongBotQ.JUMP_PHASE = 0;
+                //            PongBotQ.jump_num = 0;
+                //
+                //            PongBotQ.CommandFlag = PRONK_JUMP;
+            } else {
+                cout << " ======== not yet walk ready ======== " << endl;
+            }
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+            break;
+
+        case CTRLMODE_TEST:
+            cout << "============= [CTRLMODE_TEST] ==========" << endl;
+
+            if (PongBotQ.walk_ready_moving_done_flag == true) {
+                PongBotQ.test_cnt = 0;
+
+                PongBotQ.CommandFlag = TEST_FLAG;
+            } else {
+                cout << " ======== not yet walk ready ======== " << endl;
+            }
+
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+            
+            break;
+
+        case CTRLMODE_SLOW_WALK_HS:
+            PongBotQ.cnt_HS = 0;
+            PongBotQ.Get_gain_HS();
+            cout << "============= [CTRLMODE_Walk] ==========" << endl;
+            PongBotQ.now_vel_HS << 0.0, 0.0, 0.0;
+            PongBotQ.tar_vel_HS << 0.0, 0.0, 0.0;
+           
+            PongBotQ.zmp_ref_x_array_HS = VectorNd::Zero(PongBotQ.preview_cnt_HS);
+            PongBotQ.zmp_ref_y_array_HS = VectorNd::Zero(PongBotQ.preview_cnt_HS);
+
+            PongBotQ.X_new_x_HS << 0.0, 0.0, 0.0;
+            PongBotQ.X_new_y_HS << 0.0, 0.0, 0.0;
+            
+            PongBotQ.sum_e_x_HS = 0.0;
+            PongBotQ.sum_e_y_HS = 0.0;
+            
+            PongBotQ.WalkReady_flag_HS=true;
+            PongBotQ.sub_ctrl_flag=false;
+            PongBotQ.tmp_sub_ctrl_flag_HS=false;
+            PongBotQ.foot_height_HS=PongBotQ.tmp_foot_height_HS;
+            PongBotQ.init_Transform_flag_HS=true;
+            PongBotQ.sub_cnt_HS=0;
+            PongBotQ.init_Force_flag_HS=true;
+            
+            PongBotQ.target_base_ori_HS(2)=0.0;
+            
+            PongBotQ.CommandFlag = GOTO_SLOW_WALK_POS_HS;
+            PongBotQ.ControlMode = CTRLMODE_NONE;
+
+            break;
     }
 
-
     switch (PongBotQ.CommandFlag) {
-    case NO_ACT:
-        // No action
-        break;
+        case NO_ACT:
+            // No action
+            break;
 
-    case NO_ACT_WITH_CTC:
-        PongBotQ.ComputeTorqueControl();
-        break;
+        case NO_ACT_WITH_CTC:
+            PongBotQ.ComputeTorqueControl();
+            break;
 
-    case TORQUE_OFF:
-        PongBotQ.Torque_off();
-        break;
+        case TORQUE_OFF:
+            PongBotQ.Torque_off();
+            break;
 
-    case GOTO_HOME_POS:
-        PongBotQ.Torque_off(); // Temp
-        //        printf("[100]\n");
-        PongBotQ.Init_Pos_Traj(); // Only simulation
-        //        printf("[101]\n");
-        break;
+        case GOTO_HOME_POS:
+            PongBotQ.Torque_off(); // Temp
+            //        printf("[100]\n");
+            PongBotQ.Init_Pos_Traj(); // Only simulation
+            //        printf("[101]\n");
+            break;
 
-    case GOTO_WALK_READY_POS:
+        case GOTO_WALK_READY_POS:
 
-        PongBotQ.StateUpdate();
-        PongBotQ.WalkReady_Pos_Traj();
-//        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
-        PongBotQ.Get_Opt_F();
-        PongBotQ.ComputeTorqueControl();
-        break;
-
-    case NOMAL_TROT_WALKING:
-        //        printf("===========================================\n");        
-        
-        PongBotQ.StateUpdate();
-        PongBotQ.Trot_Walking4();
-        PongBotQ.Get_Opt_F();
-        PongBotQ.ComputeTorqueControl();
-        break;
-
-    case FLYING_TROT_RUNNING:
-        //        printf("===========================================\n");
-        PongBotQ.StateUpdate();
-        PongBotQ.Flying_Trot_Running3();
-        
-        if(PongBotQ.ft_phase != 2 && PongBotQ.ft_phase != 4 && PongBotQ.ft_phase != 6){
+            PongBotQ.StateUpdate();
+            PongBotQ.WalkReady_Pos_Traj();
+            //        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
             PongBotQ.Get_Opt_F();
-        }
-        else{
-            PongBotQ.Fc = VectorXd::Zero(19);
-            PongBotQ.Fc[9] = 0;
-            PongBotQ.Fc[12] = 0;
-            PongBotQ.Fc[15] = 0;
-            PongBotQ.Fc[18] = 0;
-        }
-       
-//        PongBotQ.Get_Opt_F();
+            PongBotQ.ComputeTorqueControl();
+            break;
 
-        if(PongBotQ.ft_phase == 2 || PongBotQ.ft_phase == 4 || PongBotQ.ft_phase == 6){
+        case NOMAL_TROT_WALKING:
+            //        printf("===========================================\n");        
+
+            PongBotQ.StateUpdate();
+            PongBotQ.Trot_Walking4();
+            PongBotQ.Get_Opt_F();
+            PongBotQ.ComputeTorqueControl();
+            break;
+
+        case FLYING_TROT_RUNNING:
+            //        printf("===========================================\n");
+            PongBotQ.StateUpdate();
+            PongBotQ.Flying_Trot_Running3();
+
+            if (PongBotQ.ft_phase != 2 && PongBotQ.ft_phase != 4 && PongBotQ.ft_phase != 6) {
+                PongBotQ.Get_Opt_F();
+            } else {
+                PongBotQ.Fc = VectorXd::Zero(19);
+                PongBotQ.Fc[9] = 0;
+                PongBotQ.Fc[12] = 0;
+                PongBotQ.Fc[15] = 0;
+                PongBotQ.Fc[18] = 0;
+            }
+
+            //        PongBotQ.Get_Opt_F();
+
+            if (PongBotQ.ft_phase == 2 || PongBotQ.ft_phase == 4 || PongBotQ.ft_phase == 6) {
                 PongBotQ.Fc = VectorNd::Zero(19);
                 PongBotQ.Fc[9] = 0;
                 PongBotQ.Fc[12] = 0;
                 PongBotQ.Fc[15] = 0;
                 PongBotQ.Fc[18] = 0;
-        }
-        
-        PongBotQ.ComputeTorqueControl();
-        break;
+            }
 
-    case PRONK_JUMP:
-        //        printf("===========================================\n");
-        //        PongBotQ.get_zmp();
-//        PongBotQ.Pronk_Jump();
-        
-        PongBotQ.ComputeTorqueControl();
-        break;
+            PongBotQ.ComputeTorqueControl();
+            break;
 
-    case TEST_FLAG:
-        //        printf("===========================================\n");
-        PongBotQ.StateUpdate();
-        PongBotQ.Test_Function();
-        PongBotQ.Get_Opt_F();
-//        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
-        PongBotQ.ComputeTorqueControl();
-        break;
+        case PRONK_JUMP:
+            //        printf("===========================================\n");
+            //        PongBotQ.get_zmp();
+            //        PongBotQ.Pronk_Jump();
+
+            PongBotQ.ComputeTorqueControl();
+            break;
+
+        case TEST_FLAG:
+            //        printf("===========================================\n");
+            PongBotQ.StateUpdate();
+            PongBotQ.Test_Function();
+            PongBotQ.Get_Opt_F();
+            //        PongBotQ.Fc << 0,0,0,0,0,0,0, 0,0,110, 0,0,110, 0,0,110, 0,0,110;
+            PongBotQ.ComputeTorqueControl();
+            break;
+
+        case GOTO_SLOW_WALK_POS_HS:
+            PongBotQ.StateUpdate();
+            PongBotQ.Transform_DH2HS();
+            if(PongBotQ.WalkReady_flag_HS==true){
+             PongBotQ.WalkReady_Pos_Traj_HS();    
+            }
+            else{
+             PongBotQ.Walking_Gait_Traj_HS();    
+            }
+            PongBotQ.ComputeTorqueControl_HS();
+            
+//            if(PongBotQ.tmp_sub_ctrl_flag_HS==true){
+//             PongBotQ.Transform_HS2DH();
+//            }
+            
+            break;
+
     }
 
     jointController();
@@ -639,8 +682,27 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
     ROSMsgPublish2();
 }
 
-void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
-{
+void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg) {
+    PongBotQ.ControlMode = msg->data;
+}
+
+void gazebo::PongBotQ_plugin::Callback2(const std_msgs::Float64Ptr &msg) {
+    PongBotQ.speed_x = msg->data;
+}
+
+void gazebo::PongBotQ_plugin::Callback3(const std_msgs::Float64Ptr &msg) {
+    PongBotQ.speed_y = msg->data;
+}
+
+void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Float64Ptr &msg) {
+    PongBotQ.speed_yaw = msg->data;
+}
+
+void gazebo::PongBotQ_plugin::Callback5(const std_msgs::Int32Ptr &msg) {
+    PongBotQ.sub_ctrl_flag = (int) (msg->data);
+}
+
+void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
     const double max_x_vel = 1.4;
     const double max_y_vel = 0.5;
     const double max_yaw_ori = 5 * D2R; // rad
@@ -654,38 +716,33 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
         if (PongBotQ.moving_done_flag == true) {
             PongBotQ.ControlMode = 3;
         }
-    }
-    else if (msg->buttons[0] == true) {
+    } else if (msg->buttons[0] == true) {
         // ========= [Trot Walk] ========== //
         if (PongBotQ.moving_done_flag == true) {
             PongBotQ.ControlMode = 4;
             PongBotQ.sub_ctrl_flag = 0;
         }
-    }
-    else if (msg->buttons[3] == true) {
-//        // ========= [Pronk] ========== //
-//        if (PongBotQ.moving_done_flag == true) {
-//            PongBotQ.ControlMode = 6;
-//            PongBotQ.sub_ctrl_flag = 0;
-//        }
-    }
-    else if (msg->buttons[5] == true) {
+    } else if (msg->buttons[3] == true) {
+        //        // ========= [Pronk] ========== //
+        //        if (PongBotQ.moving_done_flag == true) {
+        //            PongBotQ.ControlMode = 6;
+        //            PongBotQ.sub_ctrl_flag = 0;
+        //        }
+    } else if (msg->buttons[5] == true) {
         // ========= [Test] ========== //
-//        cout << "1" << endl;
+        //        cout << "1" << endl;
         if (PongBotQ.moving_done_flag == true) {
-//            cout << "2" << endl;
+            //            cout << "2" << endl;
             PongBotQ.ControlMode = 7;
             PongBotQ.sub_ctrl_flag = 0;
         }
-    }
-    else if (msg->buttons[4] == true) {
+    } else if (msg->buttons[4] == true) {
         // ========= [Flying Trot] ========== //
         if (PongBotQ.moving_done_flag == true) {
             PongBotQ.ControlMode = 5;
             PongBotQ.sub_ctrl_flag = 0;
         }
-    }
-    else {
+    } else {
         PongBotQ.ControlMode = 0;
     }
 
@@ -714,8 +771,7 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg)
 
     if (tmp_y_vel < 0.1 && tmp_y_vel>-0.1) {
         PongBotQ.tmp_y_moving_speed = 0;
-    }
-    else {
+    } else {
         PongBotQ.tmp_y_moving_speed = tmp_y_vel;
     }
 
@@ -807,8 +863,7 @@ void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
     //}
 }
 
-void gazebo::PongBotQ_plugin::GetLinks()
-{
+void gazebo::PongBotQ_plugin::GetLinks() {
     this->RL_HIP = this->model->GetLink("RL_HIP");
     this->RL_THIGH = this->model->GetLink("RL_THIGH");
     this->RL_CALF = this->model->GetLink("RL_CALF");
@@ -833,8 +888,7 @@ void gazebo::PongBotQ_plugin::GetLinks()
     this->FR_TIP = this->model->GetLink("FR_TIP");
 }
 
-void gazebo::PongBotQ_plugin::GetJoints()
-{
+void gazebo::PongBotQ_plugin::GetJoints() {
     //JOINT DEFINITION    
     this->RL_HR_JOINT = this->model->GetJoint("RL_HR_JOINT");
     this->RL_HP_JOINT = this->model->GetJoint("RL_HP_JOINT");
@@ -860,8 +914,7 @@ void gazebo::PongBotQ_plugin::GetJoints()
 
 }
 
-void gazebo::PongBotQ_plugin::InitROSPubSetting()
-{
+void gazebo::PongBotQ_plugin::InitROSPubSetting() {
     //************************ROS Msg Setting*********************************//
     P_Times = n.advertise<std_msgs::Float64>("times", 1);
     P_angular_vel_x = n.advertise<std_msgs::Float64>("angular_vel_x", 1);
@@ -915,11 +968,15 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
     m_FL_force.header.frame_id = "FL_TIP";
     m_FR_force.header.frame_id = "FR_TIP";
     //ros::Rate loop_rate(1000);
-    //    server_sub1 = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback, this);
+    server_sub1 = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback, this);
     //
-    //    //    S_ROSMODE = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::PongBot_Q_ROSmode, this);
+    //    S_ROSMODE = n.subscribe("ctrl_mode", 1, &gazebo::PongBotQ_plugin::PongBot_Q_ROSmode, this);
     //
-    //    server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
+    //server_sub2 = n.subscribe("rec_data1", 1, &gazebo::PongBotQ_plugin::Callback2, this);
+    server_sub2 = n.subscribe("vel_x", 1, &gazebo::PongBotQ_plugin::Callback2, this);
+    server_sub3 = n.subscribe("vel_y", 1, &gazebo::PongBotQ_plugin::Callback3, this);
+    server_sub4 = n.subscribe("vel_yaw", 1, &gazebo::PongBotQ_plugin::Callback4, this);
+    server_sub5 = n.subscribe("stop", 1, &gazebo::PongBotQ_plugin::Callback5, this);
     //    server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
     //    server_sub4 = n.subscribe("cp_con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback4, this);
     //    server_sub5 = n.subscribe("Body_Ori_Con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback5, this);
@@ -927,8 +984,7 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
 
 }
 
-void gazebo::PongBotQ_plugin::InitRvizSetting()
-{
+void gazebo::PongBotQ_plugin::InitRvizSetting() {
     //**************************rviz inital setting*************************************//
     //    P_joint_states = n.advertise<sensor_msgs::JointState>("joint_states", 1);
     //    m_joint_states.name.resize(13);
@@ -938,8 +994,7 @@ void gazebo::PongBotQ_plugin::InitRvizSetting()
 
 }
 
-void gazebo::PongBotQ_plugin::SensorSetting()
-{
+void gazebo::PongBotQ_plugin::SensorSetting() {
 
     //************************Imu Setting*********************************//
     //setting for IMU sensor
@@ -953,8 +1008,7 @@ void gazebo::PongBotQ_plugin::SensorSetting()
 
 }
 
-void gazebo::PongBotQ_plugin::RBDLSetting()
-{
+void gazebo::PongBotQ_plugin::RBDLSetting() {
 
     rbdl_check_api_version(RBDL_API_VERSION);
 
@@ -962,14 +1016,13 @@ void gazebo::PongBotQ_plugin::RBDLSetting()
     version_test = rbdl_get_api_version();
     printf("rbdl api version = %d\n", version_test);
 
-    Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V4/urdf/PONGBOT_Q_V4.urdf", pongbot_q_model, true, false);
-    //Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V2/urdf/PONGBOT_Q_V2.urdf", pongbot_q_model, true, true);
+    //Addons::URDFReadFromFile("/root/.gazebo/models/PONGBOT_Q_V4/urdf/PONGBOT_Q_V4.urdf", pongbot_q_model, true, false);
+    Addons::URDFReadFromFile("/home/hyunseok/.gazebo/models/PONGBOT_Q_V4/urdf/PONGBOT_Q_V4.urdf", pongbot_q_model, true, true);
     PongBotQ.setRobotModel(pongbot_q_model);
 
 }
 
-void gazebo::PongBotQ_plugin::IMUSensorRead()
-{
+void gazebo::PongBotQ_plugin::IMUSensorRead() {
     PongBotQ.IMURoll_dot = this->IMU->AngularVelocity(false)[0];
     PongBotQ.IMUPitch_dot = this->IMU->AngularVelocity(false)[1];
     PongBotQ.IMUYaw_dot = this->IMU->AngularVelocity(false)[2];
@@ -981,8 +1034,7 @@ void gazebo::PongBotQ_plugin::IMUSensorRead()
     //    printf("angular_vel_x = %f [rad/s]\n",angular_vel_x);
 }
 
-void gazebo::PongBotQ_plugin::FTSensorRead()
-{
+void gazebo::PongBotQ_plugin::FTSensorRead() {
     PongBotQ.FTsensorTransformation();
 
     wrench = this->RL_TIP_JOINT->GetForceTorque(0);
@@ -1054,12 +1106,10 @@ void gazebo::PongBotQ_plugin::FTSensorRead()
     if (PongBotQ.RL.ftSensor.Fz > thre) {
         if (rl_fz_cnt < thre_num) {
             rl_fz_cnt++;
-        }
-        else {
+        } else {
             PongBotQ.T_RL = true;
         }
-    }
-    else {
+    } else {
         PongBotQ.T_RL = false;
         rl_fz_cnt = 0;
     }
@@ -1067,12 +1117,10 @@ void gazebo::PongBotQ_plugin::FTSensorRead()
     if (PongBotQ.RR.ftSensor.Fz > thre) {
         if (rr_fz_cnt < thre_num) {
             rr_fz_cnt++;
-        }
-        else {
+        } else {
             PongBotQ.T_RR = true;
         }
-    }
-    else {
+    } else {
         PongBotQ.T_RR = false;
         rr_fz_cnt = 0;
     }
@@ -1080,12 +1128,10 @@ void gazebo::PongBotQ_plugin::FTSensorRead()
     if (PongBotQ.FL.ftSensor.Fz > thre) {
         if (fl_fz_cnt < thre_num) {
             fl_fz_cnt++;
-        }
-        else {
+        } else {
             PongBotQ.T_FL = true;
         }
-    }
-    else {
+    } else {
         PongBotQ.T_FL = false;
         fl_fz_cnt = 0;
     }
@@ -1093,12 +1139,10 @@ void gazebo::PongBotQ_plugin::FTSensorRead()
     if (PongBotQ.FR.ftSensor.Fz > thre) {
         if (fr_fz_cnt < thre_num) {
             fr_fz_cnt++;
-        }
-        else {
+        } else {
             PongBotQ.T_FR = true;
         }
-    }
-    else {
+    } else {
         PongBotQ.T_FR = false;
         fr_fz_cnt = 0;
     }
@@ -1106,8 +1150,7 @@ void gazebo::PongBotQ_plugin::FTSensorRead()
     //    printf("FZ_RL = %f, PongBotQ.T_RL = %d\n",PongBotQ.RL.ftSensor.Fz,PongBotQ.T_RL);    
 }
 
-void gazebo::PongBotQ_plugin::EncoderRead()
-{
+void gazebo::PongBotQ_plugin::EncoderRead() {
     //************************** Encoder ********************************//
     PongBotQ.actual_pos[0] = this->RL_HR_JOINT->GetAngle(0).Radian();
     PongBotQ.actual_pos[1] = this->RL_HP_JOINT->GetAngle(0).Radian();
@@ -1141,8 +1184,7 @@ void gazebo::PongBotQ_plugin::EncoderRead()
     }
 }
 
-void gazebo::PongBotQ_plugin::jointController()
-{
+void gazebo::PongBotQ_plugin::jointController() {
     //***************************Set Torque********************************//
 
     PongBotQ.joint[6].torque = PongBotQ.Kp_q[6]*(PongBotQ.target_pos[6] - PongBotQ.actual_pos[6]) + PongBotQ.Kd_q[6]*(0 - PongBotQ.lpf_actual_vel[6]);
@@ -1152,8 +1194,7 @@ void gazebo::PongBotQ_plugin::jointController()
     for (unsigned int i = 0; i < 13; ++i) {
         if (PongBotQ.joint[i].torque >= 3000) {
             PongBotQ.joint[i].torque = 3000;
-        }
-        else if (PongBotQ.joint[i].torque <= -3000) {
+        } else if (PongBotQ.joint[i].torque <= -3000) {
             PongBotQ.joint[i].torque = -3000;
         }
     }
@@ -1179,13 +1220,12 @@ void gazebo::PongBotQ_plugin::jointController()
 
 }
 
-void gazebo::PongBotQ_plugin::ROSMsgPublish1()
-{
+void gazebo::PongBotQ_plugin::ROSMsgPublish1() {
     //********************* DH : Data plot ***************************//
 
-    //    for (unsigned int i = 0; i < 12; ++i) {
-    //        TmpData[i] = PongBotQ.tmp_data[i];
-    //    }
+//        for (unsigned int i = 0; i < 12; ++i) {
+//            TmpData[i] = PongBotQ.tmp_data[i];
+//     }
 
     //    TmpData1[0] = PongBotQ.Fc_RL_z;//PongBotQ.target_EP_vel[0];
     //    TmpData1[1] = PongBotQ.Fc_RR_z;//PongBotQ.target_EP_vel[3];
@@ -1231,16 +1271,36 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
     //    TmpData[28] = PongBotQ.target_com_vel[0];
     //TmpData[29] = PongBotQ.target_com_acc[0];
     //    TmpData[29] = sqrt(pow(PongBotQ.actual_com_speed[0],2)+pow(PongBotQ.actual_com_speed[1],2));
+    TmpData[0]=PongBotQ.actual_vel[0];
+    TmpData[1]=PongBotQ.actual_vel[1];
+    TmpData[2]=PongBotQ.actual_vel[2];
+    TmpData[3]=PongBotQ.actual_vel[3];
+    TmpData[4]=PongBotQ.actual_vel[4];
+    TmpData[5]=PongBotQ.actual_vel[5];
+    TmpData[6]=PongBotQ.actual_vel[6];
+    TmpData[7]=PongBotQ.actual_vel[7];
+    TmpData[8]=PongBotQ.actual_vel[8];
+    TmpData[9]=PongBotQ.actual_vel[9];
+    TmpData[10]=PongBotQ.actual_vel[10];
+    TmpData[11]=PongBotQ.actual_vel[11];
+    TmpData[12]=PongBotQ.actual_vel[12];
+    //TmpData[10]=PongBotQ.cnt_HS;
+    //TmpData[10]=PongBotQ.joint[9].torque;
+    ///TmpData[11]=PongBotQ.actual_vel
+//    TmpData[12]=PongBotQ.target_com_pos_HS[0];
+//    TmpData[13]=PongBotQ.target_com_pos_HS[1];
+//    TmpData[14]=PongBotQ.target_com_pos_HS[2];
 
-    for (unsigned int i = 0; i < 80; ++i) {
-        ros_msg1.data[i] = PongBotQ.tmp_data1(i);
+            
+    for (unsigned int i = 0; i < 29; ++i) {
+        //ros_msg1.data[i] = PongBotQ.tmp_data1(i);
+        ros_msg1.data[i] = TmpData[i];
     }
 
     ros_pub1.publish(ros_msg1);
 }
 
-void gazebo::PongBotQ_plugin::ROSMsgPublish2()
-{
+void gazebo::PongBotQ_plugin::ROSMsgPublish2() {
 
     //********************* DH : Data plot ***************************//
 
@@ -1298,7 +1358,7 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish2()
     //    TmpData2[28] = PongBotQ.cp_RL_foot_pos[0];
     //    TmpData2[29] = PongBotQ.cp_FL_foot_pos[0];
 
-
+    
     for (unsigned int i = 0; i < 80; ++i) {
         ros_msg2.data[i] = PongBotQ.tmp_data2[i];
     }

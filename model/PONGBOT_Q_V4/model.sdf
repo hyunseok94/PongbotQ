@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <sdf version='1.6'>
   <model name='PONGBOT_Q_V4'>
-    <!--<joint name="fixed to ground" type="fixed">
+    <joint name="fixed to ground" type="fixed">
        <parent>world</parent>
        <child>REAR_BODY</child>
-     </joint>-->
+     </joint>
     <link name='REAR_BODY'>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <inertial>

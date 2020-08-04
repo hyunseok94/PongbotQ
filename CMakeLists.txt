@@ -24,7 +24,7 @@ find_package(gazebo REQUIRED)
 link_directories(${GAZEBO_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${PCL_LIBRARY_DIRS} ${RBDL_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${ADDITIONAL_INCLUDE_DIRS} ${OGRE_INCLUDE_DIRS}/Paging)
 
-add_library(${PROJECT_NAME} src/pongbotq_plugin.cc src/CRobot.cpp)
+add_library(${PROJECT_NAME} src/pongbotq_plugin.cc src/CRobot.cpp src/QuadProgpp/Array.cc src/QuadProgpp/QuadProg++.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${RBDL_LIBRARY} ${RBDL_URDFReader_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqp)
 
