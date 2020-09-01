@@ -232,13 +232,13 @@ namespace gazebo {
 
         //ros::Publisher P_joint_force;
         // DH PARA
-        double TmpData[30];
+        double TmpData[25];
         //        double TmpData1[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         //        double TmpData2[30] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         ros::Publisher ros_pub1;
-        ros::Publisher ros_pub2;
+        //ros::Publisher ros_pub2;
         std_msgs::Float64MultiArray ros_msg1;
-        std_msgs::Float64MultiArray ros_msg2;
+        //std_msgs::Float64MultiArray ros_msg2;
 
         // FT sensor Transformation
         VectorXd actual_q = VectorXd::Zero(17); // 13 Joints + 4 Tips
@@ -308,6 +308,7 @@ namespace gazebo {
         ros::Subscriber server_sub4;
         ros::Subscriber server_sub5;
         ros::Subscriber server_sub6;
+        ros::Subscriber server_sub7;
 
 
         bool moving_flag = false;
@@ -316,7 +317,7 @@ namespace gazebo {
 
         VectorXd Err_EP = VectorXd::Zero(12); //added by HSKIM
         VectorXd Err_pos = VectorXd::Zero(13); //added by HSKIM
-        
+
     public:
         //For model load
 
@@ -331,6 +332,7 @@ namespace gazebo {
         void Callback3(const std_msgs::Float64Ptr &msg);
         void Callback4(const std_msgs::Float64Ptr &msg);
         void Callback5(const std_msgs::Int32Ptr &msg);
+        void Callback7(const std_msgs::Float64Ptr &msg);
         //        void Callback3(const std_msgs::Int32Ptr &msg);
         //        void Callback4(const std_msgs::Int32Ptr &msg);
         //        void Callback5(const std_msgs::Int32Ptr &msg);
@@ -350,7 +352,7 @@ namespace gazebo {
 
         void jointController();
         void ROSMsgPublish1();
-        void ROSMsgPublish2();
+        //void ROSMsgPublish2();
 
     };
     GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
@@ -539,35 +541,35 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm() { //* Writing realtime code here
             }
 
             PongBotQ.ControlMode = CTRLMODE_NONE;
-            
+
             break;
 
         case CTRLMODE_SLOW_WALK_HS:
             PongBotQ.cnt_HS = 0;
-            PongBotQ.Get_gain_HS();
+
             cout << "============= [CTRLMODE_Walk] ==========" << endl;
             PongBotQ.now_vel_HS << 0.0, 0.0, 0.0;
             PongBotQ.tar_vel_HS << 0.0, 0.0, 0.0;
-           
+
             PongBotQ.zmp_ref_x_array_HS = VectorNd::Zero(PongBotQ.preview_cnt_HS);
             PongBotQ.zmp_ref_y_array_HS = VectorNd::Zero(PongBotQ.preview_cnt_HS);
 
             PongBotQ.X_new_x_HS << 0.0, 0.0, 0.0;
             PongBotQ.X_new_y_HS << 0.0, 0.0, 0.0;
-            
+
             PongBotQ.sum_e_x_HS = 0.0;
             PongBotQ.sum_e_y_HS = 0.0;
-            
-            PongBotQ.WalkReady_flag_HS=true;
-            PongBotQ.sub_ctrl_flag=false;
-            PongBotQ.tmp_sub_ctrl_flag_HS=false;
-            PongBotQ.foot_height_HS=PongBotQ.tmp_foot_height_HS;
-            PongBotQ.init_Transform_flag_HS=true;
-            PongBotQ.sub_cnt_HS=0;
-            PongBotQ.init_Force_flag_HS=true;
-            
-            PongBotQ.target_base_ori_HS(2)=0.0;
-            
+
+            PongBotQ.WalkReady_flag_HS = true;
+            PongBotQ.move_stop_flag = false;
+            PongBotQ.walk_stop_flag_HS = false;
+            PongBotQ.com_stop_flag_HS = false;
+            PongBotQ.foot_height_HS = PongBotQ.tmp_foot_height_HS;
+            PongBotQ.init_Transform_flag_HS = true;
+            PongBotQ.sub_cnt_HS = 0;
+            PongBotQ.init_Force_flag_HS = true;
+            PongBotQ.target_base_ori_HS(2) = 0.0;
+            PongBotQ.Contact_Info_HS << 1, 1, 1, 1;
             PongBotQ.CommandFlag = GOTO_SLOW_WALK_POS_HS;
             PongBotQ.ControlMode = CTRLMODE_NONE;
 
@@ -660,26 +662,20 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm() { //* Writing realtime code here
         case GOTO_SLOW_WALK_POS_HS:
             PongBotQ.StateUpdate();
             PongBotQ.Transform_DH2HS();
-            if(PongBotQ.WalkReady_flag_HS==true){
-             PongBotQ.WalkReady_Pos_Traj_HS();    
-            }
-            else{
-             PongBotQ.Walking_Gait_Traj_HS();    
+            if (PongBotQ.WalkReady_flag_HS == true) {
+                PongBotQ.WalkReady_Pos_Traj_HS();
+            } else {
+                PongBotQ.Walking_Gait_Traj_HS();
             }
             PongBotQ.ComputeTorqueControl_HS();
-            
-//            if(PongBotQ.tmp_sub_ctrl_flag_HS==true){
-//             PongBotQ.Transform_HS2DH();
-//            }
-            
+            PongBotQ.print_HS();
             break;
-
     }
 
     jointController();
 
     ROSMsgPublish1();
-    ROSMsgPublish2();
+    //ROSMsgPublish2();
 }
 
 void gazebo::PongBotQ_plugin::Callback(const std_msgs::Int32Ptr &msg) {
@@ -699,11 +695,16 @@ void gazebo::PongBotQ_plugin::Callback4(const std_msgs::Float64Ptr &msg) {
 }
 
 void gazebo::PongBotQ_plugin::Callback5(const std_msgs::Int32Ptr &msg) {
-    PongBotQ.sub_ctrl_flag = (int) (msg->data);
+    PongBotQ.pre_sub_ctrl_flag = PongBotQ.move_stop_flag;
+    PongBotQ.move_stop_flag = (int) (msg->data);
+}
+
+void gazebo::PongBotQ_plugin::Callback7(const std_msgs::Float64Ptr &msg) {
+    PongBotQ.pitch_degree = msg->data;
 }
 
 void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
-    const double max_x_vel = 1.4;
+    const double max_x_vel = 0.5; //1.4;
     const double max_y_vel = 0.5;
     const double max_yaw_ori = 5 * D2R; // rad
     //    const double max_x_acc = 3.0;
@@ -720,7 +721,7 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
         // ========= [Trot Walk] ========== //
         if (PongBotQ.moving_done_flag == true) {
             PongBotQ.ControlMode = 4;
-            PongBotQ.sub_ctrl_flag = 0;
+            PongBotQ.move_stop_flag = 0;
         }
     } else if (msg->buttons[3] == true) {
         //        // ========= [Pronk] ========== //
@@ -734,13 +735,19 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
         if (PongBotQ.moving_done_flag == true) {
             //            cout << "2" << endl;
             PongBotQ.ControlMode = 7;
-            PongBotQ.sub_ctrl_flag = 0;
+            PongBotQ.move_stop_flag = 0;
         }
     } else if (msg->buttons[4] == true) {
         // ========= [Flying Trot] ========== //
         if (PongBotQ.moving_done_flag == true) {
             PongBotQ.ControlMode = 5;
-            PongBotQ.sub_ctrl_flag = 0;
+            PongBotQ.move_stop_flag = 0;
+        }
+    } else if (msg->buttons[12] == true) {
+        // ========= [HS SLOW WALKING] ========== //
+        if (PongBotQ.moving_done_flag == true) {
+            PongBotQ.ControlMode = CTRLMODE_SLOW_WALK_HS;
+            PongBotQ.move_stop_flag = false;
         }
     } else {
         PongBotQ.ControlMode = 0;
@@ -749,7 +756,10 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
     if (msg->buttons[2] == true) {
         //        moving_flag = true;
         PongBotQ.moving_done_flag = true;
-        PongBotQ.sub_ctrl_flag = 1;
+        PongBotQ.move_stop_flag = 1;
+        if (PongBotQ.pre_sub_ctrl_flag == true) {
+            PongBotQ.move_stop_flag = false;
+        }
     }
 
     if (msg->buttons[9] == true) {
@@ -839,6 +849,9 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
 
     //    cout << "com_roll = " << PongBotQ.com_ori[0] << ", com_pitch = " << PongBotQ.com_ori[1] << endl;
 
+    PongBotQ.speed_x = (msg->axes[1]) * 0.22;
+    PongBotQ.speed_y = (msg->axes[0]) * 0.15;
+    PongBotQ.speed_yaw = (msg->axes[2]) * 10.0 * (4.0 * PI / 180);
 }
 
 void gazebo::PongBotQ_plugin::Print(void) //Print function added by HSKIM
@@ -955,9 +968,10 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting() {
 
     // DH Publisher
     ros_pub1 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data1/", 1000);
-    ros_pub2 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data2/", 1000);
-    ros_msg1.data.resize(80);
-    ros_msg2.data.resize(80);
+    //ros_pub2 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data2/", 1000);
+    //ros_msg1.data.resize(80);
+    ros_msg1.data.resize(20);
+    //ros_msg2.data.resize(80);
 
     P_RL_force = n.advertise<geometry_msgs::WrenchStamped>("RL_force", 1000);
     P_RR_force = n.advertise<geometry_msgs::WrenchStamped>("RR_force", 1000);
@@ -977,6 +991,7 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting() {
     server_sub3 = n.subscribe("vel_y", 1, &gazebo::PongBotQ_plugin::Callback3, this);
     server_sub4 = n.subscribe("vel_yaw", 1, &gazebo::PongBotQ_plugin::Callback4, this);
     server_sub5 = n.subscribe("stop", 1, &gazebo::PongBotQ_plugin::Callback5, this);
+    server_sub7 = n.subscribe("Pitch_angle", 1, &gazebo::PongBotQ_plugin::Callback7, this);
     //    server_sub3 = n.subscribe("sub_ctrl_mode", 1, &gazebo::PongBotQ_plugin::Callback3, this);
     //    server_sub4 = n.subscribe("cp_con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback4, this);
     //    server_sub5 = n.subscribe("Body_Ori_Con_onoff_flag", 1, &gazebo::PongBotQ_plugin::Callback5, this);
@@ -1223,9 +1238,9 @@ void gazebo::PongBotQ_plugin::jointController() {
 void gazebo::PongBotQ_plugin::ROSMsgPublish1() {
     //********************* DH : Data plot ***************************//
 
-//        for (unsigned int i = 0; i < 12; ++i) {
-//            TmpData[i] = PongBotQ.tmp_data[i];
-//     }
+    //        for (unsigned int i = 0; i < 12; ++i) {
+    //            TmpData[i] = PongBotQ.tmp_data[i];
+    //     }
 
     //    TmpData1[0] = PongBotQ.Fc_RL_z;//PongBotQ.target_EP_vel[0];
     //    TmpData1[1] = PongBotQ.Fc_RR_z;//PongBotQ.target_EP_vel[3];
@@ -1271,28 +1286,77 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1() {
     //    TmpData[28] = PongBotQ.target_com_vel[0];
     //TmpData[29] = PongBotQ.target_com_acc[0];
     //    TmpData[29] = sqrt(pow(PongBotQ.actual_com_speed[0],2)+pow(PongBotQ.actual_com_speed[1],2));
-    TmpData[0]=PongBotQ.actual_vel[0];
-    TmpData[1]=PongBotQ.actual_vel[1];
-    TmpData[2]=PongBotQ.actual_vel[2];
-    TmpData[3]=PongBotQ.actual_vel[3];
-    TmpData[4]=PongBotQ.actual_vel[4];
-    TmpData[5]=PongBotQ.actual_vel[5];
-    TmpData[6]=PongBotQ.actual_vel[6];
-    TmpData[7]=PongBotQ.actual_vel[7];
-    TmpData[8]=PongBotQ.actual_vel[8];
-    TmpData[9]=PongBotQ.actual_vel[9];
-    TmpData[10]=PongBotQ.actual_vel[10];
-    TmpData[11]=PongBotQ.actual_vel[11];
-    TmpData[12]=PongBotQ.actual_vel[12];
+    //    TmpData[0]=PongBotQ.kp_EP_HS[5]/1000.0;
+    //    TmpData[1]=PongBotQ.target_EP_HS(2);
+    //    TmpData[2]=PongBotQ.target_EP_HS(5);
+    //    TmpData[3]=PongBotQ.target_EP_HS(8);
+    //    TmpData[4]=PongBotQ.target_EP_HS(11);
+    //    
+    //    TmpData[5]=PongBotQ.actual_EP_HS(2);
+    //    TmpData[6]=PongBotQ.actual_EP_HS(5);
+    //    TmpData[7]=PongBotQ.actual_EP_HS(8);
+    //    TmpData[8]=PongBotQ.actual_EP_HS(11);
+    //    
+    //    TmpData[9]=PongBotQ.target_base_pos_HS(2)*0.1;
+    //    TmpData[10]=PongBotQ.actual_base_pos_HS(2)*0.1;
+    //    
+    //    TmpData[11]=PongBotQ.timing;
+    //    TmpData[12]=PongBotQ.EP_err_HS[2];
+
+    TmpData[0] = PongBotQ.Task_Control_value_HS[9];
+    TmpData[1] = PongBotQ.Task_Control_value_HS[12];
+    TmpData[2] = PongBotQ.Task_Control_value_HS[15];
+    TmpData[3] = PongBotQ.Task_Control_value_HS[18];
+    TmpData[4] = PongBotQ.OSQP_Control_value_HS[9];
+    TmpData[5] = PongBotQ.OSQP_Control_value_HS[12];
+    TmpData[6] = PongBotQ.OSQP_Control_value_HS[15];
+    TmpData[7] = PongBotQ.OSQP_Control_value_HS[18];
+ 
+    TmpData[8] = PongBotQ.target_EP[2];
+    TmpData[9] = PongBotQ.target_EP[5];
+    TmpData[10] = PongBotQ.target_EP[8];
+    TmpData[11] = PongBotQ.target_EP[11];
+
+    TmpData[12] = PongBotQ.target_base_pos_HS[2];
+    TmpData[13] = PongBotQ.actual_base_pos_HS[2];    
+    TmpData[14] = PongBotQ.target_EP_local_HS[8];
+    TmpData[15] = PongBotQ.target_EP_local_HS[11];
+//
+//    TmpData[9] = PongBotQ.target_EP_HS[2];
+//    TmpData[10] = PongBotQ.target_EP_HS[5];
+    //TmpData[11] = PongBotQ.target_EP_HS[8];
+    ///TmpData[12] = PongBotQ.target_EP_HS[11];
+    //TmpData[13] = PongBotQ.G_term[18];
+
+//    TmpData[14] = PongBotQ.actual_com_vel_HS[2];
+//    TmpData[15] = PongBotQ.C_term[13];
+//    TmpData[16] = PongBotQ.C_term[14];
+//    TmpData[17] = PongBotQ.C_term[15];
+//    TmpData[18] = PongBotQ.C_term[16];
+//    TmpData[19] = PongBotQ.C_term[17];
+//    TmpData[20] = PongBotQ.C_term[18];
+
+    // TmpData[12]=PongBotQ.QuadQP_Control_value_HS(18);
+    //TmpData[13]=PongBotQ.actual_base_pos_HS(2)*0.1;
+
+    //TmpData[14]=PongBotQ.timing;
+    //TmpData[15]=PongBotQ.EP_err_HS[2];
+
+
+    //    TmpData[12]=PongBotQ.actual_base_pos_HS(2);
+    //    TmpData[8]=PongBotQ.actual_com_pos_HS[2];
+    //    TmpData[10]=PongBotQ.actual_vel[10];
+    //    TmpData[11]=PongBotQ.actual_vel[11];
+    //    TmpData[12]=PongBotQ.actual_vel[12];
     //TmpData[10]=PongBotQ.cnt_HS;
     //TmpData[10]=PongBotQ.joint[9].torque;
     ///TmpData[11]=PongBotQ.actual_vel
-//    TmpData[12]=PongBotQ.target_com_pos_HS[0];
-//    TmpData[13]=PongBotQ.target_com_pos_HS[1];
-//    TmpData[14]=PongBotQ.target_com_pos_HS[2];
+    //    TmpData[12]=PongBotQ. [0];
+    //    TmpData[13]=PongBotQ.target_com_pos_HS[1];
+    //    TmpData[14]=PongBotQ.target_com_pos_HS[2];
 
-            
-    for (unsigned int i = 0; i < 29; ++i) {
+
+    for (unsigned int i = 0; i < 20; ++i) {
         //ros_msg1.data[i] = PongBotQ.tmp_data1(i);
         ros_msg1.data[i] = TmpData[i];
     }
@@ -1300,69 +1364,69 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1() {
     ros_pub1.publish(ros_msg1);
 }
 
-void gazebo::PongBotQ_plugin::ROSMsgPublish2() {
-
-    //********************* DH : Data plot ***************************//
-
-    //    for(int i=0;i<13;++i){
-    //        TmpData2[i] = PongBotQ.joint[i].torque/50.0;//PongBotQ.target_pos_with_con[i]*R2D;//(PongBotQ.target_pos[i] - PongBotQ.actual_pos[i])*R2D;
-    //    }
-
-    //    cout << "RLHR = " << PongBotQ.target_pos[0]*R2D << endl;
-
-    //    for(int i=0;i<12;++i){
-    ////        TmpData2[i+13] = PongBotQ.target_EP[i] - PongBotQ.actual_EP[i];
-    //        TmpData2[i+13] = PongBotQ.target_EP[i];// - PongBotQ.actual_EP[i];
-    //    }
-
-    //    TmpData2[13] = PongBotQ.turn_xl_EP;
-    //    TmpData2[14] = PongBotQ.turn_yl_EP;
-    //    TmpData2[15] = PongBotQ.turn_xr_EP;
-    //    TmpData2[16] = PongBotQ.turn_yr_EP;
-
-    //    TmpData2[0] = PongBotQ.tmp_data2[0];
-    //    TmpData2[1] = PongBotQ.tmp_data2[1];
-    //    TmpData2[2] = PongBotQ.tmp_data2[2];
-    //    TmpData2[3] = PongBotQ.tmp_data2[3];
-    //    TmpData2[4] = PongBotQ.tmp_data2[4];
-    //    TmpData2[5] = PongBotQ.tmp_data2[5];
-    //    TmpData2[6] = PongBotQ.tmp_data2[6];
-    //    TmpData2[7] = PongBotQ.tmp_data2[7];
-    //    TmpData2[8] = PongBotQ.tmp_data2[8];
-    //    TmpData2[9] = PongBotQ.tmp_data2[9];
-    //    TmpData2[10] = PongBotQ.tmp_data2[10];
-    //    TmpData2[11] = PongBotQ.tmp_data2[11];
-    //    TmpData2[12] = PongBotQ.tmp_data2[12];
-    //    TmpData2[13] = PongBotQ.tmp_data2[13];
-    //    TmpData2[14] = PongBotQ.tmp_data2[14];
-    //    TmpData2[15] = PongBotQ.tmp_data2[15];
-    //    TmpData2[16] = PongBotQ.tmp_data2[16];
-    //    TmpData2[17] = PongBotQ.tmp_data2[17];
-    //    TmpData2[18] = time2;
-
-    //    for(int i=0;i<30;++i){
-    //        TmpData2[i] = PongBotQ.tmp_data2[i];
-    //    }
-
-    //    TmpData2[17] = PongBotQ.target_vel[7]*60/PI2*50;
-    //    TmpData2[18] = PongBotQ.target_vel[8]*60/PI2*50;
-    //    TmpData2[19] = PongBotQ.target_vel[9]*60/PI2*50;
-    //    TmpData2[20] = PongBotQ.target_vel[10]*60/PI2*50;
-    //    TmpData2[21] = PongBotQ.target_vel[11]*60/PI2*50;
-    //    TmpData2[22] = PongBotQ.target_vel[12]*60/PI2*50;
-
-
-    //    TmpData2[25] = PongBotQ.cp_foot_offset_y;
-    //    TmpData2[26] = PongBotQ.cp_RL_foot_pos[1];
-    //    TmpData2[27] = PongBotQ.cp_RR_foot_pos[1];
-    //    TmpData2[28] = PongBotQ.cp_RL_foot_pos[0];
-    //    TmpData2[29] = PongBotQ.cp_FL_foot_pos[0];
-
-    
-    for (unsigned int i = 0; i < 80; ++i) {
-        ros_msg2.data[i] = PongBotQ.tmp_data2[i];
-    }
-
-    ros_pub2.publish(ros_msg2);
-}
+//void gazebo::PongBotQ_plugin::ROSMsgPublish2() {
+//
+//    //********************* DH : Data plot ***************************//
+//
+//    //    for(int i=0;i<13;++i){
+//    //        TmpData2[i] = PongBotQ.joint[i].torque/50.0;//PongBotQ.target_pos_with_con[i]*R2D;//(PongBotQ.target_pos[i] - PongBotQ.actual_pos[i])*R2D;
+//    //    }
+//
+//    //    cout << "RLHR = " << PongBotQ.target_pos[0]*R2D << endl;
+//
+//    //    for(int i=0;i<12;++i){
+//    ////        TmpData2[i+13] = PongBotQ.target_EP[i] - PongBotQ.actual_EP[i];
+//    //        TmpData2[i+13] = PongBotQ.target_EP[i];// - PongBotQ.actual_EP[i];
+//    //    }
+//
+//    //    TmpData2[13] = PongBotQ.turn_xl_EP;
+//    //    TmpData2[14] = PongBotQ.turn_yl_EP;
+//    //    TmpData2[15] = PongBotQ.turn_xr_EP;
+//    //    TmpData2[16] = PongBotQ.turn_yr_EP;
+//
+//    //    TmpData2[0] = PongBotQ.tmp_data2[0];
+//    //    TmpData2[1] = PongBotQ.tmp_data2[1];
+//    //    TmpData2[2] = PongBotQ.tmp_data2[2];
+//    //    TmpData2[3] = PongBotQ.tmp_data2[3];
+//    //    TmpData2[4] = PongBotQ.tmp_data2[4];
+//    //    TmpData2[5] = PongBotQ.tmp_data2[5];
+//    //    TmpData2[6] = PongBotQ.tmp_data2[6];
+//    //    TmpData2[7] = PongBotQ.tmp_data2[7];
+//    //    TmpData2[8] = PongBotQ.tmp_data2[8];
+//    //    TmpData2[9] = PongBotQ.tmp_data2[9];
+//    //    TmpData2[10] = PongBotQ.tmp_data2[10];
+//    //    TmpData2[11] = PongBotQ.tmp_data2[11];
+//    //    TmpData2[12] = PongBotQ.tmp_data2[12];
+//    //    TmpData2[13] = PongBotQ.tmp_data2[13];
+//    //    TmpData2[14] = PongBotQ.tmp_data2[14];
+//    //    TmpData2[15] = PongBotQ.tmp_data2[15];
+//    //    TmpData2[16] = PongBotQ.tmp_data2[16];
+//    //    TmpData2[17] = PongBotQ.tmp_data2[17];
+//    //    TmpData2[18] = time2;
+//
+//    //    for(int i=0;i<30;++i){
+//    //        TmpData2[i] = PongBotQ.tmp_data2[i];
+//    //    }
+//
+//    //    TmpData2[17] = PongBotQ.target_vel[7]*60/PI2*50;
+//    //    TmpData2[18] = PongBotQ.target_vel[8]*60/PI2*50;
+//    //    TmpData2[19] = PongBotQ.target_vel[9]*60/PI2*50;
+//    //    TmpData2[20] = PongBotQ.target_vel[10]*60/PI2*50;
+//    //    TmpData2[21] = PongBotQ.target_vel[11]*60/PI2*50;
+//    //    TmpData2[22] = PongBotQ.target_vel[12]*60/PI2*50;
+//
+//
+//    //    TmpData2[25] = PongBotQ.cp_foot_offset_y;
+//    //    TmpData2[26] = PongBotQ.cp_RL_foot_pos[1];
+//    //    TmpData2[27] = PongBotQ.cp_RR_foot_pos[1];
+//    //    TmpData2[28] = PongBotQ.cp_RL_foot_pos[0];
+//    //    TmpData2[29] = PongBotQ.cp_FL_foot_pos[0];
+//
+//    
+//    for (unsigned int i = 0; i < 80; ++i) {
+//        ros_msg2.data[i] = PongBotQ.tmp_data2[i];
+//    }
+//
+//    ros_pub2.publish(ros_msg2);
+//}
 
