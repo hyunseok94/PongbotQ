@@ -9,7 +9,7 @@
 <!--
        <real_time_factor>0.5</real_time_factor>
       <real_time_update_rate>500</real_time_update_rate>
-    --> 
+    -->
  	<ode>
         <solver>
           <type>quick</type>
@@ -39,19 +39,29 @@
        <plugin name="plugin" filename="libpongbot_q_v1.so"/>
     </include>
 
-   <!--<include>
+   <include>
       <uri>model://OBS_STAIR</uri>
-      <pose frame=''> 2.5 -0.9 0.9 0 0 0</pose>
-    </include>-->
+      <pose frame=''> 2.5 -0.7 0.9 0 0 0</pose>
+    </include>
 
     <!--<include>
       <uri>model://OBS_PLATE</uri>
       <pose frame=''> 1.9 0.0 0.0 3.141592 0 0</pose>
-    </include> -->
+    </include>-->
 
-   <!-- <include>
+    <!--<include>
       <uri>model://OBS_PLATE2</uri>
       <pose frame=''> 3.8 0.0 0.03 3.141592 0 0</pose>
+    </include>-->
+
+   <!--<include>
+      <uri>model://step_type1</uri>
+      <pose frame=''> 1.0 -0.5 0.0 0 0 1.57075</pose>
+    </include>-->
+  <!--<include>
+      <uri>model://SLOPE_GENERATOR</uri>
+      <pose frame=''> 4.5 1.5 1.0 0 0 0</pose>
+      <plugin name="plugin" filename="libslope_generator_pkgs.so"/>
     </include>-->
   </world>
 </sdf>

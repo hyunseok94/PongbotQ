@@ -4973,28 +4973,27 @@ MatrixNd CRobot::Kron(MatrixNd AA, MatrixNd BB) {
 }
 
 void CRobot::Walking_Gait_Traj_HS(void) {
-    std::cout << "cnt_HS:" << cnt_HS << std::endl;
-    //std::cout << "cnt=" << cnt_HS << std::endl;
-    //std::cout << "_------------------------" << std::endl;
+    // std::cout << "cnt_HS:" << cnt_HS << std::endl;
+    // std::cout << "_------------------------" << std::endl;
     step_time_HS = tsp_time_HS + fsp_time_HS;
     if (cnt_HS < preview_cnt_HS) {
         Walking_Traj_First_HS(cnt_HS);
         tmp_actual_EP_local_HS = actual_EP_local_HS;
         cnt_HS++;
     } else if (cnt_HS < (preview_cnt_HS + step_cnt_HS * 4)) {
-        Walking_Traj_COM_VER_HS(cnt_HS - preview_cnt_HS);
+        //Walking_Traj_COM_VER_HS(cnt_HS - preview_cnt_HS);
+        Walking_Traj_COM_VER_HS3(cnt_HS - preview_cnt_HS);
+        Fly_Leg_Gain_Controller(cnt_HS - preview_cnt_HS);
+        Slope_Controller();
 
         if (cnt_HS == preview_cnt_HS + step_cnt_HS * 4 - 1) {
             cnt_HS = preview_cnt_HS - 1;
         }
 
-        Fly_Leg_Gain_Controller(Contact_Info_HS, Gain_Info_HS);
         cnt_HS++;
-
     }
 
-    Diff_COM_Info_HS();
-    Regenerate_COM_Trajectory_HS(target_com_pos_HS(2) - actual_com_pos_HS(2));
+    //Regenerate_COM_Trajectory_HS(target_com_pos_HS(2) - actual_com_pos_HS(2));    
 }
 
 void CRobot::Walking_Traj_First_HS(unsigned int _i) {
@@ -5010,10 +5009,19 @@ void CRobot::Walking_Traj_First_HS(unsigned int _i) {
         tar_vel_HS << 0.0, 0.0, 0.0;
 
         FootStepPlanning_HS(init_com_pos_HS, init_base_ori_HS, init_EP_HS, now_vel_HS, tar_vel_HS);
+
+        goal_EP_HS(2) = 0.0;
+        goal_EP_HS(5) = 0.0;
+        goal_EP_HS(8) = 0.0;
+        goal_EP_HS(11) = 0.0;
+
+        //TF_Global2Semi();
     }
     //******************** Com Trajectory************************//
     COM_XY_Traj_Gen_COM_VER_HS(_i, init_com_pos_HS, goal_com_pos_HS); // This returns Com_Traj.
     target_com_pos_HS(2) = goal_com_pos_HS(2);
+
+    Contact_Info_HS << 1, 1, 1, 1;
 }
 
 void CRobot::FootStepPlanning_HS(VectorNd _now_com_pos, VectorNd _now_base_ori, VectorNd _now_EP_pos, VectorNd _now_vel, VectorNd _tar_vel) {
@@ -5032,11 +5040,19 @@ void CRobot::FootStepPlanning_HS(VectorNd _now_com_pos, VectorNd _now_base_ori, 
     VectorNd r_RL_goal(2), r_RR_goal(2), r_FL_goal(2), r_FR_goal(2);
 
     VectorNd goal_EP_rot(12);
+    //    MatrixNd R_now_HS(2, 2);
     MatrixNd R_Rot(3, 3);
+    MatrixNd R_goal(2, 2);
 
-    increment_com_x = step_time_HS * _tar_vel(0);
-    increment_com_y = step_time_HS * _tar_vel(1);
-    increment_base_yaw = step_time_HS * _tar_vel(2);
+    VectorNd r_del_global(2);
+    VectorNd r_del_local(2);
+    VectorNd r_y_local(2);
+    VectorNd r_y_global(2);
+    VectorNd Back_move(2);
+
+    increment_com_x = 4.0 * step_time_HS * _tar_vel(0);
+    increment_com_y = 4.0 * step_time_HS * _tar_vel(1);
+    increment_base_yaw = 4.0 * step_time_HS * _tar_vel(2);
 
     goal_base_ori_HS(2) = _now_base_ori(2) + increment_base_yaw;
 
@@ -5049,48 +5065,28 @@ void CRobot::FootStepPlanning_HS(VectorNd _now_com_pos, VectorNd _now_base_ori, 
     goal_EP_rot.segment(6, 3) = R_Rot * (_now_EP_pos.segment(6, 3) - _now_com_pos) + _now_com_pos;
     goal_EP_rot.segment(9, 3) = R_Rot * (_now_EP_pos.segment(9, 3) - _now_com_pos) + _now_com_pos;
 
-    // Transverse
-    //r_y << cos(goal_base_ori_HS(2) + PI / 2), sin(goal_base_ori_HS(2) + PI / 2);
-    r_y << -sin(goal_base_ori_HS(2)), cos(goal_base_ori_HS(2));
-    r_x << cos(goal_base_ori_HS(2)), sin(goal_base_ori_HS(2));
-
-    r_del_x1 << 2 * increment_com_x * cos(goal_base_ori_HS(2)), 2 * increment_com_x * sin(goal_base_ori_HS(2));
-    r_del_x2 << 4 * increment_com_x * cos(goal_base_ori_HS(2)), 4 * increment_com_x * sin(goal_base_ori_HS(2));
-    //r_del_y1 << 2 * increment_com_y * cos(goal_base_ori_HS(2) + PI / 2), 2 * increment_com_y * sin(goal_base_ori_HS(2) + PI / 2);
-    //r_del_y2 << 4 * increment_com_y * cos(goal_base_ori_HS(2) + PI / 2), 4 * increment_com_y * sin(goal_base_ori_HS(2) + PI / 2);
-    r_del_y1 << -2 * increment_com_y * sin(goal_base_ori_HS(2)), 2 * increment_com_y * cos(goal_base_ori_HS(2));
-    r_del_y2 << -4 * increment_com_y * sin(goal_base_ori_HS(2)), 4 * increment_com_y * cos(goal_base_ori_HS(2));
-
     r_RL_now << goal_EP_rot(0), goal_EP_rot(1);
     r_RR_now << goal_EP_rot(3), goal_EP_rot(4);
     r_FL_now << goal_EP_rot(6), goal_EP_rot(7);
     r_FR_now << goal_EP_rot(9), goal_EP_rot(10);
 
-    r_bw_RR_x = r_RR_now - r_RL_now;
-    r_per_RR_x = (r_bw_RR_x(0) * r_y(0) + r_bw_RR_x(1) * r_y(1)) * r_y;
-    r_tmp_RR_x = r_per_RR_x + r_RL_now;
+    R_now_HS << cos(_now_base_ori(2)), -sin(_now_base_ori(2))\
+           , sin(_now_base_ori(2)), cos(_now_base_ori(2));
 
-    r_bw_FL_x = r_FL_now - r_FR_now;
-    r_per_FL_x = (r_bw_FL_x(0) * r_y(0) + r_bw_FL_x(1) * r_y(1)) * r_y;
-    r_tmp_FL_x = r_per_FL_x + r_FR_now;
+    R_goal << cos(goal_base_ori_HS(2)), -sin(goal_base_ori_HS(2))\
+           , sin(goal_base_ori_HS(2)), cos(goal_base_ori_HS(2));
 
-    r_RL_now2 = r_RL_now + r_del_x2;
-    r_RR_now2 = r_tmp_RR_x + r_del_x1;
-    r_FL_now2 = r_tmp_FL_x + r_del_x1;
-    r_FR_now2 = r_FR_now + r_del_x2;
+    r_del_local << increment_com_x, increment_com_y;
+    r_del_global = R_goal*r_del_local;
 
-    r_bw_RR_y = r_FR_now2 - r_RR_now2;
-    r_per_RR_y = (r_bw_RR_y(0) * r_y(0) + r_bw_RR_y(1) * r_y(1)) * r_y;
-    r_tmp_RR_y = r_per_RR_y + r_RR_now2;
+    r_RL_goal = r_RL_now + r_del_global;
+    r_FR_goal = r_FR_now + r_del_global;
 
-    r_bw_FL_y = r_RL_now2 - r_FL_now2;
-    r_per_FL_y = (r_bw_FL_y(0) * r_y(0) + r_bw_FL_y(1) * r_y(1)) * r_y;
-    r_tmp_FL_y = r_per_FL_y + r_FL_now2;
+    r_y_local << 0, 1;
+    r_y_global = R_goal*r_y_local;
 
-    r_RL_goal = r_RL_now2 + r_del_y2;
-    r_RR_goal = r_tmp_RR_y + r_del_y1;
-    r_FL_goal = r_tmp_FL_y + r_del_y1;
-    r_FR_goal = r_FR_now2 + r_del_y2;
+    r_RR_goal = r_RL_now + ((r_FR_now(0) - r_RL_now(0)) * r_y_global(0)+(r_FR_now(1) - r_RL_now(1)) * r_y_global(1))*(r_y_global) + r_del_global / 2.0;
+    r_FL_goal = r_FR_now + ((r_RL_now(0) - r_FR_now(0)) * r_y_global(0)+(r_RL_now(1) - r_FR_now(1)) * r_y_global(1))*(r_y_global) + r_del_global / 2.0;
 
     goal_EP_HS(0) = r_RL_goal(0);
     goal_EP_HS(1) = r_RL_goal(1);
@@ -5103,7 +5099,20 @@ void CRobot::FootStepPlanning_HS(VectorNd _now_com_pos, VectorNd _now_base_ori, 
 
     goal_com_pos_HS(0) = (goal_EP_HS(0) + goal_EP_HS(3) + goal_EP_HS(6) + goal_EP_HS(9)) / 4.0;
     goal_com_pos_HS(1) = (goal_EP_HS(1) + goal_EP_HS(4) + goal_EP_HS(7) + goal_EP_HS(10)) / 4.0;
-    goal_com_pos_HS(2) = com_height_HS;
+}
+
+void CRobot::TF_Global2Semi(void) {
+    semi_pre_init_EP_HS << R_now_HS.transpose() * pre_init_EP_HS.segment(0, 2), pre_init_EP_HS(2), R_now_HS.transpose() * pre_init_EP_HS.segment(3, 2), pre_init_EP_HS(5), R_now_HS.transpose() * pre_init_EP_HS.segment(6, 2), pre_init_EP_HS(8), R_now_HS.transpose() * pre_init_EP_HS.segment(9, 2), pre_init_EP_HS(11);
+    semi_init_EP_HS << R_now_HS.transpose() * init_EP_HS.segment(0, 2), init_EP_HS(2), R_now_HS.transpose() * init_EP_HS.segment(3, 2), init_EP_HS(5), R_now_HS.transpose() * init_EP_HS.segment(6, 2), init_EP_HS(8), R_now_HS.transpose() * init_EP_HS.segment(9, 2), init_EP_HS(11);
+    semi_target_EP_HS << R_now_HS.transpose() * target_EP_HS.segment(0, 2), target_EP_HS(2), R_now_HS.transpose() * target_EP_HS.segment(3, 2), target_EP_HS(5), R_now_HS.transpose() * target_EP_HS.segment(6, 2), target_EP_HS(8), R_now_HS.transpose() * target_EP_HS.segment(9, 2), target_EP_HS(11);
+    semi_goal_EP_HS << R_now_HS.transpose() * goal_EP_HS.segment(0, 2), goal_EP_HS(2), R_now_HS.transpose() * goal_EP_HS.segment(3, 2), goal_EP_HS(5), R_now_HS.transpose() * goal_EP_HS.segment(6, 2), goal_EP_HS(8), R_now_HS.transpose() * goal_EP_HS.segment(9, 2), goal_EP_HS(11);
+
+}
+
+void CRobot::TF_Semi2Global(void) {
+    target_EP_HS << R_now_HS * semi_target_EP_HS.segment(0, 2), semi_target_EP_HS(2), R_now_HS * semi_target_EP_HS.segment(3, 2), semi_target_EP_HS(5), R_now_HS * semi_target_EP_HS.segment(6, 2), semi_target_EP_HS(8), R_now_HS * semi_target_EP_HS.segment(9, 2), semi_target_EP_HS(11);
+    target_EP_vel_HS << R_now_HS * semi_target_EP_vel_HS.segment(0, 2), semi_target_EP_vel_HS(2), R_now_HS * semi_target_EP_vel_HS.segment(3, 2), semi_target_EP_vel_HS(5), R_now_HS * semi_target_EP_vel_HS.segment(6, 2), semi_target_EP_vel_HS(8), R_now_HS * semi_target_EP_vel_HS.segment(9, 2), semi_target_EP_vel_HS(11);
+    target_com_pos_HS(2) = semi_target_com_pos_HS(2);
 }
 
 void CRobot::COM_XY_Traj_Gen_COM_VER_HS(unsigned int _i, VectorNd _init_com_pos, VectorNd _goal_com_pos) {
@@ -5124,7 +5133,8 @@ void CRobot::COM_XY_Traj_Gen_COM_VER_HS(unsigned int _i, VectorNd _init_com_pos,
             swing_dist_y = 0.0;
         } else {
             swing_dist_x = 0.0;
-            swing_dist_y = 0.10;
+            //swing_dist_y = 0.10;
+            swing_dist_y = 0.08;
         }
     }
 
@@ -5209,7 +5219,17 @@ void CRobot::COM_XY_Traj_Gen_COM_VER_HS(unsigned int _i, VectorNd _init_com_pos,
 
     target_com_pos_HS(0) = X_new_x_HS(0);
     target_com_pos_HS(1) = X_new_y_HS(0);
-    target_com_pos_HS(2) = goal_com_pos_HS(2);
+
+    target_com_vel_HS(0) = X_new_x_HS(1);
+    target_com_vel_HS(1) = X_new_y_HS(1);
+
+    target_com_acc_HS(0) = X_new_x_HS(2);
+    target_com_acc_HS(1) = X_new_y_HS(2);
+
+    //semi_target_com_pos_HS = target_C_WB_Y_HS.transpose() * target_com_pos_HS;
+    //semi_target_com_vel_HS = target_C_WB_Y_HS.transpose() * target_com_vel_HS;
+    //semi_target_com_acc_HS = target_C_WB_Y_HS.transpose() * target_com_acc_HS;
+    //target_com_pos_HS(2) = init_com_pos_HS(2)+(goal_com_pos_HS(2) - init_com_pos_HS(2)) / 2.0 * (1 - cos(PI / (step_cnt_HS * 4) * _i));
 }
 
 void CRobot::Preview_con_HS() {
@@ -5261,6 +5281,7 @@ void CRobot::Get_gain_HS(void) {
     FILE *fp3;
 
     fp1 = fopen("/home/hyunseok/catkin_ws/src/RcLab-PongBotQ/src/gain/3HZ/Gp.txt", "r");
+    //fp1 = fopen("/home/hyunseok/catkin_ws/src/RcLab-PongBotQ/src/gain/1.5HZ/Gp.txt", "r");
     //fp1 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/3HZ/Gp.txt", "r");
     if (fp1 == NULL)printf("CAN NOT OPEN Gp TEXT FILE \n");
     while (fscanf(fp1, "%lf", &temp_Gp_gain) == 1) {
@@ -5271,6 +5292,7 @@ void CRobot::Get_gain_HS(void) {
     nCount = 0;
 
     fp2 = fopen("/home/hyunseok/catkin_ws/src/RcLab-PongBotQ/src/gain/3HZ/Gx.txt", "r");
+    //fp2 = fopen("/home/hyunseok/catkin_ws/src/RcLab-PongBotQ/src/gain/1.5HZ/Gx.txt", "r");
     //fp2 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/3HZ/Gx.txt", "r");
     if (fp2 == NULL)printf("CAN NOT OPEN Gx TEXT FILE \n");
     while (fscanf(fp2, "%lf", &temp_Gx_gain) == 1) {
@@ -5281,6 +5303,7 @@ void CRobot::Get_gain_HS(void) {
     nCount = 0;
 
     fp3 = fopen("/home/hyunseok/catkin_ws/src/RcLab-PongBotQ/src/gain/3HZ/Gi.txt", "r");
+    //fp3 = fopen("/home/hyunseok/catkin_ws/src/RcLab-PongBotQ/src/gain/1.5HZ/Gi.txt", "r");
     //fp3 = fopen("/root/catkin_ws/src/RcLab-PongBotQ2/src/gain/3HZ/Gi.txt", "r");
     if (fp3 == NULL)printf("CAN NOT OPEN Gi TEXT FILE \n");
     while (fscanf(fp3, "%lf", &temp_Gi_gain) == 1) {
@@ -5300,11 +5323,480 @@ void CRobot::Get_gain_HS(void) {
     }
 }
 
-void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
+//void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
+//    double t1, t2;
+//    VectorNd tmp_semi_val(6);
+//    walk_time = _i*dt;
+//
+//    if (_i == 0) { //1400
+//
+//        if (move_stop_flag == true) {
+//            if (com_stop_flag_HS == true) {
+//                walk_stop_flag_HS = true;
+//                pre_sub_ctrl_flag = move_stop_flag;
+//            }
+//            if (speed_stop_flag_HS == true) {
+//                com_stop_flag_HS = true;
+//            }
+//            speed_stop_flag_HS = true;
+//            speed_x = 0.0;
+//            speed_y = 0.0;
+//            speed_yaw = 0.0;
+//        }
+//        if (move_stop_flag == false) {
+//            if (com_stop_flag_HS == false) {
+//                walk_stop_flag_HS = false;
+//                pre_sub_ctrl_flag = move_stop_flag;
+//            }
+//            com_stop_flag_HS = false;
+//            speed_stop_flag_HS = false;
+//        }
+//
+//        tar_vel_HS << speed_x, speed_y, speed_yaw;
+//
+//        FootStepPlanning_HS(init_com_pos_HS, init_base_ori_HS, init_EP_HS, now_vel_HS, tar_vel_HS);
+//        TF_Global2Semi();
+//
+//    }//************** Foot step Run *****************//
+//    if (walk_stop_flag_HS != true) {
+//        if (_i < tsp_cnt_HS) { //cnt:1400~1649 (500-1)
+//            t2 = walk_time;
+//            if (_i == (0)) {
+//                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//
+//                semi_pre_init_EP_HS(2) = semi_target_EP_HS(2);
+//                semi_pre_init_EP_HS(5) = semi_target_EP_HS(5);
+//                semi_pre_init_EP_HS(8) = semi_target_EP_HS(8);
+//                semi_pre_init_EP_HS(11) = semi_target_EP_HS(11);
+//                if (foot_height_HS == 0.0) {
+//                    Contact_Info_HS << 1, 1, 1, 1;
+//                } else {
+//                    Contact_Info_HS << 1, 0, 1, 1;
+//                }
+//                tmp_actual_EP_local_HS = actual_EP_local_HS;
+//            }
+//
+//            tmp_semi_val = Bezier_Curve_trajectory(Contact_Info_HS, semi_pre_init_EP_HS.segment(3, 3), semi_init_EP_HS.segment(3, 3), tmp_actual_EP_local_HS.segment(3, 3));
+//            semi_target_EP_HS.segment(3, 3) = tmp_semi_val.segment(0, 3);
+//            semi_target_EP_vel_HS.segment(3, 3) = tmp_semi_val.segment(3, 3);
+//
+//            semi_target_EP_HS(0) = semi_pre_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_pre_init_EP_HS(1);
+//            semi_target_EP_HS(6) = semi_pre_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_pre_init_EP_HS(7);
+//            semi_target_EP_HS(9) = semi_pre_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_pre_init_EP_HS(10);
+//
+//            semi_target_EP_vel_HS(0) = 0.0;
+//            semi_target_EP_vel_HS(1) = 0.0;
+//            semi_target_EP_vel_HS(6) = 0.0;
+//            semi_target_EP_vel_HS(7) = 0.0;
+//            semi_target_EP_vel_HS(9) = 0.0;
+//            semi_target_EP_vel_HS(10) = 0.0;
+//
+//
+//            if (adaptive_flag_HS == true) {
+//                semi_target_EP_HS(2) = semi_target_EP_HS(2);
+//                semi_target_EP_HS(8) = semi_target_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_target_EP_HS(11);
+//            } else {
+//                semi_target_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_target_EP_HS(8) = semi_pre_init_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_pre_init_EP_HS(11);
+//            }
+//
+//            semi_target_EP_vel_HS(2) = 0.0;
+//            semi_target_EP_vel_HS(8) = 0.0;
+//            semi_target_EP_vel_HS(11) = 0.0;
+//
+//        } else if (_i < step_cnt_HS) { //cnt:1650~1749(200-1)
+//            t2 = walk_time - (tsp_time_HS);
+//            semi_target_EP_HS(0) = semi_pre_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_pre_init_EP_HS(1);
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(6) = semi_pre_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_pre_init_EP_HS(7);
+//            semi_target_EP_HS(9) = semi_pre_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_pre_init_EP_HS(10);
+//
+//            // Z direction
+//            if (adaptive_flag_HS == true) {
+//                //                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                //                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                //                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                //                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//                //                if (_i == (step_cnt_HS - 1)) {
+//                ////                    target_EP_HS(2) = actual_EP_HS(2);
+//                ////                    target_EP_HS(5) = actual_EP_HS(5);
+//                ////                    target_EP_HS(8) = actual_EP_HS(8);
+//                ////                    target_EP_HS(11) = actual_EP_HS(11);
+//                ////                    init_EP_HS(2) = target_EP_HS(2);
+//                ////                    init_EP_HS(5) = target_EP_HS(5);
+//                ////                    init_EP_HS(8) = target_EP_HS(8);
+//                ////                    init_EP_HS(11) = target_EP_HS(11);                    
+//                //                    init_EP_HS(2) = actual_EP_HS(2);
+//                //                    init_EP_HS(5) = actual_EP_HS(5);
+//                //                    init_EP_HS(8) = actual_EP_HS(8);
+//                //                    init_EP_HS(11) = actual_EP_HS(11);
+//                //                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                //                }
+//            } else {
+//                semi_target_EP_HS(2) = semi_init_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_init_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_init_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_init_EP_HS(11);
+//            }
+//
+//            semi_target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//        } else if (_i < step_cnt_HS + tsp_cnt_HS) { //cnt:1750~1999(500-1)
+//            t2 = walk_time - step_time_HS;
+//            if (_i == (step_cnt_HS)) {
+//                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//
+//                semi_pre_init_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_pre_init_EP_HS(5) = semi_pre_init_EP_HS(5);
+//                semi_pre_init_EP_HS(8) = semi_pre_init_EP_HS(8);
+//                semi_pre_init_EP_HS(11) = semi_pre_init_EP_HS(11);
+//                if (foot_height_HS == 0.0) {
+//                    Contact_Info_HS << 1, 1, 1, 1;
+//                } else {
+//                    Contact_Info_HS << 1, 1, 0, 1;
+//                }
+//                tmp_actual_EP_local_HS = actual_EP_local_HS;
+//            }
+//            tmp_semi_val = Bezier_Curve_trajectory(Contact_Info_HS, semi_pre_init_EP_HS.segment(6, 3), semi_init_EP_HS.segment(6, 3), tmp_actual_EP_local_HS.segment(6, 3));
+//            semi_target_EP_HS.segment(6, 3) = tmp_semi_val.segment(0, 3);
+//            semi_target_EP_vel_HS.segment(6, 3) = tmp_semi_val.segment(3, 3);
+//
+//            semi_target_EP_HS(0) = semi_pre_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_pre_init_EP_HS(1);
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(9) = semi_pre_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_pre_init_EP_HS(10);
+//
+//            semi_target_EP_vel_HS(0) = 0.0;
+//            semi_target_EP_vel_HS(1) = 0.0;
+//            semi_target_EP_vel_HS(3) = 0.0;
+//            semi_target_EP_vel_HS(4) = 0.0;
+//            semi_target_EP_vel_HS(9) = 0.0;
+//            semi_target_EP_vel_HS(10) = 0.0;
+//
+//            if (adaptive_flag_HS == true) {
+//                semi_target_EP_HS(2) = semi_target_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_target_EP_HS(5);
+//                semi_target_EP_HS(11) = semi_target_EP_HS(11);
+//            } else {
+//                semi_target_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_pre_init_EP_HS(5);
+//                semi_target_EP_HS(11) = semi_pre_init_EP_HS(11);
+//            }
+//
+//            semi_target_EP_vel_HS(2) = 0.0;
+//            semi_target_EP_vel_HS(5) = 0.0;
+//            semi_target_EP_vel_HS(11) = 0.0;
+//
+//        } else if (_i < step_cnt_HS * 2) { //cnt:2000~2099(200-1)
+//            t2 = walk_time - (step_time_HS + tsp_time_HS);
+//            semi_target_EP_HS(0) = semi_pre_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_pre_init_EP_HS(1);
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(6) = semi_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_init_EP_HS(7);
+//            semi_target_EP_HS(9) = semi_pre_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_pre_init_EP_HS(10);
+//
+//            if (adaptive_flag_HS == true) {
+//                //                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                //                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                //                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                //                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//                //                if (_i == (step_cnt_HS * 2 - 1)) {
+//                ////                    target_EP_HS(2) = actual_EP_HS(2);
+//                ////                    target_EP_HS(5) = actual_EP_HS(5);
+//                ////                    target_EP_HS(8) = actual_EP_HS(8);
+//                ////                    target_EP_HS(11) = actual_EP_HS(11);
+//                ////                    init_EP_HS(2) = target_EP_HS(2);
+//                ////                    init_EP_HS(5) = target_EP_HS(5);
+//                ////                    init_EP_HS(8) = target_EP_HS(8);
+//                ////                    init_EP_HS(11) = target_EP_HS(11);
+//                //                    init_EP_HS(2) = actual_EP_HS(2);
+//                //                    init_EP_HS(5) = actual_EP_HS(5);
+//                //                    init_EP_HS(8) = actual_EP_HS(8);
+//                //                    init_EP_HS(11) = actual_EP_HS(11);
+//                //                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                //                }
+//            } else {
+//                semi_target_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_pre_init_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_pre_init_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_pre_init_EP_HS(11);
+//            }
+//
+//            semi_target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//        } else if (_i < step_cnt_HS * 2 + tsp_cnt_HS) { //cnt:2100~2349(500-1)
+//            t2 = walk_time - step_time_HS * 2;
+//
+//            if (_i == (2 * step_cnt_HS)) {
+//                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//
+//                semi_pre_init_EP_HS(2) = semi_target_EP_HS(2);
+//                semi_pre_init_EP_HS(5) = semi_target_EP_HS(5);
+//                semi_pre_init_EP_HS(8) = semi_target_EP_HS(8);
+//                semi_pre_init_EP_HS(11) = semi_target_EP_HS(11);
+//                if (foot_height_HS == 0.0) {
+//                    Contact_Info_HS << 1, 1, 1, 1;
+//                } else {
+//                    Contact_Info_HS << 0, 1, 1, 1;
+//                }
+//                tmp_actual_EP_local_HS = actual_EP_local_HS;
+//            }
+//
+//            tmp_semi_val = Bezier_Curve_trajectory(Contact_Info_HS, semi_pre_init_EP_HS.segment(0, 3), semi_init_EP_HS.segment(0, 3), tmp_actual_EP_local_HS.segment(0, 3));
+//            semi_target_EP_HS.segment(0, 3) = tmp_semi_val.segment(0, 3);
+//            semi_target_EP_vel_HS.segment(0, 3) = tmp_semi_val.segment(3, 3);
+//
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(6) = semi_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_init_EP_HS(7);
+//            semi_target_EP_HS(9) = semi_pre_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_pre_init_EP_HS(10);
+//
+//            semi_target_EP_vel_HS(3) = 0.0;
+//            semi_target_EP_vel_HS(4) = 0.0;
+//            semi_target_EP_vel_HS(6) = 0.0;
+//            semi_target_EP_vel_HS(7) = 0.0;
+//            semi_target_EP_vel_HS(9) = 0.0;
+//            semi_target_EP_vel_HS(10) = 0.0;
+//
+//            if (adaptive_flag_HS == true) {
+//                semi_target_EP_HS(5) = semi_target_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_target_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_target_EP_HS(11);
+//
+//            } else {
+//                semi_target_EP_HS(5) = semi_init_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_init_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_init_EP_HS(11);
+//            }
+//
+//            semi_target_EP_vel_HS(5) = 0.0;
+//            semi_target_EP_vel_HS(8) = 0.0;
+//            semi_target_EP_vel_HS(11) = 0.0;
+//
+//        } else if (_i < step_cnt_HS * 3) { //cnt:2350~2449(200-1)
+//            t2 = walk_time - (step_time_HS * 2 + tsp_time_HS);
+//            semi_target_EP_HS(0) = semi_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_init_EP_HS(1);
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(6) = semi_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_init_EP_HS(7);
+//            semi_target_EP_HS(9) = semi_pre_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_pre_init_EP_HS(10);
+//
+//            if (adaptive_flag_HS == true) {
+//                //                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                //                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                //                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                //                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//                //                //                if (_i == (step_cnt_HS * 3 - 1)) {
+//                ////                    target_EP_HS(2) = actual_EP_HS(2);
+//                ////                    target_EP_HS(5) = actual_EP_HS(5);
+//                ////                    target_EP_HS(8) = actual_EP_HS(8);
+//                ////                    target_EP_HS(11) = actual_EP_HS(11);
+//                ////                    init_EP_HS(2) = target_EP_HS(2);
+//                ////                    init_EP_HS(5) = target_EP_HS(5);
+//                ////                    init_EP_HS(8) = target_EP_HS(8);
+//                ////                    init_EP_HS(11) = target_EP_HS(11);
+//                //                    init_EP_HS(2) = actual_EP_HS(2);
+//                //                    init_EP_HS(5) = actual_EP_HS(5);
+//                //                    init_EP_HS(8) = actual_EP_HS(8);
+//                //                    init_EP_HS(11) = actual_EP_HS(11);
+//                //                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                //                }
+//            } else {
+//                semi_target_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_pre_init_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_pre_init_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_pre_init_EP_HS(11);
+//            }
+//            target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//            //Gain_Info_HS << 0, 1, 1, 1;
+//        } else if (_i < step_cnt_HS * 3 + tsp_cnt_HS) { //cnt:2450~2699(500-1)
+//            t2 = walk_time - step_time_HS * 3;
+//
+//            if (_i == (3 * step_cnt_HS)) {
+//                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//
+//                semi_pre_init_EP_HS(2) = semi_target_EP_HS(2);
+//                semi_pre_init_EP_HS(5) = semi_target_EP_HS(5);
+//                semi_pre_init_EP_HS(8) = semi_target_EP_HS(8);
+//                semi_pre_init_EP_HS(11) = semi_target_EP_HS(11);
+//                if (foot_height_HS == 0.0) {
+//                    Contact_Info_HS << 1, 1, 1, 1;
+//                } else {
+//                    Contact_Info_HS << 1, 1, 1, 0;
+//                }
+//                tmp_actual_EP_local_HS = actual_EP_local_HS;
+//            }
+//
+//            tmp_semi_val = Bezier_Curve_trajectory(Contact_Info_HS, semi_pre_init_EP_HS.segment(9, 3), semi_init_EP_HS.segment(9, 3), tmp_actual_EP_local_HS.segment(9, 3));
+//            semi_target_EP_HS.segment(9, 3) = tmp_semi_val.segment(0, 3);
+//            semi_target_EP_vel_HS.segment(9, 3) = tmp_semi_val.segment(3, 3);
+//
+//            semi_target_EP_HS(0) = semi_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_init_EP_HS(1);
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(6) = semi_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_init_EP_HS(7);
+//
+//            semi_target_EP_vel_HS(0) = 0.0;
+//            semi_target_EP_vel_HS(1) = 0.0;
+//            semi_target_EP_vel_HS(3) = 0.0;
+//            semi_target_EP_vel_HS(4) = 0.0;
+//            semi_target_EP_vel_HS(6) = 0.0;
+//            semi_target_EP_vel_HS(7) = 0.0;
+//
+//            if (adaptive_flag_HS == true) {
+//                semi_target_EP_HS(2) = semi_target_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_target_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_target_EP_HS(8);
+//            } else {
+//                semi_target_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_pre_init_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_pre_init_EP_HS(8);
+//            }
+//
+//            semi_target_EP_vel_HS(2) = 0.0;
+//            semi_target_EP_vel_HS(5) = 0.0;
+//            semi_target_EP_vel_HS(8) = 0.0;
+//
+//        } else { //cnt:2700~2799(200-1)
+//            t2 = walk_time - (step_time_HS * 3 + tsp_time_HS);
+//            semi_target_EP_HS(0) = semi_init_EP_HS(0);
+//            semi_target_EP_HS(1) = semi_init_EP_HS(1);
+//            semi_target_EP_HS(3) = semi_init_EP_HS(3);
+//            semi_target_EP_HS(4) = semi_init_EP_HS(4);
+//            semi_target_EP_HS(6) = semi_init_EP_HS(6);
+//            semi_target_EP_HS(7) = semi_init_EP_HS(7);
+//            semi_target_EP_HS(9) = semi_init_EP_HS(9);
+//            semi_target_EP_HS(10) = semi_init_EP_HS(10);
+//
+//            semi_target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            if (adaptive_flag_HS == true) {
+//                //                semi_target_EP_HS(2) = semi_actual_EP_HS(2);
+//                //                semi_target_EP_HS(5) = semi_actual_EP_HS(5);
+//                //                semi_target_EP_HS(8) = semi_actual_EP_HS(8);
+//                //                semi_target_EP_HS(11) = semi_actual_EP_HS(11);
+//                //                if (_i == (step_cnt_HS * 4 - 1)) {
+//                ////                    target_EP_HS(2) = actual_EP_HS(2);
+//                ////                    target_EP_HS(5) = actual_EP_HS(5);
+//                ////                    target_EP_HS(8) = actual_EP_HS(8);
+//                ////                    target_EP_HS(11) = actual_EP_HS(11);
+//                ////                    init_EP_HS(2) = target_EP_HS(2);
+//                ////                    init_EP_HS(5) = target_EP_HS(5);
+//                ////                    init_EP_HS(8) = target_EP_HS(8);
+//                ////                    init_EP_HS(11) = target_EP_HS(11);
+//                //                    init_EP_HS(2) = actual_EP_HS(2);
+//                //                    init_EP_HS(5) = actual_EP_HS(5);
+//                //                    init_EP_HS(8) = actual_EP_HS(8);
+//                //                    init_EP_HS(11) = actual_EP_HS(11);
+//                //                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                //                }
+//            } else {
+//                semi_target_EP_HS(2) = semi_pre_init_EP_HS(2);
+//                semi_target_EP_HS(5) = semi_pre_init_EP_HS(5);
+//                semi_target_EP_HS(8) = semi_pre_init_EP_HS(8);
+//                semi_target_EP_HS(11) = semi_pre_init_EP_HS(11);
+//            }
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//        }
+//    }
+//    COM_XY_Traj_Gen_COM_VER_HS(_i, init_com_pos_HS, goal_com_pos_HS);
+//
+//    //    target_base_ori_HS = init_base_ori_HS + (goal_base_ori_HS - init_base_ori_HS) / 2.0 * (1 - cos(PI / (step_time_HS * 4.0) * walk_time));
+//    target_base_ori_HS(2) = init_base_ori_HS(2) + (goal_base_ori_HS(2) - init_base_ori_HS(2)) / 2.0 * (1 - cos(PI / (step_time_HS * 4.0) * walk_time));
+//
+//    //* update
+//    if (_i == (step_cnt_HS * 4 - 1)) {
+//        now_vel_HS = tar_vel_HS;
+//
+//        init_com_pos_HS(0) = goal_com_pos_HS(0); //
+//        init_com_pos_HS(1) = goal_com_pos_HS(1); //
+//        init_base_ori_HS(2) = goal_base_ori_HS(2);
+//
+//        pre_init_EP_HS(0) = init_EP_HS(0); //
+//        pre_init_EP_HS(1) = init_EP_HS(1); //
+//        pre_init_EP_HS(3) = init_EP_HS(3); //
+//        pre_init_EP_HS(4) = init_EP_HS(4); //
+//        pre_init_EP_HS(6) = init_EP_HS(6); //
+//        pre_init_EP_HS(7) = init_EP_HS(7); //
+//        pre_init_EP_HS(9) = init_EP_HS(9); //
+//        pre_init_EP_HS(10) = init_EP_HS(10); //
+//
+//        init_EP_HS(0) = goal_EP_HS(0);
+//        init_EP_HS(1) = goal_EP_HS(1);
+//        init_EP_HS(3) = goal_EP_HS(3);
+//        init_EP_HS(4) = goal_EP_HS(4);
+//        init_EP_HS(6) = goal_EP_HS(6);
+//        init_EP_HS(7) = goal_EP_HS(7);
+//        init_EP_HS(9) = goal_EP_HS(9);
+//        init_EP_HS(10) = goal_EP_HS(10);
+//    }
+//    if (Contact_Info_HS(0) == 1 && Contact_Info_HS(1) == 1 && Contact_Info_HS(2) == 1 && Contact_Info_HS(3) == 1) {
+//        tmp_actual_EP_local_HS = actual_EP_local_HS;
+//        tmp_Regenerate_flag_HS = true;
+//        if (Regenerate_flag_HS == false) {
+//            tmp_cnt_HS++;
+//        } else {
+//            if (cnt_check_flag == true) {
+//                del_cnt_HS = tmp_cnt_HS;
+//            }
+//            cnt_check_flag = false;
+//        }
+//    } else {
+//        tmp_Regenerate_flag_HS = false;
+//        tmp_cnt_HS = 0;
+//        if (Regenerate_flag_HS == false) {
+//            save_actual_EP_HS(2) = actual_EP_HS(2);
+//            save_actual_EP_HS(5) = actual_EP_HS(5);
+//            save_actual_EP_HS(8) = actual_EP_HS(8);
+//            save_actual_EP_HS(11) = actual_EP_HS(11);
+//        }
+//    }
+//}
+
+void CRobot::Walking_Traj_COM_VER_HS2(unsigned int _i) {
     double t1, t2;
+
     walk_time = _i*dt;
 
-    if (_i == 0) { //1400
+    if (_i == 0) { //1400Walking_Traj_COM_VER_HS2
 
         if (move_stop_flag == true) {
             if (com_stop_flag_HS == true) {
@@ -5328,32 +5820,20 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             speed_stop_flag_HS = false;
         }
 
-        tmp_moving_speed_HS << speed_x, speed_y, speed_yaw;
+        tar_vel_HS << speed_x, speed_y, speed_yaw;
 
-        tar_vel_HS = tmp_moving_speed_HS;
 
         FootStepPlanning_HS(init_com_pos_HS, init_base_ori_HS, init_EP_HS, now_vel_HS, tar_vel_HS);
         SF_EP_Traj_Gen_HS(tsp_time_HS, pre_init_EP_HS, init_EP_HS);
+        SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
 
         target_EP_HS = pre_init_EP_HS;
-
-        Gain_Info_HS << 1, 1, 1, 1;
-        Contact_Info_HS << 1, 1, 1, 1;
 
         // Z direction
         target_EP_HS(2) = init_EP_HS(2);
         target_EP_HS(5) = init_EP_HS(5);
         target_EP_HS(8) = init_EP_HS(8);
         target_EP_HS(11) = init_EP_HS(11);
-
-        goal_EP_HS(2) = foot_height_HS;
-        goal_EP_HS(5) = foot_height_HS;
-        goal_EP_HS(8) = foot_height_HS;
-        goal_EP_HS(11) = foot_height_HS;
-
-        SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
-
-        goal_base_ori_HS(1) = pitch_degree*D2R;
 
     }//************** Foot step Run *****************//
     if (walk_stop_flag_HS != true) {
@@ -5364,7 +5844,6 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             target_EP_HS(1) = pre_init_EP_HS(1);
             target_EP_HS(3) = x2[5] * pow(t2, 5) + x2[4] * pow(t2, 4) + x2[3] * pow(t2, 3) + x2[2] * pow(t2, 2) + x2[1] * pow(t2, 1) + x2[0];
             target_EP_HS(4) = y2[5] * pow(t2, 5) + y2[4] * pow(t2, 4) + y2[3] * pow(t2, 3) + y2[2] * pow(t2, 2) + y2[1] * pow(t2, 1) + y2[0];
-            target_EP_HS(6) = pre_init_EP_HS(6);
             target_EP_HS(7) = pre_init_EP_HS(7);
             target_EP_HS(9) = pre_init_EP_HS(9);
             target_EP_HS(10) = pre_init_EP_HS(10);
@@ -5378,20 +5857,14 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             target_EP_vel_HS(9) = 0.0;
             target_EP_vel_HS(10) = 0.0;
 
-
-            // Z direction
             if (_i < tsp_time_HS / dt / 2.0) { //cnt:1400~1524
                 t1 = t2;
                 target_EP_HS(5) = z2_up[5] * pow(t1, 5) + z2_up[4] * pow(t1, 4) + z2_up[3] * pow(t1, 3) + z2_up[2] * pow(t1, 2) + z2_up[1] * pow(t1, 1) + z2_up[0];
                 target_EP_vel_HS(5) = 5 * z2_up[5] * pow(t1, 4) + 4 * z2_up[4] * pow(t1, 3) + 3 * z2_up[3] * pow(t1, 2) + 2 * z2_up[2] * pow(t1, 1) + z2_up[1];
-                //target_EP_HS(5) = init_EP_HS(5)+(goal_EP_HS(5) - init_EP_HS(5)) / 2.0 * (1 - cos(PI / (tsp_time_HS / 2.0) * t1));
-                //target_EP_vel_HS(5) = PI / tsp_time_HS / 2.0 * (goal_EP_HS(5) - init_EP_HS(5)) / 2.0 * (sin(PI / (tsp_time_HS / 2.0) * t1));
             } else {
                 t1 = t2 - tsp_time_HS / 2.0; //cnt:1525~1649
                 target_EP_HS(5) = z2_down[5] * pow(t1, 5) + z2_down[4] * pow(t1, 4) + z2_down[3] * pow(t1, 3) + z2_down[2] * pow(t1, 2) + z2_down[1] * pow(t1, 1) + z2_down[0];
                 target_EP_vel_HS(5) = 5 * z2_down[5] * pow(t1, 4) + 4 * z2_down[4] * pow(t1, 3) + 3 * z2_down[3] * pow(t1, 2) + 2 * z2_down[2] * pow(t1, 1) + z2_down[1];
-                //target_EP_HS(5) = goal_EP_HS(5)+(init_EP_HS(5) - goal_EP_HS(5)) / 2.0 * (1 - cos(PI / (tsp_time_HS / 2.0) * t1));
-                //target_EP_vel_HS(5) = PI / tsp_time_HS / 2.0 * (init_EP_HS(5) - goal_EP_HS(5)) / 2.0 * (sin(PI / (tsp_time_HS / 2.0) * t1));
             }
 
             if (adaptive_flag_HS == true) {
@@ -5429,16 +5902,15 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
 
             // Z direction
             if (adaptive_flag_HS == true) {
-                //                target_EP_HS(2) = init_EP_HS(2);
-                //                target_EP_HS(5) = actual_EP_HS(5);
-                //                target_EP_HS(8) = init_EP_HS(8);
-                //                target_EP_HS(11) = init_EP_HS(11);
-                target_EP_HS(2) = actual_EP_HS(2);
-                target_EP_HS(5) = actual_EP_HS(5);
-                target_EP_HS(8) = actual_EP_HS(8);
-                target_EP_HS(11) = actual_EP_HS(11);
-                if (_i < step_cnt_HS - 1) {
-                    init_EP_HS = target_EP_HS;
+                if (_i == (step_cnt_HS - 1)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+                    init_EP_HS(2) = target_EP_HS(2);
+                    init_EP_HS(5) = target_EP_HS(5);
+                    init_EP_HS(8) = target_EP_HS(8);
+                    init_EP_HS(11) = target_EP_HS(11);
                     SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
                 }
             } else {
@@ -5452,9 +5924,9 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
 
             Contact_Info_HS << 1, 1, 1, 1;
             Gain_Info_HS << 1, 0, 1, 1;
-            tmp_actual_EP_local_HS = actual_EP_local_HS;
         } else if (_i < step_cnt_HS + tsp_cnt_HS) { //cnt:1750~1999
-            t2 = walk_time - step_time_HS;
+            t2 = walk_time - (step_time_HS);
+
             target_EP_HS(0) = pre_init_EP_HS(0);
             target_EP_HS(1) = pre_init_EP_HS(1);
             target_EP_HS(3) = init_EP_HS(3);
@@ -5483,7 +5955,6 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
                 target_EP_HS(8) = z3_down[5] * pow(t1, 5) + z3_down[4] * pow(t1, 4) + z3_down[3] * pow(t1, 3) + z3_down[2] * pow(t1, 2) + z3_down[1] * pow(t1, 1) + z3_down[0];
                 target_EP_vel_HS(8) = 5 * z3_down[5] * pow(t1, 4) + 4 * z3_down[4] * pow(t1, 3) + 3 * z3_down[3] * pow(t1, 2) + 2 * z3_down[2] * pow(t1, 1) + z3_down[1];
             }
-
             if (adaptive_flag_HS == true) {
                 target_EP_HS(2) = target_EP_HS(2);
                 target_EP_HS(5) = target_EP_HS(5);
@@ -5507,6 +5978,7 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             }
         } else if (_i < step_cnt_HS * 2) { //cnt:2000~2099
             t2 = walk_time - (step_time_HS + tsp_time_HS);
+
             target_EP_HS(0) = pre_init_EP_HS(0);
             target_EP_HS(1) = pre_init_EP_HS(1);
             target_EP_HS(3) = init_EP_HS(3);
@@ -5517,16 +5989,17 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             target_EP_HS(10) = pre_init_EP_HS(10);
 
             if (adaptive_flag_HS == true) {
-                //                target_EP_HS(2) = init_EP_HS(2);
-                //                target_EP_HS(5) = target_EP_HS(5);
-                //                target_EP_HS(8) = actual_EP_HS(8);
-                //                target_EP_HS(11) = init_EP_HS(11);
-                target_EP_HS(2) = actual_EP_HS(2);
-                target_EP_HS(5) = actual_EP_HS(5);
-                target_EP_HS(8) = actual_EP_HS(8);
-                target_EP_HS(11) = actual_EP_HS(11);
-                if (_i < step_cnt_HS * 2 - 1) {
-                    init_EP_HS = target_EP_HS;
+                if (_i == (step_cnt_HS * 2 - 1)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+
+                    init_EP_HS(2) = target_EP_HS(2);
+                    init_EP_HS(5) = target_EP_HS(5);
+                    init_EP_HS(8) = target_EP_HS(8);
+                    init_EP_HS(11) = target_EP_HS(11);
+
                     SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
                 }
             } else {
@@ -5540,10 +6013,10 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
 
             Contact_Info_HS << 1, 1, 1, 1;
             Gain_Info_HS << 1, 1, 0, 1;
-            tmp_actual_EP_local_HS = actual_EP_local_HS;
 
         } else if (_i < step_cnt_HS * 2 + tsp_cnt_HS) { //cnt:2100~2349
-            t2 = walk_time - step_time_HS * 2;
+            t2 = walk_time - (step_time_HS * 2);
+
             target_EP_HS(0) = x1[5] * pow(t2, 5) + x1[4] * pow(t2, 4) + x1[3] * pow(t2, 3) + x1[2] * pow(t2, 2) + x1[1] * pow(t2, 1) + x1[0];
             target_EP_HS(1) = y1[5] * pow(t2, 5) + y1[4] * pow(t2, 4) + y1[3] * pow(t2, 3) + y1[2] * pow(t2, 2) + y1[1] * pow(t2, 1) + y1[0];
             target_EP_HS(3) = init_EP_HS(3);
@@ -5575,7 +6048,6 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             if (adaptive_flag_HS == true) {
                 target_EP_HS(5) = target_EP_HS(5);
                 target_EP_HS(8) = target_EP_HS(8);
-                //                target_EP_HS(11) = init_EP_HS(11);
                 target_EP_HS(11) = target_EP_HS(11);
 
             } else {
@@ -5598,6 +6070,7 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
 
         } else if (_i < step_cnt_HS * 3) { //cnt:2350~2449
             t2 = walk_time - (step_time_HS * 2 + tsp_time_HS);
+
             target_EP_HS(0) = init_EP_HS(0);
             target_EP_HS(1) = init_EP_HS(1);
             target_EP_HS(3) = init_EP_HS(3);
@@ -5608,16 +6081,17 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             target_EP_HS(10) = pre_init_EP_HS(10);
 
             if (adaptive_flag_HS == true) {
-                //                target_EP_HS(2) = actual_EP_HS(2);
-                //                target_EP_HS(5) = target_EP_HS(5);
-                //                target_EP_HS(8) = target_EP_HS(8);
-                //                target_EP_HS(11) = init_EP_HS(11);
-                target_EP_HS(2) = actual_EP_HS(2);
-                target_EP_HS(5) = actual_EP_HS(5);
-                target_EP_HS(8) = actual_EP_HS(8);
-                target_EP_HS(11) = actual_EP_HS(11);
-                if (_i < step_cnt_HS * 3 - 1) {
-                    init_EP_HS = target_EP_HS;
+                if (_i == (step_cnt_HS * 3 - 1)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+
+                    init_EP_HS(2) = target_EP_HS(2);
+                    init_EP_HS(5) = target_EP_HS(5);
+                    init_EP_HS(8) = target_EP_HS(8);
+                    init_EP_HS(11) = target_EP_HS(11);
+
                     SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
                 }
             } else {
@@ -5630,9 +6104,9 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
 
             Contact_Info_HS << 1, 1, 1, 1;
             Gain_Info_HS << 0, 1, 1, 1;
-            tmp_actual_EP_local_HS = actual_EP_local_HS;
         } else if (_i < step_cnt_HS * 3 + tsp_cnt_HS) { //cnt:2450~2699
-            t2 = walk_time - step_time_HS * 3;
+            t2 = walk_time - (step_time_HS * 3);
+
             target_EP_HS(0) = init_EP_HS(0);
             target_EP_HS(1) = init_EP_HS(1);
             target_EP_HS(3) = init_EP_HS(3);
@@ -5650,7 +6124,6 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             target_EP_vel_HS(7) = 0.0;
             target_EP_vel_HS(9) = 5 * x4[5] * pow(t2, 4) + 4 * x4[4] * pow(t2, 3) + 3 * x4[3] * pow(t2, 2) + 2 * x4[2] * pow(t2, 1) + x4[1];
             target_EP_vel_HS(10) = 5 * y4[5] * pow(t2, 4) + 4 * y4[4] * pow(t2, 3) + 3 * y4[3] * pow(t2, 2) + 2 * y4[2] * pow(t2, 1) + y4[1];
-
 
             if (_i < step_cnt_HS * 3 + tsp_time_HS / dt / 2.0) {
                 t1 = t2;
@@ -5684,7 +6157,8 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
                 Gain_Info_HS << 1, 1, 1, 0;
             }
         } else { //cnt:2700~2799
-            t2 = walk_time - (step_time_HS * 3 + tsp_time_HS);
+            t1 = walk_time - (step_time_HS * 3 + tsp_time_HS);
+
             target_EP_HS(0) = init_EP_HS(0);
             target_EP_HS(1) = init_EP_HS(1);
             target_EP_HS(3) = init_EP_HS(3);
@@ -5697,15 +6171,17 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
             target_EP_vel_HS = VectorNd::Zero(12);
 
             if (adaptive_flag_HS == true) {
-                //                target_EP_HS(2) = target_EP_HS(2);
-                //                target_EP_HS(5) = target_EP_HS(5);
-                //                target_EP_HS(8) = target_EP_HS(8);
-                //                target_EP_HS(11) = actual_EP_HS(11);
-
-                target_EP_HS(2) = actual_EP_HS(2);
-                target_EP_HS(5) = actual_EP_HS(5);
-                target_EP_HS(8) = actual_EP_HS(8);
-                target_EP_HS(11) = actual_EP_HS(11);
+                if (_i == (step_cnt_HS * 4 - 1)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+                    init_EP_HS(2) = target_EP_HS(2);
+                    init_EP_HS(5) = target_EP_HS(5);
+                    init_EP_HS(8) = target_EP_HS(8);
+                    init_EP_HS(11) = target_EP_HS(11);
+                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+                }
             } else {
                 target_EP_HS(2) = init_EP_HS(2);
                 target_EP_HS(5) = init_EP_HS(5);
@@ -5715,47 +6191,1106 @@ void CRobot::Walking_Traj_COM_VER_HS(unsigned int _i) {
 
             Contact_Info_HS << 1, 1, 1, 1;
             Gain_Info_HS << 1, 1, 1, 0;
-            tmp_actual_EP_local_HS = actual_EP_local_HS;
         }
     }
     COM_XY_Traj_Gen_COM_VER_HS(_i, init_com_pos_HS, goal_com_pos_HS);
 
-    target_base_ori_HS = init_base_ori_HS + (goal_base_ori_HS - init_base_ori_HS) / 2.0 * (1 - cos(PI / (step_time_HS * 4.0) * walk_time));
+    target_base_ori_HS(2) = init_base_ori_HS(2) + (goal_base_ori_HS(2) - init_base_ori_HS(2)) / 2.0 * (1 - cos(PI / (step_time_HS * 4.0) * walk_time));
 
     //* update
     if (_i == (step_cnt_HS * 4 - 1)) {
         now_vel_HS = tar_vel_HS;
 
-        init_com_pos_HS = goal_com_pos_HS; //
-        init_base_ori_HS = goal_base_ori_HS;
+        init_com_pos_HS(0) = goal_com_pos_HS(0); //
+        init_com_pos_HS(1) = goal_com_pos_HS(1); //
+        init_base_ori_HS(2) = goal_base_ori_HS(2);
 
-        pre_init_EP_HS = init_EP_HS; //
-        init_EP_HS = goal_EP_HS;
+        pre_init_EP_HS(0) = init_EP_HS(0); //
+        pre_init_EP_HS(1) = init_EP_HS(1); //
+        pre_init_EP_HS(3) = init_EP_HS(3); //
+        pre_init_EP_HS(4) = init_EP_HS(4); //
+        pre_init_EP_HS(6) = init_EP_HS(6); //
+        pre_init_EP_HS(7) = init_EP_HS(7); //
+        pre_init_EP_HS(9) = init_EP_HS(9); //
+        pre_init_EP_HS(10) = init_EP_HS(10); //
 
-        // if (adaptive_flag_HS == true) {
-        //        init_EP_HS(2) = target_EP_HS(2);
-        //        init_EP_HS(5) = target_EP_HS(5);
-        //        init_EP_HS(8) = target_EP_HS(8);
-        //        init_EP_HS(11) = target_EP_HS(11);
-        if (adaptive_flag_HS == true) {
-            init_EP_HS(2) = actual_EP_HS(2);
-            init_EP_HS(5) = actual_EP_HS(5);
-            init_EP_HS(8) = actual_EP_HS(8);
-            init_EP_HS(11) = actual_EP_HS(11);
-            if (_i < step_cnt_HS * 3 - 1) {
-                init_EP_HS = target_EP_HS;
-                SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
-            }
+        init_EP_HS(0) = goal_EP_HS(0);
+        init_EP_HS(1) = goal_EP_HS(1);
+        init_EP_HS(3) = goal_EP_HS(3);
+        init_EP_HS(4) = goal_EP_HS(4);
+        init_EP_HS(6) = goal_EP_HS(6);
+        init_EP_HS(7) = goal_EP_HS(7);
+        init_EP_HS(9) = goal_EP_HS(9);
+        init_EP_HS(10) = goal_EP_HS(10);
+
+    }
+    if (Contact_Info_HS(0) == 1 && Contact_Info_HS(1) == 1 && Contact_Info_HS(2) == 1 && Contact_Info_HS(3) == 1) {
+        tmp_actual_EP_local_HS = actual_EP_local_HS;
+        tmp_actual_EP_local_hip_HS = actual_EP_local_hip_HS;
+        tmp_Regenerate_flag_HS = true;
+        if (Regenerate_flag_HS == false) {
+            tmp_cnt_HS++;
         } else {
-            init_EP_HS(2) = target_EP_HS(2);
-            init_EP_HS(5) = target_EP_HS(5);
-            init_EP_HS(8) = target_EP_HS(8);
-            init_EP_HS(11) = target_EP_HS(11);
+            if (cnt_check_flag == true) {
+                del_cnt_HS = tmp_cnt_HS;
+            }
+            cnt_check_flag = false;
         }
-
-        // }
+    } else {
+        tmp_Regenerate_flag_HS = false;
+        tmp_cnt_HS = 0;
+        if (Regenerate_flag_HS == false) {
+            save_actual_EP_HS(2) = actual_EP_HS(2);
+            save_actual_EP_HS(5) = actual_EP_HS(5);
+            save_actual_EP_HS(8) = actual_EP_HS(8);
+            save_actual_EP_HS(11) = actual_EP_HS(11);
+        }
     }
 }
+
+void CRobot::Walking_Traj_COM_VER_HS3(unsigned int _i) {
+    double t1, t2;
+    VectorNd tmp_bezi_val(6);
+    walk_time = _i*dt;
+
+    if (_i == 0) { //1400
+
+        if (move_stop_flag == true) {
+            if (com_stop_flag_HS == true) {
+                walk_stop_flag_HS = true;
+                pre_sub_ctrl_flag = move_stop_flag;
+            }
+            if (speed_stop_flag_HS == true) {
+                com_stop_flag_HS = true;
+            }
+            speed_stop_flag_HS = true;
+            speed_x = 0.0;
+            speed_y = 0.0;
+            speed_yaw = 0.0;
+        }
+        if (move_stop_flag == false) {
+            if (com_stop_flag_HS == false) {
+                walk_stop_flag_HS = false;
+                pre_sub_ctrl_flag = move_stop_flag;
+            }
+            com_stop_flag_HS = false;
+            speed_stop_flag_HS = false;
+        }
+
+        tar_vel_HS << speed_x, speed_y, speed_yaw;
+        FootStepPlanning_HS(init_com_pos_HS, init_base_ori_HS, init_EP_HS, now_vel_HS, tar_vel_HS);
+
+    }//************** Foot step Run *****************//
+    if (walk_stop_flag_HS != true) {
+        if (_i < tsp_cnt_HS) { //cnt:1400~1649 (250)
+            t2 = walk_time;
+
+            if (_i == (0)) {
+                //                target_EP_HS(2) = actual_EP_HS(2);
+                //                target_EP_HS(5) = actual_EP_HS(5);
+                //                target_EP_HS(8) = actual_EP_HS(8);
+                //                target_EP_HS(11) = actual_EP_HS(11);
+
+                //                pre_init_EP_HS(2) = actual_EP_HS(2);
+                //                pre_init_EP_HS(5) = actual_EP_HS(5);
+                //                pre_init_EP_HS(8) = actual_EP_HS(8);
+                //                pre_init_EP_HS(11) = actual_EP_HS(11);
+                pre_init_EP_HS(2) = target_EP_HS(2);
+                pre_init_EP_HS(5) = target_EP_HS(5);
+                pre_init_EP_HS(8) = target_EP_HS(8);
+                pre_init_EP_HS(11) = target_EP_HS(11);
+
+                if (foot_height_HS == 0.0) {
+                    Contact_Info_HS << 1, 1, 1, 1;
+                } else {
+                    Contact_Info_HS << 1, 0, 1, 1;
+                }
+                tmp_actual_EP_local_HS = actual_EP_local_HS;
+            }
+
+            tmp_bezi_val = Bezier_Curve_trajectory2(Contact_Info_HS, pre_init_EP_HS.segment(3, 3), init_EP_HS.segment(3, 3), tmp_actual_EP_local_HS.segment(3, 3));
+            target_EP_HS.segment(3, 3) = tmp_bezi_val.segment(0, 3);
+            target_EP_vel_HS.segment(3, 3) = tmp_bezi_val.segment(3, 3);
+
+            target_EP_HS(0) = pre_init_EP_HS(0);
+            target_EP_HS(1) = pre_init_EP_HS(1);
+            target_EP_HS(7) = pre_init_EP_HS(7);
+            target_EP_HS(9) = pre_init_EP_HS(9);
+            target_EP_HS(10) = pre_init_EP_HS(10);
+
+            target_EP_vel_HS(0) = 0.0;
+            target_EP_vel_HS(1) = 0.0;
+            target_EP_vel_HS(6) = 0.0;
+            target_EP_vel_HS(7) = 0.0;
+            target_EP_vel_HS(9) = 0.0;
+            target_EP_vel_HS(10) = 0.0;
+
+            if (adaptive_flag_HS == true) {
+                target_EP_HS(2) = target_EP_HS(2);
+                target_EP_HS(8) = target_EP_HS(8);
+                target_EP_HS(11) = target_EP_HS(11);
+            } else {
+                target_EP_HS(2) = pre_init_EP_HS(2);
+                target_EP_HS(8) = pre_init_EP_HS(8);
+                target_EP_HS(11) = pre_init_EP_HS(11);
+            }
+
+            target_EP_vel_HS(2) = 0.0;
+            target_EP_vel_HS(8) = 0.0;
+            target_EP_vel_HS(11) = 0.0;
+
+        } else if (_i < step_cnt_HS) { //cnt:1650~1749
+            t2 = walk_time - (tsp_time_HS);
+            target_EP_HS(0) = pre_init_EP_HS(0);
+            target_EP_HS(1) = pre_init_EP_HS(1);
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(6) = pre_init_EP_HS(6);
+            target_EP_HS(7) = pre_init_EP_HS(7);
+            target_EP_HS(9) = pre_init_EP_HS(9);
+            target_EP_HS(10) = pre_init_EP_HS(10);
+
+            // Z direction
+            if (adaptive_flag_HS == true) {
+                if (_i == (tsp_cnt_HS)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+                }
+            } else {
+                target_EP_HS(2) = init_EP_HS(2);
+                target_EP_HS(5) = init_EP_HS(5);
+                target_EP_HS(8) = init_EP_HS(8);
+                target_EP_HS(11) = init_EP_HS(11);
+            }
+
+            target_EP_vel_HS = VectorNd::Zero(12);
+
+            Contact_Info_HS << 1, 1, 1, 1;
+        } else if (_i < step_cnt_HS + tsp_cnt_HS) { //cnt:1750~1999
+            t2 = walk_time - (step_time_HS);
+
+            if (_i == (step_cnt_HS)) {
+                //                pre_init_EP_HS(2) = actual_EP_HS(2);
+                //                pre_init_EP_HS(5) = actual_EP_HS(5);
+                //                pre_init_EP_HS(8) = actual_EP_HS(8);
+                //                pre_init_EP_HS(11) = actual_EP_HS(11);
+                pre_init_EP_HS(2) = target_EP_HS(2);
+                pre_init_EP_HS(5) = target_EP_HS(5);
+                pre_init_EP_HS(8) = target_EP_HS(8);
+                pre_init_EP_HS(11) = target_EP_HS(11);
+
+                //                pre_init_EP_HS(2) = target_EP_HS(2);
+                //                pre_init_EP_HS(5) = target_EP_HS(5);
+                //                pre_init_EP_HS(8) = target_EP_HS(8);
+                //                pre_init_EP_HS(11) = target_EP_HS(11);
+                if (foot_height_HS == 0.0) {
+                    Contact_Info_HS << 1, 1, 1, 1;
+                } else {
+                    Contact_Info_HS << 1, 1, 0, 1;
+                }
+                tmp_actual_EP_local_HS = actual_EP_local_HS;
+            }
+
+            tmp_bezi_val = Bezier_Curve_trajectory2(Contact_Info_HS, pre_init_EP_HS.segment(6, 3), init_EP_HS.segment(6, 3), tmp_actual_EP_local_HS.segment(6, 3));
+            target_EP_HS.segment(6, 3) = tmp_bezi_val.segment(0, 3);
+            target_EP_vel_HS.segment(6, 3) = tmp_bezi_val.segment(3, 3);
+
+            target_EP_HS(0) = pre_init_EP_HS(0);
+            target_EP_HS(1) = pre_init_EP_HS(1);
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(9) = pre_init_EP_HS(9);
+            target_EP_HS(10) = pre_init_EP_HS(10);
+
+            target_EP_vel_HS(0) = 0.0;
+            target_EP_vel_HS(1) = 0.0;
+            target_EP_vel_HS(3) = 0.0;
+            target_EP_vel_HS(4) = 0.0;
+            target_EP_vel_HS(9) = 0.0;
+            target_EP_vel_HS(10) = 0.0;
+
+            target_EP_vel_HS(2) = 0.0;
+            target_EP_vel_HS(5) = 0.0;
+            target_EP_vel_HS(11) = 0.0;
+
+            if (adaptive_flag_HS == true) {
+                target_EP_HS(2) = target_EP_HS(2);
+                target_EP_HS(5) = target_EP_HS(5);
+                target_EP_HS(11) = target_EP_HS(11);
+            } else {
+                target_EP_HS(2) = pre_init_EP_HS(2);
+                target_EP_HS(5) = pre_init_EP_HS(5);
+                target_EP_HS(11) = pre_init_EP_HS(11);
+            }
+
+        } else if (_i < step_cnt_HS * 2) { //cnt:2000~2099
+            t2 = walk_time - (step_time_HS + tsp_time_HS);
+
+            target_EP_HS(0) = pre_init_EP_HS(0);
+            target_EP_HS(1) = pre_init_EP_HS(1);
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(6) = init_EP_HS(6);
+            target_EP_HS(7) = init_EP_HS(7);
+            target_EP_HS(9) = pre_init_EP_HS(9);
+            target_EP_HS(10) = pre_init_EP_HS(10);
+
+            if (adaptive_flag_HS == true) {
+                if (_i == (step_cnt_HS + tsp_cnt_HS)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+                }
+            } else {
+                target_EP_HS(2) = pre_init_EP_HS(2);
+                target_EP_HS(5) = pre_init_EP_HS(5);
+                target_EP_HS(8) = pre_init_EP_HS(8);
+                target_EP_HS(11) = pre_init_EP_HS(11);
+            }
+
+            target_EP_vel_HS = VectorNd::Zero(12);
+
+            Contact_Info_HS << 1, 1, 1, 1;
+
+        } else if (_i < step_cnt_HS * 2 + tsp_cnt_HS) { //cnt:2100~2349
+            t2 = walk_time - (step_time_HS * 2);
+
+            if (_i == (step_cnt_HS * 2)) {
+                //                pre_init_EP_HS(2) = actual_EP_HS(2);
+                //                pre_init_EP_HS(5) = actual_EP_HS(5);
+                //                pre_init_EP_HS(8) = actual_EP_HS(8);
+                //                pre_init_EP_HS(11) = actual_EP_HS(11);
+
+                pre_init_EP_HS(2) = target_EP_HS(2);
+                pre_init_EP_HS(5) = target_EP_HS(5);
+                pre_init_EP_HS(8) = target_EP_HS(8);
+                pre_init_EP_HS(11) = target_EP_HS(11);
+
+                //                pre_init_EP_HS(2) = target_EP_HS(2);
+                //                pre_init_EP_HS(5) = target_EP_HS(5);
+                //                pre_init_EP_HS(8) = target_EP_HS(8);
+                //                pre_init_EP_HS(11) = target_EP_HS(11);
+                if (foot_height_HS == 0.0) {
+                    Contact_Info_HS << 1, 1, 1, 1;
+                } else {
+                    Contact_Info_HS << 0, 1, 1, 1;
+                }
+                tmp_actual_EP_local_HS = actual_EP_local_HS;
+            }
+
+            tmp_bezi_val = Bezier_Curve_trajectory2(Contact_Info_HS, pre_init_EP_HS.segment(0, 3), init_EP_HS.segment(0, 3), tmp_actual_EP_local_HS.segment(0, 3));
+            target_EP_HS.segment(0, 3) = tmp_bezi_val.segment(0, 3);
+            target_EP_vel_HS.segment(0, 3) = tmp_bezi_val.segment(3, 3);
+
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(6) = init_EP_HS(6);
+            target_EP_HS(7) = init_EP_HS(7);
+            target_EP_HS(9) = pre_init_EP_HS(9);
+            target_EP_HS(10) = pre_init_EP_HS(10);
+
+            target_EP_vel_HS(3) = 0.0;
+            target_EP_vel_HS(4) = 0.0;
+            target_EP_vel_HS(6) = 0.0;
+            target_EP_vel_HS(7) = 0.0;
+            target_EP_vel_HS(9) = 0.0;
+            target_EP_vel_HS(10) = 0.0;
+
+            target_EP_vel_HS(5) = 0.0;
+            target_EP_vel_HS(8) = 0.0;
+            target_EP_vel_HS(11) = 0.0;
+
+            if (adaptive_flag_HS == true) {
+                target_EP_HS(5) = target_EP_HS(5);
+                target_EP_HS(8) = target_EP_HS(8);
+                target_EP_HS(11) = target_EP_HS(11);
+
+            } else {
+                target_EP_HS(5) = pre_init_EP_HS(5);
+                target_EP_HS(8) = pre_init_EP_HS(8);
+                target_EP_HS(11) = pre_init_EP_HS(11);
+            }
+
+        } else if (_i < step_cnt_HS * 3) { //cnt:2350~2449
+            t2 = walk_time - (step_time_HS * 2 + tsp_time_HS);
+
+            target_EP_HS(0) = init_EP_HS(0);
+            target_EP_HS(1) = init_EP_HS(1);
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(6) = init_EP_HS(6);
+            target_EP_HS(7) = init_EP_HS(7);
+            target_EP_HS(9) = pre_init_EP_HS(9);
+            target_EP_HS(10) = pre_init_EP_HS(10);
+
+            if (adaptive_flag_HS == true) {
+                if (_i == (step_cnt_HS * 2 + tsp_cnt_HS)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+                }
+            } else {
+                target_EP_HS(2) = pre_init_EP_HS(2);
+                target_EP_HS(5) = pre_init_EP_HS(5);
+                target_EP_HS(8) = pre_init_EP_HS(8);
+                target_EP_HS(11) = pre_init_EP_HS(11);
+            }
+
+            target_EP_vel_HS = VectorNd::Zero(12);
+
+            Contact_Info_HS << 1, 1, 1, 1;
+        } else if (_i < step_cnt_HS * 3 + tsp_cnt_HS) { //cnt:2450~2699
+            t2 = walk_time - (step_time_HS * 3);
+
+            if (_i == (step_cnt_HS * 3)) {
+                //                pre_init_EP_HS(2) = actual_EP_HS(2);
+                //                pre_init_EP_HS(5) = actual_EP_HS(5);
+                //                pre_init_EP_HS(8) = actual_EP_HS(8);
+                //                pre_init_EP_HS(11) = actual_EP_HS(11);
+                pre_init_EP_HS(2) = target_EP_HS(2);
+                pre_init_EP_HS(5) = target_EP_HS(5);
+                pre_init_EP_HS(8) = target_EP_HS(8);
+                pre_init_EP_HS(11) = target_EP_HS(11);
+
+                //                pre_init_EP_HS(2) = target_EP_HS(2);
+                //                pre_init_EP_HS(5) = target_EP_HS(5);
+                //                pre_init_EP_HS(8) = target_EP_HS(8);
+                //                pre_init_EP_HS(11) = target_EP_HS(11);
+                if (foot_height_HS == 0.0) {
+                    Contact_Info_HS << 1, 1, 1, 1;
+                } else {
+                    Contact_Info_HS << 1, 1, 1, 0;
+                }
+                tmp_actual_EP_local_HS = actual_EP_local_HS;
+            }
+
+            tmp_bezi_val = Bezier_Curve_trajectory2(Contact_Info_HS, pre_init_EP_HS.segment(9, 3), init_EP_HS.segment(9, 3), tmp_actual_EP_local_HS.segment(9, 3));
+            target_EP_HS.segment(9, 3) = tmp_bezi_val.segment(0, 3);
+            target_EP_vel_HS.segment(9, 3) = tmp_bezi_val.segment(3, 3);
+
+            target_EP_HS(0) = init_EP_HS(0);
+            target_EP_HS(1) = init_EP_HS(1);
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(6) = init_EP_HS(6);
+            target_EP_HS(7) = init_EP_HS(7);
+
+            target_EP_vel_HS(0) = 0.0;
+            target_EP_vel_HS(1) = 0.0;
+            target_EP_vel_HS(3) = 0.0;
+            target_EP_vel_HS(4) = 0.0;
+            target_EP_vel_HS(6) = 0.0;
+            target_EP_vel_HS(7) = 0.0;
+
+            target_EP_vel_HS(2) = 0.0;
+            target_EP_vel_HS(5) = 0.0;
+            target_EP_vel_HS(8) = 0.0;
+
+            if (adaptive_flag_HS == true) {
+                target_EP_HS(2) = target_EP_HS(2);
+                target_EP_HS(5) = target_EP_HS(5);
+                target_EP_HS(8) = target_EP_HS(8);
+            } else {
+                target_EP_HS(2) = pre_init_EP_HS(2);
+                target_EP_HS(5) = pre_init_EP_HS(5);
+                target_EP_HS(8) = pre_init_EP_HS(8);
+            }
+
+        } else { //cnt:2700~2799
+            t1 = walk_time - (step_time_HS * 3 + tsp_time_HS);
+
+            target_EP_HS(0) = init_EP_HS(0);
+            target_EP_HS(1) = init_EP_HS(1);
+            target_EP_HS(3) = init_EP_HS(3);
+            target_EP_HS(4) = init_EP_HS(4);
+            target_EP_HS(6) = init_EP_HS(6);
+            target_EP_HS(7) = init_EP_HS(7);
+            target_EP_HS(9) = init_EP_HS(9);
+            target_EP_HS(10) = init_EP_HS(10);
+
+            target_EP_vel_HS = VectorNd::Zero(12);
+
+            if (adaptive_flag_HS == true) {
+                if (_i == (step_cnt_HS * 3 + tsp_cnt_HS)) {
+                    target_EP_HS(2) = actual_EP_HS(2);
+                    target_EP_HS(5) = actual_EP_HS(5);
+                    target_EP_HS(8) = actual_EP_HS(8);
+                    target_EP_HS(11) = actual_EP_HS(11);
+                }
+            } else {
+                target_EP_HS(2) = init_EP_HS(2);
+                target_EP_HS(5) = init_EP_HS(5);
+                target_EP_HS(8) = init_EP_HS(8);
+                target_EP_HS(11) = init_EP_HS(11);
+            }
+
+            Contact_Info_HS << 1, 1, 1, 1;
+        }
+    }
+    COM_XY_Traj_Gen_COM_VER_HS(_i, init_com_pos_HS, goal_com_pos_HS);
+
+    target_base_ori_HS(2) = init_base_ori_HS(2) + (goal_base_ori_HS(2) - init_base_ori_HS(2)) / 2.0 * (1 - cos(PI / (step_time_HS * 4.0) * walk_time));
+
+    //* update
+    if (_i == (step_cnt_HS * 4 - 1)) {
+        now_vel_HS = tar_vel_HS;
+
+        init_com_pos_HS(0) = goal_com_pos_HS(0); //
+        init_com_pos_HS(1) = goal_com_pos_HS(1); //
+        init_base_ori_HS(2) = goal_base_ori_HS(2);
+
+        pre_init_EP_HS(0) = init_EP_HS(0); //
+        pre_init_EP_HS(1) = init_EP_HS(1); //
+        pre_init_EP_HS(3) = init_EP_HS(3); //
+        pre_init_EP_HS(4) = init_EP_HS(4); //
+        pre_init_EP_HS(6) = init_EP_HS(6); //
+        pre_init_EP_HS(7) = init_EP_HS(7); //
+        pre_init_EP_HS(9) = init_EP_HS(9); //
+        pre_init_EP_HS(10) = init_EP_HS(10); //
+
+        init_EP_HS(0) = goal_EP_HS(0);
+        init_EP_HS(1) = goal_EP_HS(1);
+        init_EP_HS(3) = goal_EP_HS(3);
+        init_EP_HS(4) = goal_EP_HS(4);
+        init_EP_HS(6) = goal_EP_HS(6);
+        init_EP_HS(7) = goal_EP_HS(7);
+        init_EP_HS(9) = goal_EP_HS(9);
+        init_EP_HS(10) = goal_EP_HS(10);
+
+    }
+    if (Contact_Info_HS(0) == 1 && Contact_Info_HS(1) == 1 && Contact_Info_HS(2) == 1 && Contact_Info_HS(3) == 1) {
+        tmp_actual_EP_local_HS = actual_EP_local_HS;
+        tmp_actual_EP_local_hip_HS = actual_EP_local_hip_HS;
+        tmp_Regenerate_flag_HS = true;
+        if (Regenerate_flag_HS == false) {
+            tmp_cnt_HS++;
+        } else {
+            if (cnt_check_flag == true) {
+                del_cnt_HS = tmp_cnt_HS;
+            }
+            cnt_check_flag = false;
+        }
+    } else {
+        tmp_Regenerate_flag_HS = false;
+        tmp_cnt_HS = 0;
+        if (Regenerate_flag_HS == false) {
+            save_actual_EP_HS(2) = actual_EP_HS(2);
+            save_actual_EP_HS(5) = actual_EP_HS(5);
+            save_actual_EP_HS(8) = actual_EP_HS(8);
+            save_actual_EP_HS(11) = actual_EP_HS(11);
+        }
+    }
+}
+
+//void CRobot::Walking_Traj_COM_VER_HS2(unsigned int _i) {
+//    double t1;
+//    walk_time = _i*dt;
+//
+//    if (_i == 0) { //1400
+//
+//        if (move_stop_flag == true) {
+//            if (com_stop_flag_HS == true) {
+//                walk_stop_flag_HS = true;
+//                pre_sub_ctrl_flag = move_stop_flag;
+//            }
+//            if (speed_stop_flag_HS == true) {
+//                com_stop_flag_HS = true;
+//            }
+//            speed_stop_flag_HS = true;
+//            speed_x = 0.0;
+//            speed_y = 0.0;
+//            speed_yaw = 0.0;
+//        }
+//        if (move_stop_flag == false) {
+//            if (com_stop_flag_HS == false) {
+//                walk_stop_flag_HS = false;
+//                pre_sub_ctrl_flag = move_stop_flag;
+//            }
+//            com_stop_flag_HS = false;
+//            speed_stop_flag_HS = false;
+//        }
+//
+//        tar_vel_HS << speed_x, speed_y, speed_yaw;
+//
+//
+//        FootStepPlanning_HS(init_com_pos_HS, init_base_ori_HS, init_EP_HS, now_vel_HS, tar_vel_HS);
+//        SF_EP_Traj_Gen_HS(tsp_time_HS, pre_init_EP_HS, init_EP_HS);
+//        SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//
+//        target_EP_HS = pre_init_EP_HS;
+//
+//        // Z direction
+//        target_EP_HS(2) = init_EP_HS(2);
+//        target_EP_HS(5) = init_EP_HS(5);
+//        target_EP_HS(8) = init_EP_HS(8);
+//        target_EP_HS(11) = init_EP_HS(11);
+//
+//    }//************** Foot step Run *****************//
+//    if (walk_stop_flag_HS != true) {
+//        if (_i < tsp_cnt_HS * 2 / 5) { //cnt:1400~1649 (250)
+//            t1 = walk_time;
+//
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = pre_init_EP_HS(3);
+//            target_EP_HS(4) = pre_init_EP_HS(4);
+//            target_EP_HS(7) = pre_init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(5) = z2_up[5] * pow(t1, 5) + z2_up[4] * pow(t1, 4) + z2_up[3] * pow(t1, 3) + z2_up[2] * pow(t1, 2) + z2_up[1] * pow(t1, 1) + z2_up[0];
+//            target_EP_vel_HS(5) = 5 * z2_up[5] * pow(t1, 4) + 4 * z2_up[4] * pow(t1, 3) + 3 * z2_up[3] * pow(t1, 2) + 2 * z2_up[2] * pow(t1, 1) + z2_up[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS(2) = 0.0;
+//            target_EP_vel_HS(8) = 0.0;
+//            target_EP_vel_HS(11) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 1, 0, 1, 1;
+//                Gain_Info_HS << 1, 0, 1, 1;
+//            }
+//
+//        } else if (_i < tsp_cnt_HS * 5 / 5) { //cnt:1400~1649 (250)
+//            t1 = walk_time - (tsp_time_HS * 2.0 / 5.0);
+//
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = x2[5] * pow(t1, 5) + x2[4] * pow(t1, 4) + x2[3] * pow(t1, 3) + x2[2] * pow(t1, 2) + x2[1] * pow(t1, 1) + x2[0];
+//            target_EP_HS(4) = y2[5] * pow(t1, 5) + y2[4] * pow(t1, 4) + y2[3] * pow(t1, 3) + y2[2] * pow(t1, 2) + y2[1] * pow(t1, 1) + y2[0];
+//            target_EP_HS(6) = pre_init_EP_HS(6);
+//            target_EP_HS(7) = pre_init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 5 * x2[5] * pow(t1, 4) + 4 * x2[4] * pow(t1, 3) + 3 * x2[3] * pow(t1, 2) + 2 * x2[2] * pow(t1, 1) + x2[1];
+//            target_EP_vel_HS(4) = 5 * y2[5] * pow(t1, 4) + 4 * y2[4] * pow(t1, 3) + 3 * y2[3] * pow(t1, 2) + 2 * y2[2] * pow(t1, 1) + y2[1];
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(5) = z2_down[5] * pow(t1, 5) + z2_down[4] * pow(t1, 4) + z2_down[3] * pow(t1, 3) + z2_down[2] * pow(t1, 2) + z2_down[1] * pow(t1, 1) + z2_down[0];
+//            target_EP_vel_HS(5) = 5 * z2_down[5] * pow(t1, 4) + 4 * z2_down[4] * pow(t1, 3) + 3 * z2_down[3] * pow(t1, 2) + 2 * z2_down[2] * pow(t1, 1) + z2_down[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS(2) = 0.0;
+//            target_EP_vel_HS(8) = 0.0;
+//            target_EP_vel_HS(11) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 1, 0, 1, 1;
+//                Gain_Info_HS << 1, 0, 1, 1;
+//            }
+//        }else if (_i < step_cnt_HS) { //cnt:1650~1749
+//            t1 = walk_time - (tsp_time_HS);
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = pre_init_EP_HS(6);
+//            target_EP_HS(7) = pre_init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            // Z direction
+//            if (adaptive_flag_HS == true) {
+//                if (_i == (step_cnt_HS - 1)) {
+//                    target_EP_HS(2) = actual_EP_HS(2);
+//                    target_EP_HS(5) = actual_EP_HS(5);
+//                    target_EP_HS(8) = actual_EP_HS(8);
+//                    target_EP_HS(11) = actual_EP_HS(11);
+//                    init_EP_HS(2) = target_EP_HS(2);
+//                    init_EP_HS(5) = target_EP_HS(5);
+//                    init_EP_HS(8) = target_EP_HS(8);
+//                    init_EP_HS(11) = target_EP_HS(11);
+//                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                }
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//            Gain_Info_HS << 1, 0, 1, 1;
+//        } else if (_i < step_cnt_HS + tsp_cnt_HS * 2 / 5) { //cnt:1750~1999
+//            t1 = walk_time - (step_time_HS);
+//
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = pre_init_EP_HS(6);
+//            target_EP_HS(7) = pre_init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(8) = z3_up[5] * pow(t1, 5) + z3_up[4] * pow(t1, 4) + z3_up[3] * pow(t1, 3) + z3_up[2] * pow(t1, 2) + z3_up[1] * pow(t1, 1) + z3_up[0];
+//            target_EP_vel_HS(8) = 5 * z3_up[5] * pow(t1, 4) + 4 * z3_up[4] * pow(t1, 3) + 3 * z3_up[3] * pow(t1, 2) + 2 * z3_up[2] * pow(t1, 1) + z3_up[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(2) = target_EP_HS(2);
+//                target_EP_HS(5) = target_EP_HS(5);
+//                target_EP_HS(11) = target_EP_HS(11);
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS(2) = 0.0;
+//            target_EP_vel_HS(5) = 0.0;
+//            target_EP_vel_HS(11) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 1, 1, 0, 1;
+//                Gain_Info_HS << 1, 1, 0, 1;
+//            }
+//        } else if (_i < step_cnt_HS + tsp_cnt_HS * 5 / 5) { //cnt:1750~1999
+//            t1 = walk_time - (step_time_HS + tsp_time_HS * 2.0 / 5.0);
+//
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = x3[5] * pow(t1, 5) + x3[4] * pow(t1, 4) + x3[3] * pow(t1, 3) + x3[2] * pow(t1, 2) + x3[1] * pow(t1, 1) + x3[0];
+//            target_EP_HS(7) = y3[5] * pow(t1, 5) + y3[4] * pow(t1, 4) + y3[3] * pow(t1, 3) + y3[2] * pow(t1, 2) + y3[1] * pow(t1, 1) + y3[0];
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 5 * x3[5] * pow(t1, 4) + 4 * x3[4] * pow(t1, 3) + 3 * x3[3] * pow(t1, 2) + 2 * x3[2] * pow(t1, 1) + x3[1];
+//            target_EP_vel_HS(7) = 5 * y3[5] * pow(t1, 4) + 4 * y3[4] * pow(t1, 3) + 3 * y3[3] * pow(t1, 2) + 2 * y3[2] * pow(t1, 1) + y3[1];
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(8) = z3_down[5] * pow(t1, 5) + z3_down[4] * pow(t1, 4) + z3_down[3] * pow(t1, 3) + z3_down[2] * pow(t1, 2) + z3_down[1] * pow(t1, 1) + z3_down[0];
+//            target_EP_vel_HS(8) = 5 * z3_down[5] * pow(t1, 4) + 4 * z3_down[4] * pow(t1, 3) + 3 * z3_down[3] * pow(t1, 2) + 2 * z3_down[2] * pow(t1, 1) + z3_down[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(2) = target_EP_HS(2);
+//                target_EP_HS(5) = target_EP_HS(5);
+//                target_EP_HS(11) = target_EP_HS(11);
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS(2) = 0.0;
+//            target_EP_vel_HS(5) = 0.0;
+//            target_EP_vel_HS(11) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 1, 1, 0, 1;
+//                Gain_Info_HS << 1, 1, 0, 1;
+//            }
+//        } else if (_i < step_cnt_HS * 2) { //cnt:2000~2099
+//            t1 = walk_time - (step_time_HS + tsp_time_HS);
+//
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            if (adaptive_flag_HS == true) {
+//                if (_i == (step_cnt_HS * 2 - 1)) {
+//                    target_EP_HS(2) = actual_EP_HS(2);
+//                    target_EP_HS(5) = actual_EP_HS(5);
+//                    target_EP_HS(8) = actual_EP_HS(8);
+//                    target_EP_HS(11) = actual_EP_HS(11);
+//                    init_EP_HS(2) = target_EP_HS(2);
+//                    init_EP_HS(5) = target_EP_HS(5);
+//                    init_EP_HS(8) = target_EP_HS(8);
+//                    init_EP_HS(11) = target_EP_HS(11);
+//                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                }
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//            Gain_Info_HS << 1, 1, 0, 1;
+//
+//        } else if (_i < step_cnt_HS * 2 + tsp_cnt_HS * 2 / 5) { //cnt:2100~2349
+//            t1 = walk_time - (step_time_HS * 2);
+//
+//            target_EP_HS(0) = pre_init_EP_HS(0);
+//            target_EP_HS(1) = pre_init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(2) = z1_up[5] * pow(t1, 5) + z1_up[4] * pow(t1, 4) + z1_up[3] * pow(t1, 3) + z1_up[2] * pow(t1, 2) + z1_up[1] * pow(t1, 1) + z1_up[0];
+//            target_EP_vel_HS(2) = 5 * z1_up[5] * pow(t1, 4) + 4 * z1_up[4] * pow(t1, 3) + 3 * z1_up[3] * pow(t1, 2) + 2 * z1_up[2] * pow(t1, 1) + z1_up[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(5) = target_EP_HS(5);
+//                target_EP_HS(8) = target_EP_HS(8);
+//                target_EP_HS(11) = target_EP_HS(11);
+//
+//            } else {
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS(5) = 0.0;
+//            target_EP_vel_HS(8) = 0.0;
+//            target_EP_vel_HS(11) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 0, 1, 1, 1;
+//                Gain_Info_HS << 0, 1, 1, 1;
+//            }
+//
+//        } else if (_i < step_cnt_HS * 2 + tsp_cnt_HS * 5 / 5) { //cnt:2100~2349
+//            t1 = walk_time - (step_time_HS * 2 + tsp_time_HS * 2.0 / 5.0);
+//
+//            target_EP_HS(0) = x1[5] * pow(t1, 5) + x1[4] * pow(t1, 4) + x1[3] * pow(t1, 3) + x1[2] * pow(t1, 2) + x1[1] * pow(t1, 1) + x1[0];
+//            target_EP_HS(1) = y1[5] * pow(t1, 5) + y1[4] * pow(t1, 4) + y1[3] * pow(t1, 3) + y1[2] * pow(t1, 2) + y1[1] * pow(t1, 1) + y1[0];
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 5 * x1[5] * pow(t1, 4) + 4 * x1[4] * pow(t1, 3) + 3 * x1[3] * pow(t1, 2) + 2 * x1[2] * pow(t1, 1) + x1[1];
+//            target_EP_vel_HS(1) = 5 * y1[5] * pow(t1, 4) + 4 * y1[4] * pow(t1, 3) + 3 * y1[3] * pow(t1, 2) + 2 * y1[2] * pow(t1, 1) + y1[1];
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(2) = z1_down[5] * pow(t1, 5) + z1_down[4] * pow(t1, 4) + z1_down[3] * pow(t1, 3) + z1_down[2] * pow(t1, 2) + z1_down[1] * pow(t1, 1) + z1_down[0];
+//            target_EP_vel_HS(2) = 5 * z1_down[5] * pow(t1, 4) + 4 * z1_down[4] * pow(t1, 3) + 3 * z1_down[3] * pow(t1, 2) + 2 * z1_down[2] * pow(t1, 1) + z1_down[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(5) = target_EP_HS(5);
+//                target_EP_HS(8) = target_EP_HS(8);
+//                target_EP_HS(11) = target_EP_HS(11);
+//
+//            } else {
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            target_EP_vel_HS(5) = 0.0;
+//            target_EP_vel_HS(8) = 0.0;
+//            target_EP_vel_HS(11) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 0, 1, 1, 1;
+//                Gain_Info_HS << 0, 1, 1, 1;
+//            }
+//
+//        } else if (_i < step_cnt_HS * 3) { //cnt:2350~2449
+//            t1 = walk_time - (step_time_HS * 2 + tsp_time_HS);
+//
+//            target_EP_HS(0) = init_EP_HS(0);
+//            target_EP_HS(1) = init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            if (adaptive_flag_HS == true) {
+//                if (_i == (step_cnt_HS * 3 - 1)) {
+//                    target_EP_HS(2) = actual_EP_HS(2);
+//                    target_EP_HS(5) = actual_EP_HS(5);
+//                    target_EP_HS(8) = actual_EP_HS(8);
+//                    target_EP_HS(11) = actual_EP_HS(11);
+//                    init_EP_HS(2) = target_EP_HS(2);
+//                    init_EP_HS(5) = target_EP_HS(5);
+//                    init_EP_HS(8) = target_EP_HS(8);
+//                    init_EP_HS(11) = target_EP_HS(11);
+//                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                }
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//            target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//            Gain_Info_HS << 0, 1, 1, 1;
+//        } else if (_i < step_cnt_HS * 3 + tsp_cnt_HS * 2 / 5) { //cnt:2450~2699
+//            t1 = walk_time - (step_time_HS * 3);
+//
+//            target_EP_HS(0) = init_EP_HS(0);
+//            target_EP_HS(1) = init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = pre_init_EP_HS(9);
+//            target_EP_HS(10) = pre_init_EP_HS(10);
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 0.0;
+//            target_EP_vel_HS(10) = 0.0;
+//
+//            target_EP_HS(11) = z4_up[5] * pow(t1, 5) + z4_up[4] * pow(t1, 4) + z4_up[3] * pow(t1, 3) + z4_up[2] * pow(t1, 2) + z4_up[1] * pow(t1, 1) + z4_up[0];
+//            target_EP_vel_HS(11) = 5 * z4_up[5] * pow(t1, 4) + 4 * z4_up[4] * pow(t1, 3) + 3 * z4_up[3] * pow(t1, 2) + 2 * z4_up[2] * pow(t1, 1) + z4_up[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(2) = target_EP_HS(2);
+//                target_EP_HS(5) = target_EP_HS(5);
+//                target_EP_HS(8) = target_EP_HS(8);
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//            }
+//
+//            target_EP_vel_HS(2) = 0.0;
+//            target_EP_vel_HS(5) = 0.0;
+//            target_EP_vel_HS(8) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 1, 1, 1, 0;
+//                Gain_Info_HS << 1, 1, 1, 0;
+//            }
+//        } else if (_i < step_cnt_HS * 3 + tsp_cnt_HS * 5 / 5) { //cnt:2450~2699
+//            t1 = walk_time - (step_time_HS * 3 + tsp_time_HS * 2.0 / 5.0);
+//
+//            target_EP_HS(0) = init_EP_HS(0);
+//            target_EP_HS(1) = init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = x4[5] * pow(t1, 5) + x4[4] * pow(t1, 4) + x4[3] * pow(t1, 3) + x4[2] * pow(t1, 2) + x4[1] * pow(t1, 1) + x4[0];
+//            target_EP_HS(10) = y4[5] * pow(t1, 5) + y4[4] * pow(t1, 4) + y4[3] * pow(t1, 3) + y4[2] * pow(t1, 2) + y4[1] * pow(t1, 1) + y4[0];
+//
+//            target_EP_vel_HS(0) = 0.0;
+//            target_EP_vel_HS(1) = 0.0;
+//            target_EP_vel_HS(3) = 0.0;
+//            target_EP_vel_HS(4) = 0.0;
+//            target_EP_vel_HS(6) = 0.0;
+//            target_EP_vel_HS(7) = 0.0;
+//            target_EP_vel_HS(9) = 5 * x4[5] * pow(t1, 4) + 4 * x4[4] * pow(t1, 3) + 3 * x4[3] * pow(t1, 2) + 2 * x4[2] * pow(t1, 1) + x4[1];
+//            target_EP_vel_HS(10) = 5 * y4[5] * pow(t1, 4) + 4 * y4[4] * pow(t1, 3) + 3 * y4[3] * pow(t1, 2) + 2 * y4[2] * pow(t1, 1) + y4[1];
+//
+//            target_EP_HS(11) = z4_down[5] * pow(t1, 5) + z4_down[4] * pow(t1, 4) + z4_down[3] * pow(t1, 3) + z4_down[2] * pow(t1, 2) + z4_down[1] * pow(t1, 1) + z4_down[0];
+//            target_EP_vel_HS(11) = 5 * z4_down[5] * pow(t1, 4) + 4 * z4_down[4] * pow(t1, 3) + 3 * z4_down[3] * pow(t1, 2) + 2 * z4_down[2] * pow(t1, 1) + z4_down[1];
+//
+//            if (adaptive_flag_HS == true) {
+//                target_EP_HS(2) = target_EP_HS(2);
+//                target_EP_HS(5) = target_EP_HS(5);
+//                target_EP_HS(8) = target_EP_HS(8);
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//            }
+//
+//            target_EP_vel_HS(2) = 0.0;
+//            target_EP_vel_HS(5) = 0.0;
+//            target_EP_vel_HS(8) = 0.0;
+//
+//            if (foot_height_HS == 0.0) {
+//                Contact_Info_HS << 1, 1, 1, 1;
+//                Gain_Info_HS << 1, 1, 1, 1;
+//            } else {
+//                Contact_Info_HS << 1, 1, 1, 0;
+//                Gain_Info_HS << 1, 1, 1, 0;
+//            }
+//        } else { //cnt:2700~2799
+//            t1 = walk_time - (step_time_HS * 3 + tsp_time_HS);
+//
+//            target_EP_HS(0) = init_EP_HS(0);
+//            target_EP_HS(1) = init_EP_HS(1);
+//            target_EP_HS(3) = init_EP_HS(3);
+//            target_EP_HS(4) = init_EP_HS(4);
+//            target_EP_HS(6) = init_EP_HS(6);
+//            target_EP_HS(7) = init_EP_HS(7);
+//            target_EP_HS(9) = init_EP_HS(9);
+//            target_EP_HS(10) = init_EP_HS(10);
+//
+//            target_EP_vel_HS = VectorNd::Zero(12);
+//
+//            if (adaptive_flag_HS == true) {
+//                if (_i == (step_cnt_HS * 4 - 1)) {
+//                    target_EP_HS(2) = actual_EP_HS(2);
+//                    target_EP_HS(5) = actual_EP_HS(5);
+//                    target_EP_HS(8) = actual_EP_HS(8);
+//                    target_EP_HS(11) = actual_EP_HS(11);
+//                    init_EP_HS(2) = target_EP_HS(2);
+//                    init_EP_HS(5) = target_EP_HS(5);
+//                    init_EP_HS(8) = target_EP_HS(8);
+//                    init_EP_HS(11) = target_EP_HS(11);
+//                    SF_EP_Z_Traj_Gen_HS(tsp_time_HS, init_EP_HS, goal_EP_HS);
+//                }
+//            } else {
+//                target_EP_HS(2) = init_EP_HS(2);
+//                target_EP_HS(5) = init_EP_HS(5);
+//                target_EP_HS(8) = init_EP_HS(8);
+//                target_EP_HS(11) = init_EP_HS(11);
+//            }
+//
+//            Contact_Info_HS << 1, 1, 1, 1;
+//            Gain_Info_HS << 1, 1, 1, 0;
+//        }
+//    }
+//    COM_XY_Traj_Gen_COM_VER_HS(_i, init_com_pos_HS, goal_com_pos_HS);
+//
+//    target_base_ori_HS(2) = init_base_ori_HS(2) + (goal_base_ori_HS(2) - init_base_ori_HS(2)) / 2.0 * (1 - cos(PI / (step_time_HS * 4.0) * walk_time));
+//
+//    //* update
+//    if (_i == (step_cnt_HS * 4 - 1)) {
+//        now_vel_HS = tar_vel_HS;
+//
+//        init_com_pos_HS(0) = goal_com_pos_HS(0); //
+//        init_com_pos_HS(1) = goal_com_pos_HS(1); //
+//        init_base_ori_HS(2) = goal_base_ori_HS(2);
+//
+//        pre_init_EP_HS(0) = init_EP_HS(0); //
+//        pre_init_EP_HS(1) = init_EP_HS(1); //
+//        pre_init_EP_HS(3) = init_EP_HS(3); //
+//        pre_init_EP_HS(4) = init_EP_HS(4); //
+//        pre_init_EP_HS(6) = init_EP_HS(6); //
+//        pre_init_EP_HS(7) = init_EP_HS(7); //
+//        pre_init_EP_HS(9) = init_EP_HS(9); //
+//        pre_init_EP_HS(10) = init_EP_HS(10); //
+//
+//        init_EP_HS(0) = goal_EP_HS(0);
+//        init_EP_HS(1) = goal_EP_HS(1);
+//        init_EP_HS(3) = goal_EP_HS(3);
+//        init_EP_HS(4) = goal_EP_HS(4);
+//        init_EP_HS(6) = goal_EP_HS(6);
+//        init_EP_HS(7) = goal_EP_HS(7);
+//        init_EP_HS(9) = goal_EP_HS(9);
+//        init_EP_HS(10) = goal_EP_HS(10);
+//
+//    }
+//    if (Contact_Info_HS(0) == 1 && Contact_Info_HS(1) == 1 && Contact_Info_HS(2) == 1 && Contact_Info_HS(3) == 1) {
+//        tmp_actual_EP_local_HS = actual_EP_local_HS;
+//        tmp_actual_EP_local_hip_HS = actual_EP_local_hip_HS;
+//        tmp_Regenerate_flag_HS = true;
+//        if (Regenerate_flag_HS == false) {
+//            tmp_cnt_HS++;
+//        } else {
+//            if (cnt_check_flag == true) {
+//                del_cnt_HS = tmp_cnt_HS;
+//            }
+//            cnt_check_flag = false;
+//        }
+//    } else {
+//        tmp_Regenerate_flag_HS = false;
+//        tmp_cnt_HS = 0;
+//        if (Regenerate_flag_HS == false) {
+//            save_actual_EP_HS(2) = actual_EP_HS(2);
+//            save_actual_EP_HS(5) = actual_EP_HS(5);
+//            save_actual_EP_HS(8) = actual_EP_HS(8);
+//            save_actual_EP_HS(11) = actual_EP_HS(11);
+//        }
+//    }
+//}
 
 void CRobot::SF_EP_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos, VectorNd _goal_EP_pos) {
     init_x[0] = _init_EP_pos(0);
@@ -5799,6 +7334,7 @@ void CRobot::SF_EP_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos, Vecto
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time, y1);
 
+
     init_x[0] = _init_EP_pos(4);
     init_x[1] = 0;
     init_x[2] = 0;
@@ -5806,6 +7342,7 @@ void CRobot::SF_EP_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos, Vecto
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time, y2);
+
 
     init_x[0] = _init_EP_pos(7);
     init_x[1] = 0;
@@ -5815,6 +7352,7 @@ void CRobot::SF_EP_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos, Vecto
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time, y3);
 
+
     init_x[0] = _init_EP_pos(10);
     init_x[1] = 0;
     init_x[2] = 0;
@@ -5822,71 +7360,156 @@ void CRobot::SF_EP_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos, Vecto
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time, y4);
+
 }
 
-void CRobot::SF_EP_Z_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos_z, VectorNd _goal_EP_pos_z) { //Swing foot
+void CRobot::SF_EP_Z_Traj_Gen_HS(double _travel_time, VectorNd _init_EP_pos, VectorNd _goal_EP_pos) { //Swing foot
+    double Dist;
+    Dist = now_vel_HS(0) * step_time_HS * 4.0;
+    //std::cout << "D=" << Dist << std::endl;
+    double tmp_RL_th;
+    double tmp_RR_th;
+    double tmp_FL_th;
+    double tmp_FR_th;
 
     //******* Z trajectory ********///
-    init_x[0] = _init_EP_pos_z(2);
+    //    tmp_RL_th = abs(tmp_actual_EP_local_HS(2) / cos(abs(filtered_Pitch_local_vec(1)))) / 1.0;
+    //    tmp_RR_th = abs(tmp_actual_EP_local_HS(5) / cos(abs(filtered_Pitch_local_vec(1)))) / 1.0;
+    //    tmp_FL_th = abs(tmp_actual_EP_local_HS(8) / cos(abs(filtered_Pitch_local_vec(1)))) / 1.0;
+    //    tmp_FR_th = abs(tmp_actual_EP_local_HS(11) / cos(abs(filtered_Pitch_local_vec(1)))) / 1.0;
+    tmp_RL_th = abs(tmp_actual_EP_local_HS(2) / cos(abs(target_base_ori_HS(1))));
+    tmp_RR_th = abs(tmp_actual_EP_local_HS(5) / cos(abs(target_base_ori_HS(1))));
+    tmp_FL_th = abs(tmp_actual_EP_local_HS(8) / cos(abs(target_base_ori_HS(1))));
+    tmp_FR_th = abs(tmp_actual_EP_local_HS(11) / cos(abs(target_base_ori_HS(1))));
+
+    init_x[0] = _init_EP_pos(2);
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _goal_EP_pos_z(2);
+    //    if (tmp_RL_th < foot_height_HS) {
+    //        //        final_x[0] = _init_EP_pos(2) + tmp_RL_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(2) + tmp_RL_th / 2.0;
+    //    } else {
+    //        //        final_x[0] = _init_EP_pos(2) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(2) + foot_height_HS;
+    //    }
+    //final_x[0] = _tmp_goal_EP_pos(2);
+    final_x[0] = _init_EP_pos(2) + foot_height_HS;
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z1_up);
 
-    init_x[0] = _init_EP_pos_z(5);
+    init_x[0] = _init_EP_pos(5);
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _goal_EP_pos_z(5);
+    //if (Base_control_flag_HS == false) {
+    //    if (tmp_RR_th < foot_height_HS) {
+    //        //        final_x[0] = _init_EP_pos(5) + tmp_RR_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(5) + tmp_RR_th / 2.0;
+    //    } else {
+    //        //final_x[0] = _init_EP_pos(5) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(5) + foot_height_HS;
+    //    }
+    final_x[0] = _init_EP_pos(5) + foot_height_HS;
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z2_up);
 
-    init_x[0] = _init_EP_pos_z(8);
+    init_x[0] = _init_EP_pos(8);
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _goal_EP_pos_z(8);
+    //    if (tmp_FL_th < foot_height_HS) {
+    //        //        final_x[0] = _init_EP_pos(8) + tmp_FL_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(8) + tmp_FL_th / 2.0;
+    //    } else {
+    //        //        final_x[0] = _init_EP_pos(8) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(8) + foot_height_HS;
+    //    }
+    final_x[0] = _init_EP_pos(8) + foot_height_HS;
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z3_up);
 
-    init_x[0] = _init_EP_pos_z(11);
+    init_x[0] = _init_EP_pos(11);
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _goal_EP_pos_z(11);
+    //    if (tmp_FR_th < foot_height_HS) {
+    //        //        final_x[0] = _init_EP_pos(11) + tmp_FR_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(11) + tmp_FR_th / 2.0;
+    //    } else {
+    //        //        final_x[0] = _init_EP_pos(11) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        final_x[0] = _init_EP_pos(11) + foot_height_HS;
+    //    }
+    //    final_x[0] = _tmp_goal_EP_pos(11);
+    final_x[0] = _init_EP_pos(11) + foot_height_HS;
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z4_up);
 
-    init_x[0] = _goal_EP_pos_z(2);
+    //    if (tmp_RL_th < foot_height_HS) {
+    //        //        init_x[0] = _init_EP_pos(2) + tmp_RL_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(2) + tmp_RL_th / 2.0;
+    //    } else {
+    //        //        init_x[0] = _init_EP_pos(2) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(2) + foot_height_HS;
+    //    }
+    init_x[0] = _init_EP_pos(2) + foot_height_HS;
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _init_EP_pos_z(2);
+
+    //final_x[0] = _init_EP_pos(2) + Dist * tan(-filtered_Pitch_local_vec(1));
+    final_x[0] = _init_EP_pos(2);
+    //final_x[0] = _goal_EP_pos(2);
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z1_down);
 
-    init_x[0] = _goal_EP_pos_z(5);
+    //    if (tmp_RR_th < foot_height_HS) {
+    //        //        init_x[0] = _init_EP_pos(5) + tmp_RR_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(5) + tmp_RR_th / 2.0;
+    //    } else {
+    //        //        init_x[0] = _init_EP_pos(5) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(5) + foot_height_HS;
+    //    }
+    init_x[0] = _init_EP_pos(5) + foot_height_HS;
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _init_EP_pos_z(5);
+    final_x[0] = _init_EP_pos(5);
+    //    final_x[0] = _init_EP_pos(5) + Dist * tan(-filtered_Pitch_local_vec(1));
+    //final_x[0] = _goal_EP_pos(5);
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z2_down);
 
-    init_x[0] = _goal_EP_pos_z(8);
+    //    if (tmp_FL_th < foot_height_HS) {
+    //        //        init_x[0] = _init_EP_pos(8) + tmp_FL_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(8) + tmp_FL_th / 2.0;
+    //    } else {
+    //        //        init_x[0] = _init_EP_pos(8) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(8) + foot_height_HS;
+    //    }
+    init_x[0] = _init_EP_pos(8) + foot_height_HS;
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _init_EP_pos_z(8);
+    final_x[0] = _init_EP_pos(8);
+    //    final_x[0] = _init_EP_pos(8) + Dist * tan(-filtered_Pitch_local_vec(1));
+    //  final_x[0] = _goal_EP_pos(8);
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z3_down);
 
-    init_x[0] = _goal_EP_pos_z(11);
+    //    if (tmp_FR_th < foot_height_HS) {
+    //        //        init_x[0] = _init_EP_pos(11) + tmp_FR_th / 2.0 + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(11) + tmp_FR_th / 2.0;
+    //    } else {
+    //        //        init_x[0] = _init_EP_pos(11) + foot_height_HS + Dist / 2 * tan(-filtered_Pitch_local_vec(1));
+    //        init_x[0] = _init_EP_pos(11) + foot_height_HS;
+    //    }
+    init_x[0] = _init_EP_pos(11) + foot_height_HS;
     init_x[1] = 0;
     init_x[2] = 0;
-    final_x[0] = _init_EP_pos_z(11);
+    final_x[0] = _init_EP_pos(11);
+    //    final_x[0] = _init_EP_pos(11) + Dist * tan(-filtered_Pitch_local_vec(1));
+    //  final_x[0] = _goal_EP_pos(11);
     final_x[1] = 0;
     final_x[2] = 0;
     coefficient_5thPoly(init_x, final_x, _travel_time / 2.0, z4_down);
@@ -5925,13 +7548,7 @@ void CRobot::ComputeTorqueControl_HS(void) {
     //Joint_Space_Controller();
     Task_Space_Controller();
 
-    //CTC_Torque = C_term + G_term - J_A.transpose() * (Task_Control_value_HS + QuadQP_Control_value_HS);
     CTC_Torque = C_term + G_term - J_A.transpose() * (Task_Control_value_HS + OSQP_Control_value_HS);
-    //CTC_Torque = C_term + G_term - J_A.transpose() * (Task_Control_value_HS + F_GRF_local);
-
-    //CTC_Torque = - J_A.transpose() * (Task_Control_value_HS + OSQP_Control_value_HS);
-    //CTC_Torque = C_term + G_term - J_A.transpose() * (Task_Control_value_HS);
-
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
@@ -5963,33 +7580,12 @@ void CRobot::Task_Space_Controller(void) {
     VectorNd target_base_vel_12d_HS(12);
 
     Task_Gain_Setting_HS();
-    //Global
-    //    target_base_pos_HS = Get_Base_pos_HS2(target_com_pos_HS);
-    //
-    //    EP_err_HS = target_C_WB_12d_HS.transpose()*(actual_EP_HS - target_EP_HS);
-    //    EP_vel_err_HS = target_C_WB_12d_HS.transpose()*(actual_EP_vel_HS - target_EP_vel_HS);
-    //
-    //    tmp_base_pos_err = target_C_WB_HS.transpose()*(target_base_pos_HS - actual_base_pos_HS);
-    //    base_pos_err_HS << tmp_base_pos_err, tmp_base_pos_err, tmp_base_pos_err, tmp_base_pos_err;
-    //
-    //    tmp_base_vel_err = target_C_WB_HS.transpose()*(target_com_vel_HS - actual_com_vel_HS);
-    //    base_vel_err_HS << tmp_base_vel_err, tmp_base_vel_err, tmp_base_vel_err, tmp_base_vel_err;
-    //
-    //    for (int i = 0; i < 12; ++i) {
-    //        EP_Control_value[i] = kp_EP_HS[i]*(EP_err_HS[i]) + kd_EP_HS[i]*(EP_vel_err_HS[i]);
-    //        Base_Control_value[i] = kp_base_HS[i]*(base_pos_err_HS[i]) + kd_base_HS[i]*(base_vel_err_HS[i]);
-    //    }
-    //
-    //    tmp_task_Control_value = EP_Control_value + Base_Control_value;
-    //    Task_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, tmp_task_Control_value[0], tmp_task_Control_value[1], tmp_task_Control_value[2], tmp_task_Control_value[3], tmp_task_Control_value[4], tmp_task_Control_value[5], tmp_task_Control_value[6], tmp_task_Control_value[7], tmp_task_Control_value[8], tmp_task_Control_value[9], tmp_task_Control_value[10], tmp_task_Control_value[11];
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // EP
-    target_base_pos_HS = Get_Base_pos_HS2(target_com_pos_HS);
     target_base_pos_12d_HS << target_base_pos_HS, target_base_pos_HS, target_base_pos_HS, target_base_pos_HS;
     target_EP_local_HS = target_C_WB_12d_HS.transpose()*(target_EP_HS - target_base_pos_12d_HS);
 
-    target_base_vel_12d_HS << target_com_vel_HS, target_com_vel_HS, target_com_vel_HS, target_com_vel_HS;
+    target_base_vel_HS = target_com_vel_HS;
+    target_base_vel_12d_HS << target_base_vel_HS, target_base_vel_HS, target_base_vel_HS, target_base_vel_HS;
     target_EP_vel_local_HS = target_C_WB_12d_HS.transpose()*(target_EP_vel_HS - target_base_vel_12d_HS);
 
     J_A.block(0, 0, 6, 19) = J_BASE;
@@ -6026,7 +7622,6 @@ void CRobot::Task_Space_Controller(void) {
     Task_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, EP_Control_value[0], EP_Control_value[1], EP_Control_value[2], EP_Control_value[3], EP_Control_value[4], EP_Control_value[5], EP_Control_value[6], EP_Control_value[7], EP_Control_value[8], EP_Control_value[9], EP_Control_value[10], EP_Control_value[11];
 
     //QP_Task_Space_Controller();
-    //Estimate_GRF(target_EP_HS,target_com_pos_HS,target_com_acc_HS);
     Get_Opt_F_HS();
 }
 
@@ -6104,7 +7699,10 @@ MatrixNd CRobot::Base_Rotation_Matrix_HS(VectorNd _Base_ori) {
 , sin(_Base_ori(2)), cos(_Base_ori(2)), 0\
 , 0, 0, 1;
 
-    C_WB = C_roll_Base * C_pitch_Base * C_yaw_Base;
+    target_C_WB_RP_HS = C_roll_Base * C_pitch_Base;
+    target_C_WB_Y_HS = C_yaw_Base;
+
+    C_WB = target_C_WB_RP_HS * target_C_WB_Y_HS;
 
     return C_WB;
 }
@@ -6329,34 +7927,6 @@ void CRobot::QP_Task_Space_Controller(void) {
     QuadQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
 };
 
-void CRobot::Diff_COM_Info_HS(void) {
-    target_com_vel_HS = (target_com_pos_HS - pre_target_com_pos_HS) / dt;
-    target_com_acc_HS = (target_com_vel_HS - pre_target_com_vel_HS) / dt;
-
-    pre_target_com_pos_HS = target_com_pos_HS;
-    pre_target_com_vel_HS = target_com_vel_HS;
-
-    if (abs(target_com_vel_HS(2)) > 10) {
-        target_com_vel_HS(2) = 0;
-    }
-    if (abs(target_com_vel_HS(0)) > 10) {
-        target_com_vel_HS(0) = 0;
-    }
-    if (abs(target_com_vel_HS(1)) > 10) {
-        target_com_vel_HS(1) = 0;
-    }
-
-    if (abs(target_com_acc_HS(2)) > 10) {
-        target_com_acc_HS(2) = 0;
-    }
-    if (abs(target_com_acc_HS(0)) > 10) {
-        target_com_acc_HS(0) = 0;
-    }
-    if (abs(target_com_acc_HS(1)) > 10) {
-        target_com_acc_HS(1) = 0;
-    }
-}
-
 VectorNd CRobot::Get_COM_pos_HS(VectorNd Base_pos, VectorNd q) {
     VectorNd r_Base_body_4d(4);
     VectorNd RL_r_HR_Hip_4d(4), RL_r_HP_Thigh_4d(4), RL_r_KN_Calf_4d(4);
@@ -6434,7 +8004,7 @@ VectorNd CRobot::Get_COM_pos_HS(VectorNd Base_pos, VectorNd q) {
     b_r_bc_4d = (m_body * r_Base_body_4d + m_Hip * RL_r_Base_Hip_4d + m_Thigh * RL_r_Base_Thigh_4d + m_Calf * RL_r_Base_Calf_4d + m_Hip * RR_r_Base_Hip_4d + m_Thigh * RR_r_Base_Thigh_4d + m_Calf * RR_r_Base_Calf_4d + m_Hip * FL_r_Base_Hip_4d + m_Thigh * FL_r_Base_Thigh_4d + m_Calf * FL_r_Base_Calf_4d + m_Hip * FR_r_Base_Hip_4d + m_Thigh * FR_r_Base_Thigh_4d + m_Calf * FR_r_Base_Calf_4d) / (m_body + 4 * (m_Hip + m_Thigh + m_Calf));
     b_r_bc_3d = b_r_bc_4d.head(3);
 
-    w_r_wc = target_C_WB_HS * b_r_bc_3d + Base_pos;
+    w_r_wc = target_C_WB_RPY_HS * b_r_bc_3d + Base_pos;
 
     return w_r_wc;
 }
@@ -6517,25 +8087,13 @@ VectorNd CRobot::Get_Base_pos_HS(VectorNd COM_pos, VectorNd q) {
     b_r_bc_4d = (m_body * r_Base_body_4d + m_Hip * RL_r_Base_Hip_4d + m_Thigh * RL_r_Base_Thigh_4d + m_Calf * RL_r_Base_Calf_4d + m_Hip * RR_r_Base_Hip_4d + m_Thigh * RR_r_Base_Thigh_4d + m_Calf * RR_r_Base_Calf_4d + m_Hip * FL_r_Base_Hip_4d + m_Thigh * FL_r_Base_Thigh_4d + m_Calf * FL_r_Base_Calf_4d + m_Hip * FR_r_Base_Hip_4d + m_Thigh * FR_r_Base_Thigh_4d + m_Calf * FR_r_Base_Calf_4d) / (m_body + 4 * (m_Hip + m_Thigh + m_Calf));
     b_r_bc_3d = b_r_bc_4d.head(3);
 
-    Base_Pos_global = COM_pos - target_C_WB_HS * b_r_bc_3d;
+    Base_Pos_global = COM_pos - target_C_WB_RPY_HS * b_r_bc_3d;
 
     return Base_Pos_global;
 }
 
 VectorNd CRobot::Base_Estimation(VectorNd actual_EP_local) {
     double z_RL, z_RR, z_FL, z_FR;
-    Vector3d r_line1, r_line2, r_line3, r_line4, r_line5, r_line6;
-    VectorNd Line1_score = VectorNd::Zero(4);
-    VectorNd Line2_score = VectorNd::Zero(4);
-    VectorNd Line3_score = VectorNd::Zero(4);
-    VectorNd Line4_score = VectorNd::Zero(4);
-    VectorNd Line5_score = VectorNd::Zero(4);
-    VectorNd Line6_score = VectorNd::Zero(4);
-
-    VectorNd total_Line_score = VectorNd::Zero(4);
-
-    MatrixNd tmp_R_yaw = MatrixNd::Zero(3, 3);
-
     VectorNd tmp_Standard_leg = VectorNd::Zero(4);
 
     z_RL = abs(actual_EP_local(2));
@@ -6577,54 +8135,60 @@ VectorNd CRobot::Base_Estimation(VectorNd actual_EP_local) {
 }
 
 VectorNd CRobot::Base_Estimation2(VectorNd actual_EP_local) {
-    double z_RL, z_RR, z_FL, z_FR;
-    Vector3d r_line1, r_line2, r_line3, r_line4, r_line5, r_line6;
-    VectorNd Line1_score = VectorNd::Zero(4);
-    VectorNd Line2_score = VectorNd::Zero(4);
-    VectorNd Line3_score = VectorNd::Zero(4);
-    VectorNd Line4_score = VectorNd::Zero(4);
-    VectorNd Line5_score = VectorNd::Zero(4);
-    VectorNd Line6_score = VectorNd::Zero(4);
-
-    VectorNd total_Line_score = VectorNd::Zero(4);
-
-    MatrixNd tmp_R_yaw = MatrixNd::Zero(3, 3);
-
+    double Err_z_RL, Err_z_RR, Err_z_FL, Err_z_FR;
     VectorNd tmp_Standard_leg = VectorNd::Zero(4);
-    double alpha = 1.5;
-    double beta = 0.1;
 
-    z_RL = abs(actual_EP_local(2));
-    z_RR = abs(actual_EP_local(5));
-    z_FL = abs(actual_EP_local(8));
-    z_FR = abs(actual_EP_local(11));
+    //    Err_z_RL = abs(com_height_HS/cos(sqrt(pow(Roll_set(0),2)+pow(Pitch_set(0),2)))-abs(actual_EP_local(2)));
+    //    Err_z_RR = abs(com_height_HS/cos(sqrt(pow(Roll_set(0),2)+pow(Pitch_set(0),2)))-abs(actual_EP_local(5)));
+    //    Err_z_FL = abs(com_height_HS/cos(sqrt(pow(Roll_set(0),2)+pow(Pitch_set(0),2)))-abs(actual_EP_local(8)));
+    //    Err_z_FR = abs(com_height_HS/cos(sqrt(pow(Roll_set(0),2)+pow(Pitch_set(0),2)))-abs(actual_EP_local(11)));
+    //    Err_z_RL = abs(com_height_HS-abs(actual_EP_local(2)));
+    //    Err_z_RR = abs(com_height_HS-abs(actual_EP_local(5)));
+    //    Err_z_FL = abs(com_height_HS-abs(actual_EP_local(8)));
+    //    Err_z_FR = abs(com_height_HS-abs(actual_EP_local(11)));
 
-    if (z_RL >= z_RR) {
-        if (z_RL >= z_FL) {
-            if (z_RL >= z_FR) {
-                tmp_Standard_leg << alpha, beta, beta, beta; //RL
+    //    Err_z_RL = abs(target_base_pos_HS(2) - abs(actual_EP_local(2)) / cos(sqrt(pow(Roll_set(0), 2) + pow(Pitch_set(0), 2))));
+    //    Err_z_RR = abs(target_base_pos_HS(2) - abs(actual_EP_local(5)) / cos(sqrt(pow(Roll_set(0), 2) + pow(Pitch_set(0), 2))));
+    //    Err_z_FL = abs(target_base_pos_HS(2) - abs(actual_EP_local(8)) / cos(sqrt(pow(Roll_set(0), 2) + pow(Pitch_set(0), 2))));
+    //    Err_z_FR = abs(target_base_pos_HS(2) - abs(actual_EP_local(11)) / cos(sqrt(pow(Roll_set(0), 2) + pow(Pitch_set(0), 2))));
+
+
+    //    Err_z_RL = abs(target_base_pos_HS(2) - abs(actual_EP_local(2)) / cos(abs(filtered_Pitch_local_vec(1))));
+    //    Err_z_RR = abs(target_base_pos_HS(2) - abs(actual_EP_local(5)) / cos(abs(filtered_Pitch_local_vec(1))));
+    //    Err_z_FL = abs(target_base_pos_HS(2) - abs(actual_EP_local(8)) / cos(abs(filtered_Pitch_local_vec(1))));
+    //    Err_z_FR = abs(target_base_pos_HS(2) - abs(actual_EP_local(11)) / cos(abs(filtered_Pitch_local_vec(1))));
+    Err_z_RL = abs(target_base_pos_HS(2) - abs(actual_EP_local(2)) / cos(abs(target_base_ori_HS(1))));
+    Err_z_RR = abs(target_base_pos_HS(2) - abs(actual_EP_local(5)) / cos(abs(target_base_ori_HS(1))));
+    Err_z_FL = abs(target_base_pos_HS(2) - abs(actual_EP_local(8)) / cos(abs(target_base_ori_HS(1))));
+    Err_z_FR = abs(target_base_pos_HS(2) - abs(actual_EP_local(11)) / cos(abs(target_base_ori_HS(1))));
+
+
+    if (Err_z_RL <= Err_z_RR) {
+        if (Err_z_RL <= Err_z_FL) {
+            if (Err_z_RL <= Err_z_FR) {
+                tmp_Standard_leg << 1, 0, 0, 0; //RL
             } else {
-                tmp_Standard_leg << beta, beta, beta, alpha; //FR
+                tmp_Standard_leg << 0, 0, 0, 1; //FR
             }
         } else {
-            if (z_FL >= z_FR) {
-                tmp_Standard_leg << beta, beta, alpha, beta; //FL
+            if (Err_z_FL <= Err_z_FR) {
+                tmp_Standard_leg << 0, 0, 1, 0; //FL
             } else {
-                tmp_Standard_leg << beta, beta, beta, alpha; //FR
+                tmp_Standard_leg << 0, 0, 0, 1; //FR
             }
         }
     } else {
-        if (z_RR >= z_FL) {
-            if (z_RR >= z_FR) {
-                tmp_Standard_leg << beta, alpha, beta, beta; //RR
+        if (Err_z_RR <= Err_z_FL) {
+            if (Err_z_RR <= Err_z_FR) {
+                tmp_Standard_leg << 0, 1, 0, 0; //RR
             } else {
-                tmp_Standard_leg << beta, beta, beta, alpha; //FR
+                tmp_Standard_leg << 0, 0, 0, 1; //FR
             }
         } else {
-            if (z_FL >= z_FR) {
-                tmp_Standard_leg << beta, beta, alpha, beta; //RR
+            if (Err_z_FL <= Err_z_FR) {
+                tmp_Standard_leg << 0, 0, 1, 0; //FL
             } else {
-                tmp_Standard_leg << beta, beta, beta, alpha; //FR
+                tmp_Standard_leg << 0, 0, 0, 1; //FR
             }
         }
 
@@ -6647,20 +8211,20 @@ VectorNd CRobot::Transform_G2L(VectorNd Base_pos, VectorNd EP_ori, VectorNd EP_p
 
     VectorNd EP_pos_local(12);
 
-    target_C_WB_HS = Base_Rotation_Matrix_HS(target_base_ori_HS);
+    target_C_WB_RPY_HS = Base_Rotation_Matrix_HS(target_base_ori_HS);
 
-    target_C_WB_12d_HS.block(0, 0, 3, 3) = target_C_WB_HS;
-    target_C_WB_12d_HS.block(3, 3, 3, 3) = target_C_WB_HS;
-    target_C_WB_12d_HS.block(6, 6, 3, 3) = target_C_WB_HS;
-    target_C_WB_12d_HS.block(9, 9, 3, 3) = target_C_WB_HS;
+    target_C_WB_12d_HS.block(0, 0, 3, 3) = target_C_WB_RPY_HS;
+    target_C_WB_12d_HS.block(3, 3, 3, 3) = target_C_WB_RPY_HS;
+    target_C_WB_12d_HS.block(6, 6, 3, 3) = target_C_WB_RPY_HS;
+    target_C_WB_12d_HS.block(9, 9, 3, 3) = target_C_WB_RPY_HS;
 
-    C_pitch_RL = target_C_WB_HS;
-    C_pitch_RR = target_C_WB_HS;
-    C_pitch_FL = target_C_WB_HS;
-    C_pitch_FR = target_C_WB_HS;
+    C_pitch_RL = target_C_WB_RPY_HS;
+    C_pitch_RR = target_C_WB_RPY_HS;
+    C_pitch_FL = target_C_WB_RPY_HS;
+    C_pitch_FR = target_C_WB_RPY_HS;
 
     r_WB = Base_pos;
-    T_WB.block(0, 0, 3, 3) = target_C_WB_HS;
+    T_WB.block(0, 0, 3, 3) = target_C_WB_RPY_HS;
     T_WB.block(0, 3, 3, 1) = r_WB;
     T_WB.block(3, 0, 1, 4) << 0, 0, 0, 1;
 
@@ -6786,65 +8350,124 @@ VectorNd CRobot::Localization_Base2Hip_Pos_HS(VectorNd EP_pos_local) {
 
 VectorNd CRobot::Localization_Hip2Base_Pos_HS(VectorNd EP_pos_local_hip) {
     VectorNd EP_pos_local(12);
-    VectorNd r_Base2RL(3);
-    VectorNd r_Base2RR(3);
-    VectorNd r_Base2FL(3);
-    VectorNd r_Base2FR(3);
 
-    r_Base2RL << -0.35, 0.115, -0.053;
-    r_Base2RR << -0.35, -0.115, -0.053;
-    r_Base2FL << 0.35, 0.115, -0.053;
-    r_Base2FR << 0.35, -0.115, -0.053;
+    EP_pos_local(0) = EP_pos_local_hip(0) + RL_base2hip_pos(0);
+    EP_pos_local(1) = EP_pos_local_hip(1) + RL_base2hip_pos(1);
+    EP_pos_local(2) = EP_pos_local_hip(2) + RL_base2hip_pos(2);
 
-    EP_pos_local(0) = EP_pos_local_hip(0) + r_Base2RL(0);
-    EP_pos_local(1) = EP_pos_local_hip(1) + r_Base2RL(1);
-    EP_pos_local(2) = EP_pos_local_hip(2) + r_Base2RL(2);
+    EP_pos_local(3) = EP_pos_local_hip(3) + RR_base2hip_pos(0);
+    EP_pos_local(4) = EP_pos_local_hip(4) + RR_base2hip_pos(1);
+    EP_pos_local(5) = EP_pos_local_hip(5) + RR_base2hip_pos(2);
 
-    EP_pos_local(3) = EP_pos_local_hip(3) + r_Base2RR(0);
-    EP_pos_local(4) = EP_pos_local_hip(4) + r_Base2RR(1);
-    EP_pos_local(5) = EP_pos_local_hip(5) + r_Base2RR(2);
+    EP_pos_local(6) = EP_pos_local_hip(6) + FL_base2hip_pos(0);
+    EP_pos_local(7) = EP_pos_local_hip(7) + FL_base2hip_pos(1);
+    EP_pos_local(8) = EP_pos_local_hip(8) + FL_base2hip_pos(2);
 
-    EP_pos_local(6) = EP_pos_local_hip(6) + r_Base2FL(0);
-    EP_pos_local(7) = EP_pos_local_hip(7) + r_Base2FL(1);
-    EP_pos_local(8) = EP_pos_local_hip(8) + r_Base2FL(2);
-
-    EP_pos_local(9) = EP_pos_local_hip(9) + r_Base2FR(0);
-    EP_pos_local(10) = EP_pos_local_hip(10) + r_Base2FR(1);
-    EP_pos_local(11) = EP_pos_local_hip(11) + r_Base2FR(2);
+    EP_pos_local(9) = EP_pos_local_hip(9) + FR_base2hip_pos(0);
+    EP_pos_local(10) = EP_pos_local_hip(10) + FR_base2hip_pos(1);
+    EP_pos_local(11) = EP_pos_local_hip(11) + FR_base2hip_pos(2);
 
     return EP_pos_local;
 }
 
 void CRobot::print_HS(void) {
-    std::cout << "__________________________" << std::endl;
-    std::cout << "tar_base_pos : " << target_base_pos_HS(0) << "/" << target_base_pos_HS(1) << "/" << target_base_pos_HS(2) << std::endl;
-    std::cout << "tar_base_vel : " << target_com_vel_HS(0) << "/" << target_com_vel_HS(1) << "/" << target_com_vel_HS(2) << std::endl;
-    std::cout << "tar_EP_pos : " << "(" << target_EP_HS(0) << "/" << target_EP_HS(1) << "/" << target_EP_HS(2) << ")" << "," << "(" << target_EP_HS(3) << "/" << target_EP_HS(4) << "/" << target_EP_HS(5) << ")" << "," << "(" << target_EP_HS(6) << "/" << target_EP_HS(7) << "/" << target_EP_HS(8) << ")" << "," << "(" << target_EP_HS(9) << "/" << target_EP_HS(10) << "/" << target_EP_HS(11) << ")" << std::endl;
-    std::cout << "tar_EP_vel : " << "(" << target_EP_vel_HS(0) << "/" << target_EP_vel_HS(1) << "/" << target_EP_vel_HS(2) << ")" << "," << "(" << target_EP_vel_HS(3) << "/" << target_EP_vel_HS(4) << "/" << target_EP_vel_HS(5) << ")" << "," << "(" << target_EP_vel_HS(6) << "/" << target_EP_vel_HS(7) << "/" << target_EP_vel_HS(8) << ")" << "," << "(" << target_EP_vel_HS(9) << "/" << target_EP_vel_HS(10) << "/" << target_EP_vel_HS(11) << ")" << std::endl;
-    std::cout << "--------------------------------------------" << std::endl;
-    std::cout << "act_base_pos : " << actual_base_pos_HS(0) << "/" << actual_base_pos_HS(1) << "/" << actual_base_pos_HS(2) << std::endl;
-    std::cout << "act_base_vel : " << actual_com_vel_HS(0) << "/" << actual_com_vel_HS(1) << "/" << actual_com_vel_HS(2) << std::endl;
-    std::cout << "act_EP_pos : " << "(" << actual_EP_HS(0) << "/" << actual_EP_HS(1) << "/" << actual_EP_HS(2) << ")" << "," << "(" << actual_EP_HS(3) << "/" << actual_EP_HS(4) << "/" << actual_EP_HS(5) << ")" << "," << "(" << actual_EP_HS(6) << "/" << actual_EP_HS(7) << "/" << actual_EP_HS(8) << ")" << "," << "(" << actual_EP_HS(9) << "/" << actual_EP_HS(10) << "/" << actual_EP_HS(11) << ")" << std::endl;
-    std::cout << "act_EP_vel : " << "(" << actual_EP_vel_HS(0) << "/" << actual_EP_vel_HS(1) << "/" << actual_EP_vel_HS(2) << ")" << "," << "(" << actual_EP_vel_HS(3) << "/" << actual_EP_vel_HS(4) << "/" << actual_EP_vel_HS(5) << ")" << "," << "(" << actual_EP_vel_HS(6) << "/" << actual_EP_vel_HS(7) << "/" << actual_EP_vel_HS(8) << ")" << "," << "(" << actual_EP_vel_HS(9) << "/" << actual_EP_vel_HS(10) << "/" << actual_EP_vel_HS(11) << ")" << std::endl;
-    std::cout << "--------------------------------------------" << std::endl;
-    std::cout << "Err_pos : " << EP_pos_local_err_HS[2] << "/" << EP_pos_local_err_HS[5] << "/" << EP_pos_local_err_HS[8] << "/" << EP_pos_local_err_HS[11] << std::endl;
-    std::cout << "Err_vel : " << EP_vel_local_err_HS[2] << "/" << EP_vel_local_err_HS[5] << "/" << EP_vel_local_err_HS[8] << "/" << EP_vel_local_err_HS[11] << std::endl;
-    std::cout << "----------------------------------------------" << std::endl;
-    std::cout << " Standard_leg : " << Standard_leg.transpose() << std::endl;
+    //    std::cout << "__________________________" << std::endl;
+    //    std::cout<<"cnt_HS="<<cnt_HS<<std::endl;
+    //    std::cout<<"fly_cnt_HS="<<fly_cnt_HS<<std::endl;
+    //    std::cout<<"CONTACT_info="<<Contact_Info_HS.transpose()<<std::endl;
+    //    std::cout<<"gain_info="<<Gain_Info_HS.transpose()<<std::endl;
+    //    std::cout<<"target_k="<<target_kp_EP(2)<<std::endl;
+    //    std::cout<<"target_k_EP="<<kp_EP_HS(2)<<std::endl;
+    //    std::cout << "tar_base_pos : " << target_base_pos_HS(0) << "/" << target_base_pos_HS(1) << "/" << target_base_pos_HS(2) << std::endl;
+    //    std::cout << "target_com_pos : " << target_com_pos_HS(0) << "/" << target_com_pos_HS(1) << "/" << target_com_pos_HS(2) << std::endl;
 
-    //
+    //std::cout << "target_EP(L) : " << "(" << "(" << target_EP_local_HS(0) << "/" << target_EP_local_HS(1) << "/" << target_EP_local_HS(2) << ")" << "," << "(" << target_EP_local_HS(3) << "/" << target_EP_local_HS(4) << "/" << target_EP_local_HS(5) << ")" << "," << "(" << target_EP_local_HS(6) << "/" << target_EP_local_HS(7) << "/" << target_EP_local_HS(8) << ")" << "," << "(" << target_EP_local_HS(9) << "/" << target_EP_local_HS(10) << "/" << target_EP_local_HS(11) << ")" << std::endl;
+    //std::cout<<"speed="<<tar_vel_HS(0)<<"/"<<tar_vel_HS(1)<<"/"<<tar_vel_HS(2)<<std::endl;
+
+    //std::cout << "init_EP(G) : " << "(" << init_EP_HS(0) << "/" << init_EP_HS(1) << "/" << init_EP_HS(2) << ")" << "," << "(" << init_EP_HS(3) << "/" << init_EP_HS(4) << "/" << init_EP_HS(5) << ")" << "," << "(" << init_EP_HS(6) << "/" << init_EP_HS(7) << "/" << init_EP_HS(8) << ")" << "," << "(" << init_EP_HS(9) << "/" << init_EP_HS(10) << "/" << init_EP_HS(11) << ")" << std::endl;
+    // std::cout << "goal_EP(G) : " << "(" << goal_EP_HS(0) << "/" << goal_EP_HS(1) << "/" << goal_EP_HS(2) << ")" << "," << "(" << goal_EP_HS(3) << "/" << goal_EP_HS(4) << "/" << goal_EP_HS(5) << ")" << "," << "(" << goal_EP_HS(6) << "/" << goal_EP_HS(7) << "/" << goal_EP_HS(8) << ")" << "," << "(" << goal_EP_HS(9) << "/" << goal_EP_HS(10) << "/" << goal_EP_HS(11) << ")" << std::endl;
+    //  std::cout << "target_EP(G) : " << "(" << target_EP_HS(0) << "/" << target_EP_HS(1) << "/" << target_EP_HS(2) << ")" << "," << "(" << target_EP_HS(3) << "/" << target_EP_HS(4) << "/" << target_EP_HS(5) << ")" << "," << "(" << target_EP_HS(6) << "/" << target_EP_HS(7) << "/" << target_EP_HS(8) << ")" << "," << "(" << target_EP_HS(9) << "/" << target_EP_HS(10) << "/" << target_EP_HS(11) << ")" << std::endl;
+    //std::cout << "tmp_goal_EP(semiG) : " << "(" << semi_tmp_goal_EP_HS(0) << "/" << semi_tmp_goal_EP_HS(1) << "/" << semi_tmp_goal_EP_HS(2) << ")" << "," << "(" << semi_tmp_goal_EP_HS(3) << "/" << semi_tmp_goal_EP_HS(4) << "/" << semi_tmp_goal_EP_HS(5) << ")" << "," << "(" << semi_tmp_goal_EP_HS(6) << "/" << semi_tmp_goal_EP_HS(7) << "/" << semi_tmp_goal_EP_HS(8) << ")" << "," << "(" << semi_tmp_goal_EP_HS(9) << "/" << semi_tmp_goal_EP_HS(10) << "/" << semi_tmp_goal_EP_HS(11) << ")" << std::endl;
+
+
+    //std::cout << "pre_init_EP(semiG) : " << "(" << semi_pre_init_EP_HS(0) << "/" << semi_pre_init_EP_HS(1) << "/" << semi_pre_init_EP_HS(2) << ")" << "," << "(" << semi_pre_init_EP_HS(3) << "/" << semi_pre_init_EP_HS(4) << "/" << semi_pre_init_EP_HS(5) << ")" << "," << "(" << semi_pre_init_EP_HS(6) << "/" << semi_pre_init_EP_HS(7) << "/" << semi_pre_init_EP_HS(8) << ")" << "," << "(" << semi_pre_init_EP_HS(9) << "/" << semi_pre_init_EP_HS(10) << "/" << semi_pre_init_EP_HS(11) << ")" << std::endl;
+    //std::cout << "init_EP(semiG) : " << "(" << semi_init_EP_HS(0) << "/" << semi_init_EP_HS(1) << "/" << semi_init_EP_HS(2) << ")" << "," << "(" << semi_init_EP_HS(3) << "/" << semi_init_EP_HS(4) << "/" << semi_init_EP_HS(5) << ")" << "," << "(" << semi_init_EP_HS(6) << "/" << semi_init_EP_HS(7) << "/" << semi_init_EP_HS(8) << ")" << "," << "(" << semi_init_EP_HS(9) << "/" << semi_init_EP_HS(10) << "/" << semi_init_EP_HS(11) << ")" << std::endl;
+    //std::cout << "goal_EP(semiG) : " << "(" << semi_goal_EP_HS(0) << "/" << semi_goal_EP_HS(1) << "/" << semi_goal_EP_HS(2) << ")" << "," << "(" << semi_goal_EP_HS(3) << "/" << semi_goal_EP_HS(4) << "/" << semi_goal_EP_HS(5) << ")" << "," << "(" << semi_goal_EP_HS(6) << "/" << semi_goal_EP_HS(7) << "/" << semi_goal_EP_HS(8) << ")" << "," << "(" << semi_goal_EP_HS(9) << "/" << semi_goal_EP_HS(10) << "/" << semi_goal_EP_HS(11) << ")" << std::endl;
+    //std::cout << "target_EP(semiG) : " << "(" << semi_target_EP_HS(0) << "/" << semi_target_EP_HS(1) << "/" << semi_target_EP_HS(2) << ")" << "," << "(" << semi_target_EP_HS(3) << "/" << semi_target_EP_HS(4) << "/" << semi_target_EP_HS(5) << ")" << "," << "(" << semi_target_EP_HS(6) << "/" << semi_target_EP_HS(7) << "/" << semi_target_EP_HS(8) << ")" << "," << "(" << semi_target_EP_HS(9) << "/" << semi_target_EP_HS(10) << "/" << semi_target_EP_HS(11) << ")" << std::endl;
+    std::cout << "--------------------------" << std::endl;
+    //std::cout<<"cnt(bez)="<<cnt_bez<<std::endl;
+    //std::cout<<"target_EP(bez)="<<semi_target_EP_HS2(3)<<" / "<<semi_target_EP_HS2(4)<<" / "<<semi_target_EP_HS2(5)<<std::endl;
+
+    std::cout << "tar_EP_pos : " << "(" << target_EP_HS(2) << ")" << "," << "(" << target_EP_HS(5) << ")" << "," << "(" << target_EP_HS(8) << ")" << "," << "(" << target_EP_HS(11) << ")" << std::endl;
+
+    //    std::cout << "tar_EP_vel : " << "(" << target_EP_vel_HS(0) << "/" << target_EP_vel_HS(1) << "/" << target_EP_vel_HS(2) << ")" << "," << "(" << target_EP_vel_HS(3) << "/" << target_EP_vel_HS(4) << "/" << target_EP_vel_HS(5) << ")" << "," << "(" << target_EP_vel_HS(6) << "/" << target_EP_vel_HS(7) << "/" << target_EP_vel_HS(8) << ")" << "," << "(" << target_EP_vel_HS(9) << "/" << target_EP_vel_HS(10) << "/" << target_EP_vel_HS(11) << ")" << std::endl;
+    //std::cout << "--------------------------------------------" << std::endl;
+    //    std::cout << "actual_EP(L) : " << "(" << "(" << actual_EP_local_HS(0) << "/" << actual_EP_local_HS(1) << "/" << actual_EP_local_HS(2) << ")" << "," << "(" << actual_EP_local_HS(3) << "/" << actual_EP_local_HS(4) << "/" << actual_EP_local_HS(5) << ")" << "," << "(" << actual_EP_local_HS(6) << "/" << actual_EP_local_HS(7) << "/" << actual_EP_local_HS(8) << ")" << "," << "(" << actual_EP_local_HS(9) << "/" << actual_EP_local_HS(10) << "/" << actual_EP_local_HS(11) << ")" << std::endl;
+    //    std::cout << "act_EP_pos(G) : " << "(" << actual_EP_HS(0) << "/" << actual_EP_HS(1) << "/" << actual_EP_HS(2) << ")" << "," << "(" << actual_EP_HS(3) << "/" << actual_EP_HS(4) << "/" << actual_EP_HS(5) << ")" << "," << "(" << actual_EP_HS(6) << "/" << actual_EP_HS(7) << "/" << actual_EP_HS(8) << ")" << "," << "(" << actual_EP_HS(9) << "/" << actual_EP_HS(10) << "/" << actual_EP_HS(11) << ")" << std::endl;
+    //    std::cout << "act_base_pos : " << actual_base_pos_HS(0) << "/" << actual_base_pos_HS(1) << "/" << actual_base_pos_HS(2) << std::endl;
+    //    std::cout << "act_com_pos : " << actual_com_pos_HS(0) << "/" << actual_com_pos_HS(1) << "/" << actual_com_pos_HS(2) << std::endl;
+
+
+
+    //std::cout << "act_EP_pos : " << "(" << actual_EP_HS(2) << ")" << "," << "(" << actual_EP_HS(5) << ")" << "," << "(" << actual_EP_HS(8) << ")" << "," << "(" << actual_EP_HS(11) << ")" << std::endl;    //    std::cout << "act_EP_vel : " << "(" << actual_EP_vel_HS(0) << "/" << actual_EP_vel_HS(1) << "/" << actual_EP_vel_HS(2) << ")" << "," << "(" << actual_EP_vel_HS(3) << "/" << actual_EP_vel_HS(4) << "/" << actual_EP_vel_HS(5) << ")" << "," << "(" << actual_EP_vel_HS(6) << "/" << actual_EP_vel_HS(7) << "/" << actual_EP_vel_HS(8) << ")" << "," << "(" << actual_EP_vel_HS(9) << "/" << actual_EP_vel_HS(10) << "/" << actual_EP_vel_HS(11) << ")" << std::endl;
+    //    std::cout << "act_base_vel : " << actual_com_vel_HS(0) << "/" << actual_com_vel_HS(1) << "/" << actual_com_vel_HS(2) << std::endl;
+
+
+    //    std::cout << "--------------------------------------------" << std::endl;
+    //    std::cout << "Err_pos : " << EP_pos_local_err_HS[2] << "/" << EP_pos_local_err_HS[5] << "/" << EP_pos_local_err_HS[8] << "/" << EP_pos_local_err_HS[11] << std::endl;
+    //    std::cout << "Err_vel : " << EP_vel_local_err_HS[2] << "/" << EP_vel_local_err_HS[5] << "/" << EP_vel_local_err_HS[8] << "/" << EP_vel_local_err_HS[11] << std::endl;
+    //    std::cout << "----------------------------------------------" << std::endl;
+    //    //std::cout << " Standard_leg : " << Standard_leg.transpose() << std::endl;
+    //    std::cout << "tar_base_pos : " << target_base_pos_HS(0) << "/" << target_base_pos_HS(1) << "/" << target_base_pos_HS(2) << std::endl;
+    //    std::cout << "act_base_pos : " << actual_base_pos_HS(0) << "/" << actual_base_pos_HS(1) << "/" << actual_base_pos_HS(2) << std::endl;
+    //std::cout << "act_base_pos : " << actual_base_pos_HS(0) << "/" << actual_base_pos_HS(1) << "/" << actual_base_pos_HS(2) << std::endl;
+    //    std::cout << "act_base_pos : " << actual_base_pos_HS(2) << std::endl;
+    //    cout<<"cnt_HS="<<cnt_HS<<endl;
+    //    cout<<"slop_cnt="<<slope_cnt_HS<<endl;
+    //    cout<<"target_Base="<<target_base_pos_HS.transpose()<<endl;
+    //    cout<<"actual_Base="<<actual_base_pos_HS.transpose()<<endl;
+
+    // std::cout << "----------------------------------------------" << std::endl;
+    //    std::cout << " Tmp_flag : " << tmp_Regenerate_flag_HS << std::endl;
+    //    std::cout << " Re_flag : " << Regenerate_flag_HS << std::endl;
+    //    std::cout << "up_flag_HS : " << up_flag_HS << std::endl;
+    //    std::cout << "down_flag_HS : " << down_flag_HS << std::endl;
+    //    std::cout << "Count_com_cnt_flag_HS : " << Count_com_cnt_flag_HS <<std::endl;
+    //std::cout << "Save EP : " << save_actual_EP_HS(2) << "/" << save_actual_EP_HS(5) << "/" << save_actual_EP_HS(8) << "/" << save_actual_EP_HS(11)<<std::endl;
+    //std::cout << "goal_EP : " << goal_EP_HS(2) << "/" << goal_EP_HS(5) << "/" << goal_EP_HS(8) << "/" << goal_EP_HS(11)<<std::endl;
+    //std::cout << "----------------------------------------------" << std::endl;
+    //    std::cout << "cnt_COM : " << cnt_com_HS << std::endl;
+    //    std::cout << "init_com_pos_z-HS : " << init_com_pos_z_HS << std::endl;
+    //    std::cout << "target_com_pos_z_HS : " << target_com_pos_z_HS << std::endl;
+    //    std::cout<<"Estimated_pitch : "<< Pitch_set(0)<<std::endl;
+
+    //    std::cout<<"goal_base_ori_local_HS:"<<goal_base_ori_local_HS.transpose()<<std::endl;
+    //    std::cout<<"init_base_ori_HS:"<<init_base_ori_HS.transpose()<<std::endl;   
+    std::cout << "target_base_ori_HS:" << target_base_ori_HS(0) * R2D << " / " << target_base_ori_HS(1) * R2D << " / " << target_base_ori_HS(2) * R2D << std::endl;
+    std::cout << "actual_base_ori_HS:" << actual_base_ori_HS(0) * R2D << " / " << actual_base_ori_HS(1) * R2D << " / " << actual_base_ori_HS(2) * R2D << std::endl;
+
+    //    std::cout<<"goal_base_ori_HS:"<<goal_base_ori_HS.transpose()<<std::endl;
+    //std::cout << " tmp_cnt_HS : " << tmp_cnt_HS << std::endl;
+    //std::cout << "cnt_check_flag : " << cnt_check_flag << std::endl;
+    //std::cout << " del_cnt_HS : " << del_cnt_HS << std::endl;
+
+    //std::cout << " Err_z : " << target_com_pos_HS(2) - actual_com_pos_HS(2) << std::endl;
+    //std::cout <<"Foot_z(tmp)="<<tmp_foot_height_HS<<std::endl;
+    //std::cout <<"Foot_z="<<foot_height_HS<<std::endl;
+
     //std::cout<<"z="<<goal_com_pos_HS(2)<<std::endl;
     //std::cout<<"C_term : "<<"("<<C_term(6)<<","<<C_term(7)<<","<<C_term(8)<<")"<<","<<"("<<C_term(9)<<","<<C_term(10)<<","<<C_term(11)<<")"<<","<<"("<<C_term(13)<<","<<C_term(14)<<","<<C_term(15)<<")"<<","<<"("<<C_term(16)<<","<<C_term(17)<<","<<C_term(18)<<")"<<std::endl;
     //std::cout<<"G_term : "<<"("<<G_term(6)<<","<<G_term(7)<<","<<G_term(8)<<")"<<","<<"("<<G_term(9)<<","<<G_term(10)<<","<<G_term(11)<<")"<<","<<"("<<G_term(13)<<","<<G_term(14)<<","<<G_term(15)<<")"<<","<<"("<<G_term(16)<<","<<G_term(17)<<","<<G_term(18)<<")"<<std::endl;
     //    std::cout << "Base=" << actual_base_pos_HS.transpose() << std::endl;
     //    std::cout << "Base ori=" << target_base_ori_HS.transpose() << std::endl;
     //std::cout << "--------------------------------------------" << std::endl;
-    //    std::cout << "kp_EP=" << kp_EP_HS.transpose() << std::endl;
-    //    std::cout << "kd_EP=" << kd_EP_HS.transpose() << std::endl;
+    //std::cout << "kp_EP=" << kp_EP_HS(2) << "/" << kp_EP_HS(5) << "/" << kp_EP_HS(8) << "/" << kp_EP_HS(11) << std::endl;
+    // std::cout << "kd_EP=" << kd_EP_HS.transpose() << std::endl;
     //    std::cout << "kp_com=" << kp_com_HS.transpose() << std::endl;
     //    std::cout << "kd_com=" << kd_com_HS.transpose() << std::endl;
     //    std::cout << "--------------------------------------------" << std::endl;
-    //    std::cout << "Stand_leg=" << Standard_leg.transpose() << std::endl;
+    //std::cout << "actual_EP(L) : " << actual_EP_local_HS(2) << "," << actual_EP_local_HS(5) << "," << actual_EP_local_HS(8) << "," << actual_EP_local_HS(11) << std::endl;
+    //std::cout << "Stand_leg=" << Standard_leg.transpose() << std::endl;
     //    std::cout << "Contact_info=" << Contact_Info_HS.transpose() << std::endl;
     //    std::cout << "Gain_info=" << Gain_Info_HS.transpose() << std::endl;
     //std::cout << "--------------------------------------------" << std::endl;
@@ -6855,13 +8478,12 @@ void CRobot::print_HS(void) {
 
     //    std::cout << "actual_com_pos(G) : " << actual_com_pos_HS(2) << std::endl;
     //    std::cout << "actual_EP(G) : " << actual_EP_HS(2) << "," << actual_EP_HS(5) << "," << actual_EP_HS(8) << "," << actual_EP_HS(11) << std::endl;
-    //    std::cout << "actual_EP(L) : " << actual_EP_local_HS(2) << "," << actual_EP_local_HS(5) << "," << actual_EP_local_HS(8) << "," << actual_EP_local_HS(11) << std::endl;
+
     //    std::cout << "------" << std::endl;
     //    std::cout << "target_com_pos(G) : " << target_com_pos_HS(2) << std::endl;
     //    std::cout << "target_EP(G) : " << target_EP_HS(2) << "," << target_EP_HS(5) << "," << target_EP_HS(8) << "," << target_EP_HS(11) << std::endl;
     //    std::cout << "target_EP(L) : " << target_EP_local_HS(2) << "," << target_EP_local_HS(5) << "," << target_EP_local_HS(8) << "," << target_EP_local_HS(11) << std::endl;
 
-    // std::cout<<"vel="<<tmp_moving_speed_HS.transpose()<<std::endl;
     //std::cout << "pre_stop_flag = " << pre_sub_ctrl_flag << std::endl;
     //std::cout << "move_stop_flag = " << move_stop_flag << std::endl;
     //std::cout << "speed_stop_flag_HS="<<speed_stop_flag_HS<<std::endl;
@@ -6924,9 +8546,6 @@ VectorNd CRobot::FK_HS(VectorNd joint_pos_HS) {
     const double L2 = 0.305;
     const double L3 = 0.309;
 
-    //    static double q1 = 0;
-    //    static double q2 = 0;
-    //    static double q3 = 0;
     double q1 = 0;
     double q2 = 0;
     double q3 = 0;
@@ -6972,14 +8591,22 @@ void CRobot::WalkReady_Pos_Traj_HS(void) {
     if (WalkReady_flag_HS == true) {
         if (cnt_HS == 0) {
             init_com_pos_HS = actual_com_pos_HS;
-            init_EP_HS = actual_EP_HS;
+            init_EP_HS(0) = actual_com_pos_HS(0)-(target_C_WB_RPY_HS(0, 0) * offset_B2C(0) + target_C_WB_RPY_HS(0, 1) * offset_B2C(1) + target_C_WB_RPY_HS(0, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(0) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(1) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(2));
+            init_EP_HS(1) = actual_com_pos_HS(1)-(target_C_WB_RPY_HS(1, 0) * offset_B2C(0) + target_C_WB_RPY_HS(1, 1) * offset_B2C(1) + target_C_WB_RPY_HS(1, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(0) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(1) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(2));
+            init_EP_HS(3) = actual_com_pos_HS(0)-(target_C_WB_RPY_HS(0, 0) * offset_B2C(0) + target_C_WB_RPY_HS(0, 1) * offset_B2C(1) + target_C_WB_RPY_HS(0, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(3) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(4) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(5));
+            init_EP_HS(4) = actual_com_pos_HS(1)-(target_C_WB_RPY_HS(1, 0) * offset_B2C(0) + target_C_WB_RPY_HS(1, 1) * offset_B2C(1) + target_C_WB_RPY_HS(1, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(3) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(4) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(5));
+            init_EP_HS(6) = actual_com_pos_HS(0)-(target_C_WB_RPY_HS(0, 0) * offset_B2C(0) + target_C_WB_RPY_HS(0, 1) * offset_B2C(1) + target_C_WB_RPY_HS(0, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(6) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(7) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(8));
+            init_EP_HS(7) = actual_com_pos_HS(1)-(target_C_WB_RPY_HS(1, 0) * offset_B2C(0) + target_C_WB_RPY_HS(1, 1) * offset_B2C(1) + target_C_WB_RPY_HS(1, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(6) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(7) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(8));
+            init_EP_HS(9) = actual_com_pos_HS(0)-(target_C_WB_RPY_HS(0, 0) * offset_B2C(0) + target_C_WB_RPY_HS(0, 1) * offset_B2C(1) + target_C_WB_RPY_HS(0, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(9) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(10) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(11));
+            init_EP_HS(10) = actual_com_pos_HS(1)-(target_C_WB_RPY_HS(1, 0) * offset_B2C(0) + target_C_WB_RPY_HS(1, 1) * offset_B2C(1) + target_C_WB_RPY_HS(1, 2) * offset_B2C(2))+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(9) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(10) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(11));
+
+            init_EP_HS(2) = actual_EP_HS(2);
+            init_EP_HS(5) = actual_EP_HS(5);
+            init_EP_HS(8) = actual_EP_HS(8);
+            init_EP_HS(11) = actual_EP_HS(11);
 
             goal_com_pos_HS << 0.0, 0.0, com_height_HS;
             goal_EP_HS << tar_init_RL_foot_pos, tar_init_RR_foot_pos, tar_init_FL_foot_pos, tar_init_FR_foot_pos;
-            //            goal_EP_HS(2) = actual_EP_HS(2);
-            //            goal_EP_HS(5) = actual_EP_HS(5);
-            //            goal_EP_HS(8) = actual_EP_HS(8);
-            //            goal_EP_HS(11) = actual_EP_HS(11);
 
             target_com_pos_HS = init_com_pos_HS;
             target_EP_HS = init_EP_HS;
@@ -7008,276 +8635,155 @@ void CRobot::WalkReady_Pos_Traj_HS(void) {
     tmp_actual_EP_local_HS = actual_EP_local_HS;
 }
 
-void CRobot::Transform_DH2HS(void) {
-    double lamda1 = 0.5;
-    double lamda2 = 5.0;
-    //double lamda = 0.5;
-    VectorNd actual_EP_local_hip_HS(12);
-    //VectorNd target_EP_local_HS(12);
+void CRobot::Global_Transform_Z(void) {
     VectorNd target_EP_local_hip_HS(12);
     VectorNd actual_base_pos_local_HS(3);
     VectorNd actual_base_ori_local_HS(3);
     VectorNd actual_base_ori_vel_local_HS(3);
     VectorNd tmp_actual_base_pos_local_HS(3);
-    VectorNd tmp_actual_base_pos_HS(2);
+    VectorNd tmp_actual_base_pos_global_HS(3);
     VectorNd tmp_target_EP_HS(12);
+    VectorNd actual_base_pos_12d_HS(12);
 
-    target_C_WB_HS = Base_Rotation_Matrix_HS(target_base_ori_HS);
-    target_C_WB_12d_HS.block(0, 0, 3, 3) = target_C_WB_HS;
-    target_C_WB_12d_HS.block(3, 3, 3, 3) = target_C_WB_HS;
-    target_C_WB_12d_HS.block(6, 6, 3, 3) = target_C_WB_HS;
-    target_C_WB_12d_HS.block(9, 9, 3, 3) = target_C_WB_HS;
+    offset_B2C << -0.06, 0.0, -0.0;
+
+    target_C_WB_RPY_HS = Base_Rotation_Matrix_HS(target_base_ori_HS);
+    target_C_WB_12d_HS.block(0, 0, 3, 3) = target_C_WB_RPY_HS;
+    target_C_WB_12d_HS.block(3, 3, 3, 3) = target_C_WB_RPY_HS;
+    target_C_WB_12d_HS.block(6, 6, 3, 3) = target_C_WB_RPY_HS;
+    target_C_WB_12d_HS.block(9, 9, 3, 3) = target_C_WB_RPY_HS;
 
     actual_base_ori_local_HS << IMURoll, IMUPitch, 0.0;
-    actual_base_ori_HS = target_C_WB_HS*actual_base_ori_local_HS;
+    actual_base_ori_HS = target_C_WB_RPY_HS*actual_base_ori_local_HS;
+
     actual_base_ori_HS(2) = target_base_ori_HS(2);
     actual_base_ori_vel_local_HS << IMURoll_dot, IMUPitch_dot, IMUYaw_dot;
-    actual_base_ori_vel_HS = target_C_WB_HS*actual_base_ori_vel_local_HS;
+    actual_base_ori_vel_HS = target_C_WB_RPY_HS*actual_base_ori_vel_local_HS;
 
     actual_pos_HS = actual_pos;
     actual_EP_local_hip_HS = FK_HS(actual_pos_HS);
     actual_EP_local_HS = Localization_Hip2Base_Pos_HS(actual_EP_local_hip_HS);
 
-    if (init_Transform_flag_HS == false) {
+    Standard_leg = Base_Estimation2(actual_EP_local_HS);
+    std::cout<<"Stnadard_leg="<<Standard_leg.transpose()<<std::endl;
+    std::cout<<"__-------------------------------------------"<<std::endl;
+    tmp_actual_base_pos_local_HS = -Standard_leg(0) * ((actual_EP_local_HS.segment(0, 3))) - Standard_leg(1) * ((actual_EP_local_HS.segment(3, 3))) - Standard_leg(2) * ((actual_EP_local_HS.segment(6, 3))) - Standard_leg(3) * ((actual_EP_local_HS.segment(9, 3)));
+    actual_base_z_set = Low_pass_Filter_HS(tmp_actual_base_pos_local_HS(2), actual_base_z_set(0), 0.0);
+    //actual_base_z_set = Low_pass_Filter_HS(tmp_actual_base_pos_local_HS(2), actual_base_z_set(0), 0.99);
+    actual_base_pos_HS(2) = actual_base_z_set(0) / cos(abs(target_base_ori_HS(1)));
+    //actual_base_pos_HS(2) = actual_base_z_set(0) / cos(abs(filtered_Pitch_local_vec(1)));
+    actual_com_pos_HS(2) = actual_base_pos_HS(2) + target_C_WB_RPY_HS(2, 0) * offset_B2C(0) + target_C_WB_RPY_HS(2, 1) * offset_B2C(1) + target_C_WB_RPY_HS(2, 2) * offset_B2C(2);
 
-        Standard_leg = Base_Estimation(tmp_actual_EP_local_HS);
-        //        tmp_actual_base_pos_HS = -target_C_WB_HS * (Standard_leg(0) * tmp_actual_EP_local_HS.segment(0, 3) + Standard_leg(1) * tmp_actual_EP_local_HS.segment(3, 3) + Standard_leg(2) * tmp_actual_EP_local_HS.segment(6, 3) + Standard_leg(3) * tmp_actual_EP_local_HS.segment(9, 3)) / (Standard_leg(0) + Standard_leg(1) + Standard_leg(2) + Standard_leg(3));
-        tmp_actual_base_pos_HS = -target_C_WB_HS * Standard_leg(0) * ((1 - Contact_Info_HS(0)) * tmp_actual_EP_local_HS.segment(0, 3)+(Contact_Info_HS(0)) * actual_EP_local_HS.segment(0, 3))
-                - target_C_WB_HS * Standard_leg(1) * ((1 - Contact_Info_HS(1)) * tmp_actual_EP_local_HS.segment(3, 3)+(Contact_Info_HS(1)) * actual_EP_local_HS.segment(3, 3))
-                - target_C_WB_HS * Standard_leg(2) * ((1 - Contact_Info_HS(2)) * tmp_actual_EP_local_HS.segment(6, 3)+(Contact_Info_HS(2)) * actual_EP_local_HS.segment(6, 3))
-                - target_C_WB_HS * Standard_leg(3) * ((1 - Contact_Info_HS(3)) * tmp_actual_EP_local_HS.segment(9, 3)+(Contact_Info_HS(3)) * actual_EP_local_HS.segment(9, 3));
+    actual_EP_HS(2) = target_C_WB_RPY_HS(2, 0) * actual_EP_local_HS(0) + target_C_WB_RPY_HS(2, 1) * actual_EP_local_HS(1) + target_C_WB_RPY_HS(2, 2) * actual_EP_local_HS(2) + actual_base_pos_HS(2);
+    actual_EP_HS(5) = target_C_WB_RPY_HS(2, 0) * actual_EP_local_HS(3) + target_C_WB_RPY_HS(2, 1) * actual_EP_local_HS(4) + target_C_WB_RPY_HS(2, 2) * actual_EP_local_HS(5) + actual_base_pos_HS(2);
+    actual_EP_HS(8) = target_C_WB_RPY_HS(2, 0) * actual_EP_local_HS(6) + target_C_WB_RPY_HS(2, 1) * actual_EP_local_HS(7) + target_C_WB_RPY_HS(2, 2) * actual_EP_local_HS(8) + actual_base_pos_HS(2);
+    actual_EP_HS(11) = target_C_WB_RPY_HS(2, 0) * actual_EP_local_HS(9) + target_C_WB_RPY_HS(2, 1) * actual_EP_local_HS(10) + target_C_WB_RPY_HS(2, 2) * actual_EP_local_HS(11) + actual_base_pos_HS(2);
 
-        //Standard_leg = Base_Estimation(actual_EP_local_HS);
-        //Standard_leg = Base_Estimat ion(tmp_actual_EP_local_HS);
-        //tmp_actual_base_pos_HS = -target_C_WB_HS * (Standard_leg(0) * actual_EP_local_HS.segment(0, 3) + Standard_leg(1) * actual_EP_local_HS.segment(3, 3) + Standard_leg(2) * actual_EP_local_HS.segment(6, 3) + Standard_leg(3) * actual_EP_local_HS.segment(9, 3)) / (Standard_leg(0) + Standard_leg(1) + Standard_leg(2) + Standard_leg(3));
-
-        actual_base_z_set = Low_pass_Filter_HS(tmp_actual_base_pos_HS(2), actual_base_z_set(0), 0.0);
-
-        actual_base_pos_HS(2) = actual_base_z_set(0);
-        actual_base_pos_HS(0) = target_base_pos_HS(0);
-        actual_base_pos_HS(1) = target_base_pos_HS(1);
-
-        actual_com_pos_HS = Get_COM_pos_HS2(actual_base_pos_HS);
-        actual_EP_HS << (target_C_WB_HS * actual_EP_local_HS.segment(0, 3) + actual_base_pos_HS), (target_C_WB_HS * actual_EP_local_HS.segment(3, 3) + actual_base_pos_HS), (target_C_WB_HS * actual_EP_local_HS.segment(6, 3) + actual_base_pos_HS), (target_C_WB_HS * actual_EP_local_HS.segment(9, 3) + actual_base_pos_HS);
-
-    } else {
-        actual_base_pos_HS = -target_C_WB_HS * (actual_EP_local_HS.segment(0, 3) + actual_EP_local_HS.segment(3, 3) + actual_EP_local_HS.segment(6, 3) + actual_EP_local_HS.segment(9, 3)) / 4.0;
-        actual_com_pos_HS = Get_COM_pos_HS2(actual_base_pos_HS);
-        actual_EP_HS << (target_C_WB_HS * actual_EP_local_HS.segment(0, 3) + actual_base_pos_HS), (target_C_WB_HS * actual_EP_local_HS.segment(3, 3) + actual_base_pos_HS), (target_C_WB_HS * actual_EP_local_HS.segment(6, 3) + actual_base_pos_HS), (target_C_WB_HS * actual_EP_local_HS.segment(9, 3) + actual_base_pos_HS);
-
-        pre_actual_EP_HS = actual_EP_HS;
-        pre_actual_com_pos_HS = actual_com_pos_HS;
-
-        actual_base_z_set << actual_base_pos_HS(2), actual_base_pos_HS(2);
-        tmp_actual_EP_local_HS = actual_EP_local_HS;
-        init_Transform_flag_HS = false;
-    }
-
-    actual_EP_vel_HS = (actual_EP_HS - pre_actual_EP_HS) / dt;
-    actual_com_vel_HS = (actual_com_pos_HS - pre_actual_com_pos_HS) / dt;
-
-    pre_actual_EP_HS = actual_EP_HS;
-    pre_actual_com_pos_HS = actual_com_pos_HS;
-
-    if (abs(actual_com_vel_HS(2)) > lamda1) {
-        actual_com_vel_HS = pre_actual_com_vel_HS;
-    }
-    //    actual_com_z_vel_set=Low_pass_Filter_HS(tmp_actual_com_vel_HS(2), actual_com_z_vel_set(0), 0.999);
-    //    actual_com_vel_HS(2)=actual_com_z_vel_set(0);
-
-    if (abs(actual_EP_vel_HS(2)) > lamda2) {
-        actual_EP_vel_HS(2) = pre_actual_EP_vel_HS(2);
-    }
-    if (abs(actual_EP_vel_HS(5)) > lamda2) {
-        actual_EP_vel_HS(5) = pre_actual_EP_vel_HS(5);
-    }
-    if (abs(actual_EP_vel_HS(8)) > lamda2) {
-        actual_EP_vel_HS(8) = pre_actual_EP_vel_HS(8);
-    }
-    if (abs(actual_EP_vel_HS(11)) > lamda2) {
-        actual_EP_vel_HS(11) = pre_actual_EP_vel_HS(11);
-    }
-    pre_actual_com_vel_HS = actual_com_vel_HS;
-    pre_actual_EP_vel_HS(2) = actual_EP_vel_HS(2);
-    pre_actual_EP_vel_HS(5) = actual_EP_vel_HS(5);
-    pre_actual_EP_vel_HS(8) = actual_EP_vel_HS(8);
-    pre_actual_EP_vel_HS(11) = actual_EP_vel_HS(11);
 }
 
-void CRobot::Fly_Leg_Gain_Controller(VectorNd _Leg_phase, VectorNd _Gain_phase) {
+void CRobot::Fly_Leg_Gain_Controller(unsigned int _i) {
 
-    VectorNd init_kp_EP_down(2);
-    VectorNd init_kd_EP_down(2);
-    VectorNd goal_kp_EP_down(2);
-    VectorNd goal_kd_EP_down(2);
-    VectorNd init_kp_EP_up(2);
-    VectorNd init_kd_EP_up(2);
-    VectorNd goal_kp_EP_up(2);
-    VectorNd goal_kd_EP_up(2);
-    double init_kp_base_down;
-    double init_kd_base_down;
-    double goal_kp_base_down;
-    double goal_kd_base_down;
-    double init_kp_base_up;
-    double init_kd_base_up;
-    double goal_kp_base_up;
-    double goal_kd_base_up;
-
-    double cycle_cnt_down = tsp_cnt_HS;
-
-    init_kp_EP_down << goal_kp_EP_HS(0), goal_kp_EP_HS(2);
-    init_kd_EP_down << goal_kd_EP_HS(0), goal_kd_EP_HS(2);
-    goal_kp_EP_down << goal_kp_EP_HS(0), goal_kp_EP_HS(2) / 30.0;
-    goal_kd_EP_down << goal_kd_EP_HS(0), goal_kd_EP_HS(2) / 10.0;
-
-    init_kp_EP_up = goal_kp_EP_down;
-    init_kd_EP_up = goal_kd_EP_down;
-    goal_kp_EP_up = init_kp_EP_down;
-    goal_kd_EP_up = init_kd_EP_down;
-
-    init_kp_base_down = goal_kp_base_HS(2);
-    init_kd_base_down = goal_kd_base_HS(2);
-    //    goal_kp_base_down = goal_kp_base_HS(2)/30.0;
-    //    goal_kd_base_down = goal_kd_base_HS(2)/10.0;
-    goal_kp_base_down = goal_kp_base_HS(2);
-    goal_kd_base_down = goal_kd_base_HS(2);
-
-    init_kp_base_up = goal_kp_base_down;
-    init_kd_base_up = goal_kd_base_down;
-    goal_kp_base_up = init_kp_base_down;
-    goal_kd_base_up = init_kd_base_down;
-
-    double cycle_cnt_up = fsp_cnt_HS;
-
-    VectorNd target_kp_EP(2);
-    VectorNd target_kd_EP(2);
-    double target_kp_base;
-    double target_kd_base;
+    VectorNd init_kp_EP(3);
+    VectorNd init_kd_EP(3);
+    VectorNd goal_kp_EP(3);
+    VectorNd goal_kd_EP(3);
 
     unsigned int tmp_fly_cnt;
 
-    if (fly_cnt_HS < cycle_cnt_down) {
-        target_kp_EP = init_kp_EP_down + (goal_kp_EP_down - init_kp_EP_down) / 2.0 * (1 - cos(PI / cycle_cnt_down * fly_cnt_HS));
-        target_kd_EP = init_kd_EP_down + (goal_kd_EP_down - init_kd_EP_down) / 2.0 * (1 - cos(PI / cycle_cnt_down * fly_cnt_HS));
-        target_kp_base = init_kp_base_down + (goal_kp_base_down - init_kp_base_down) / 2.0 * (1 - cos(PI / cycle_cnt_down * fly_cnt_HS));
-        target_kd_base = init_kd_base_down + (goal_kd_base_down - init_kd_base_down) / 2.0 * (1 - cos(PI / cycle_cnt_down * fly_cnt_HS));
-        fly_cnt_HS++;
-    } else if (fly_cnt_HS < (cycle_cnt_down + cycle_cnt_up)) {
-        tmp_fly_cnt = fly_cnt_HS - cycle_cnt_down;
-        target_kp_EP = init_kp_EP_up + (goal_kp_EP_up - init_kp_EP_up) / 2.0 * (1 - cos(PI / cycle_cnt_up * tmp_fly_cnt));
-        target_kd_EP = init_kd_EP_up + (goal_kd_EP_up - init_kd_EP_up) / 2.0 * (1 - cos(PI / cycle_cnt_up * tmp_fly_cnt));
-        target_kp_base = init_kp_base_up + (goal_kp_base_up - init_kp_base_up) / 2.0 * (1 - cos(PI / cycle_cnt_up * tmp_fly_cnt));
-        target_kd_base = init_kd_base_up + (goal_kd_base_up - init_kd_base_up) / 2.0 * (1 - cos(PI / cycle_cnt_up * tmp_fly_cnt));
-        fly_cnt_HS++;
+    init_kp_EP << goal_kp_EP_HS(0), goal_kp_EP_HS(1), goal_kp_EP_HS(2);
+    init_kd_EP << goal_kd_EP_HS(0), goal_kd_EP_HS(1), goal_kd_EP_HS(2);
+    goal_kp_EP << goal_kp_EP_HS(0), goal_kp_EP_HS(1), goal_kp_EP_HS(2) / 100;
+    goal_kd_EP << goal_kd_EP_HS(0), goal_kd_EP_HS(1), goal_kd_EP_HS(2) / 100;
+
+    if (_i < tsp_cnt_HS) {
+        if (_i < tsp_cnt_HS * (0.5)) {
+            Gain_Info_HS << 0, 0, 0, 1;
+        } else {
+            Gain_Info_HS << 0, 1, 0, 0;
+            Gain_Trajectory_flag = true;
+        }
+    } else if (_i < step_cnt_HS) {
+        Gain_Info_HS << 0, 1, 0, 0;
+    } else if (_i < step_cnt_HS + tsp_cnt_HS) {
+        if (_i < step_cnt_HS + tsp_cnt_HS * (0.5)) {
+            Gain_Info_HS << 0, 1, 0, 0;
+        } else {
+            Gain_Info_HS << 0, 0, 1, 0;
+        }
+    } else if (_i < step_cnt_HS * 2) {
+        Gain_Info_HS << 0, 0, 1, 0;
+    } else if (_i < step_cnt_HS * 2 + tsp_cnt_HS) {
+        if (_i < step_cnt_HS * 2 + tsp_cnt_HS * (0.5)) {
+            Gain_Info_HS << 0, 0, 1, 0;
+        } else {
+            Gain_Info_HS << 1, 0, 0, 0;
+        }
+    } else if (_i < step_cnt_HS * 3) {
+        Gain_Info_HS << 1, 0, 0, 0;
+    } else if (_i < step_cnt_HS * 3 + tsp_cnt_HS) {
+        if (_i < step_cnt_HS * 3 + tsp_cnt_HS * (0.5)) {
+            Gain_Info_HS << 1, 0, 0, 0;
+        } else {
+            Gain_Info_HS << 0, 0, 0, 1;
+        }
     } else {
-        target_kp_EP = goal_kp_EP_up;
-        target_kd_EP = goal_kd_EP_up;
-        target_kp_base = goal_kp_base_up;
-        target_kd_base = goal_kd_base_up;
-        fly_cnt_HS = 1;
+        Gain_Info_HS << 0, 0, 0, 1;
     }
-    //kp_base_HS<<0,0,target_kp_base,0,0,target_kp_base,0,0,target_kp_base,0,0,target_kp_base;
-    //kd_base_HS<<0,0,target_kd_base,0,0,target_kd_base,0,0,target_kd_base,0,0,target_kd_base;
-    //std::cout<<"target"<<target_kp_EP.transpose()<<std::endl;
-    if (foot_height_HS == 0.0) {
-        //X
-        kp_EP_HS(0) = goal_kp_EP_HS(0);
-        kp_EP_HS(3) = goal_kp_EP_HS(0);
-        kp_EP_HS(6) = goal_kp_EP_HS(0);
-        kp_EP_HS(9) = goal_kp_EP_HS(0);
 
-        kd_EP_HS(0) = goal_kd_EP_HS(0);
-        kd_EP_HS(3) = goal_kd_EP_HS(0);
-        kd_EP_HS(6) = goal_kd_EP_HS(0);
-        kd_EP_HS(9) = goal_kd_EP_HS(0);
-        //Z
-        kp_EP_HS(2) = goal_kp_EP_HS(2);
-        kp_EP_HS(5) = goal_kp_EP_HS(2);
-        kp_EP_HS(8) = goal_kp_EP_HS(2);
-        kp_EP_HS(11) = goal_kp_EP_HS(2);
-
-        kd_EP_HS(2) = goal_kd_EP_HS(2);
-        kd_EP_HS(5) = goal_kd_EP_HS(2);
-        kd_EP_HS(8) = goal_kd_EP_HS(2);
-        kd_EP_HS(11) = goal_kd_EP_HS(2);
+    if (Gain_Trajectory_flag == true) {
+        if (fly_cnt_HS < tsp_cnt_HS * (1.0 - 0.5)) {
+            tmp_fly_cnt = fly_cnt_HS;
+            target_kp_EP = init_kp_EP + (goal_kp_EP - init_kp_EP) / 2.0 * (1 - cos(PI / (tsp_cnt_HS * (1.0 - 0.5)) * tmp_fly_cnt));
+            target_kd_EP = init_kd_EP + (goal_kd_EP - init_kd_EP) / 2.0 * (1 - cos(PI / (tsp_cnt_HS * (1.0 - 0.5)) * tmp_fly_cnt));
+            fly_cnt_HS++;
+        } else if (fly_cnt_HS < tsp_cnt_HS * (1.0 - 0.5) + fsp_cnt_HS) {
+            tmp_fly_cnt = fly_cnt_HS - tsp_cnt_HS * (1.0 - 0.5);
+            target_kp_EP = goal_kp_EP;
+            target_kd_EP = goal_kd_EP;
+            fly_cnt_HS++;
+        } else if (fly_cnt_HS < step_cnt_HS) {
+            tmp_fly_cnt = fly_cnt_HS - (tsp_cnt_HS * (1.0 - 0.5) + fsp_cnt_HS);
+            target_kp_EP = goal_kp_EP + (init_kp_EP - goal_kp_EP) / 2.0 * (1 - cos(PI / (tsp_cnt_HS * 0.5) * tmp_fly_cnt));
+            target_kd_EP = goal_kd_EP + (init_kd_EP - goal_kd_EP) / 2.0 * (1 - cos(PI / (tsp_cnt_HS * 0.5) * tmp_fly_cnt));
+            fly_cnt_HS++;
+        } else {
+            fly_cnt_HS = 1;
+        }
     } else {
-        if (_Leg_phase(0) == 0) {
-            kp_EP_HS(0) = target_kp_EP(0);
-            kd_EP_HS(0) = target_kd_EP(0);
-            kp_EP_HS(2) = target_kp_EP(1);
-            kd_EP_HS(2) = target_kd_EP(1);
+        target_kp_EP(2) = init_kp_EP(2);
+        target_kd_EP(2) = init_kd_EP(2);
+    }
 
-        } else {
-            if (_Gain_phase(0) == 0) {
-                kp_EP_HS(0) = target_kp_EP(0);
-                kd_EP_HS(0) = target_kd_EP(0);
-                kp_EP_HS(2) = target_kp_EP(1);
-                kd_EP_HS(2) = target_kd_EP(1);
+    if (Gain_Info_HS(0) == 1) {
+        kp_EP_HS(2) = target_kp_EP(2);
+        kd_EP_HS(2) = target_kd_EP(2);
+    } else {
+        kp_EP_HS(2) = init_kp_EP(2);
+        kd_EP_HS(2) = init_kd_EP(2);
+    }
 
-            } else {
-                kp_EP_HS(0) = goal_kp_EP_up(0);
-                kd_EP_HS(0) = goal_kd_EP_up(0);
-                kp_EP_HS(2) = goal_kp_EP_up(1);
-                kd_EP_HS(2) = goal_kd_EP_up(1);
-            }
-        }
+    if (Gain_Info_HS(1) == 1) {
+        kp_EP_HS(5) = target_kp_EP(2);
+        kd_EP_HS(5) = target_kd_EP(2);
+    } else {
+        kp_EP_HS(5) = init_kp_EP(2);
+        kd_EP_HS(5) = init_kd_EP(2);
+    }
 
-        if (_Leg_phase(1) == 0) {
-            kp_EP_HS(3) = target_kp_EP(0);
-            kd_EP_HS(3) = target_kd_EP(0);
-            kp_EP_HS(5) = target_kp_EP(1);
-            kd_EP_HS(5) = target_kd_EP(1);
-        } else {
-            if (_Gain_phase(1) == 0) {
-                kp_EP_HS(3) = target_kp_EP(0);
-                kd_EP_HS(3) = target_kd_EP(0);
-                kp_EP_HS(5) = target_kp_EP(1);
-                kd_EP_HS(5) = target_kd_EP(1);
-            } else {
-                kp_EP_HS(3) = goal_kp_EP_up(0);
-                kd_EP_HS(3) = goal_kd_EP_up(0);
-                kp_EP_HS(5) = goal_kp_EP_up(1);
-                kd_EP_HS(5) = goal_kd_EP_up(1);
-            }
-        }
+    if (Gain_Info_HS(2) == 1) {
+        kp_EP_HS(8) = target_kp_EP(2);
+        kd_EP_HS(8) = target_kd_EP(2);
+    } else {
+        kp_EP_HS(8) = init_kp_EP(2);
+        kd_EP_HS(8) = init_kd_EP(2);
+    }
 
-        if (_Leg_phase(2) == 0) {
-            kp_EP_HS(6) = target_kp_EP(0);
-            kd_EP_HS(6) = target_kd_EP(0);
-            kp_EP_HS(8) = target_kp_EP(1);
-            kd_EP_HS(8) = target_kd_EP(1);
-        } else {
-            if (_Gain_phase(2) == 0) {
-                kp_EP_HS(6) = target_kp_EP(0);
-                kd_EP_HS(6) = target_kd_EP(0);
-                kp_EP_HS(8) = target_kp_EP(1);
-                kd_EP_HS(8) = target_kd_EP(1);
-            } else {
-                kp_EP_HS(6) = goal_kp_EP_up(0);
-                kd_EP_HS(6) = goal_kd_EP_up(0);
-                kp_EP_HS(8) = goal_kp_EP_up(1);
-                kd_EP_HS(8) = goal_kd_EP_up(1);
-            }
-        }
-
-        if (_Leg_phase(3) == 0) {
-            kp_EP_HS(9) = target_kp_EP(0);
-            kd_EP_HS(9) = target_kd_EP(0);
-            kp_EP_HS(11) = target_kp_EP(1);
-            kd_EP_HS(11) = target_kd_EP(1);
-        } else {
-            if (_Gain_phase(3) == 0) {
-                kp_EP_HS(9) = target_kp_EP(0);
-                kd_EP_HS(9) = target_kd_EP(0);
-                kp_EP_HS(11) = target_kp_EP(1);
-                kd_EP_HS(11) = target_kd_EP(1);
-            } else {
-                kp_EP_HS(9) = goal_kp_EP_up(0);
-                kd_EP_HS(9) = goal_kd_EP_up(0);
-                kp_EP_HS(11) = goal_kp_EP_up(1);
-                kd_EP_HS(11) = goal_kd_EP_up(1);
-            }
-        }
+    if (Gain_Info_HS(3) == 1) {
+        kp_EP_HS(11) = target_kp_EP(2);
+        kd_EP_HS(11) = target_kd_EP(2);
+    } else {
+        kp_EP_HS(11) = init_kp_EP(2);
+        kd_EP_HS(11) = init_kd_EP(2);
     }
 }
 
@@ -7286,11 +8792,12 @@ void CRobot::Angle_Estimation(void) {
     Vector3d b_r_RL, b_r_RR, b_r_FL, b_r_FR;
     Vector3d b_r_RL_RR, b_r_RR_FR, b_r_FR_FL, b_r_FL_RL;
     Vector3d n_plane1, n_plane2, n_plane3, n_plane4;
-    VectorNd Plane_Angle(2);
+    VectorNd Pitch_local_vec(3);
 
     double C_RL, C_RR, C_FL, C_FR;
     double estimated_angle_size;
-    VectorNd Angle_vec(2);
+    VectorNd Angle_vec_global(2);
+    VectorNd Angle_vec_local(2);
     double alpha = 0.999;
 
     C_RL = Contact_Info_HS(0);
@@ -7308,19 +8815,22 @@ void CRobot::Angle_Estimation(void) {
     b_r_FR_FL = b_r_FL - b_r_FR;
     b_r_FL_RL = b_r_RL - b_r_FL;
 
-
-    b_n = C_RL * C_RR * C_FR * b_r_RL_RR.cross(b_r_RR_FR) + C_RR * C_FR * C_FL * b_r_RR_FR.cross(b_r_FR_FL) + C_FR * C_FL * C_RL * b_r_FR_FL.cross(b_r_FL_RL) + C_FL * C_RL * C_RR * b_r_FL_RL.cross(b_r_RL_RR);
-
-    w_n = target_C_WB_HS*b_n;
-
-    estimated_angle_size = acos(w_n(2) / sqrt(pow(w_n(0), 2) + pow(w_n(1), 2) + pow(w_n(2), 2)));
-
-    Angle_vec = w_n.segment(0, 2) / sqrt(pow(w_n(0), 2) + pow(w_n(1), 2)) * estimated_angle_size;
-    Plane_Angle << -Angle_vec(1), Angle_vec(0);
-
+    if (C_RL != 1 || C_RR != 1 || C_FL != 1 || C_FR != 1) {
+        b_n = C_RL * C_RR * C_FR * b_r_RL_RR.cross(b_r_RR_FR) + C_RR * C_FR * C_FL * b_r_RR_FR.cross(b_r_FR_FL) + C_FR * C_FL * C_RL * b_r_FR_FL.cross(b_r_FL_RL) + C_FL * C_RL * C_RR * b_r_FL_RL.cross(b_r_RL_RR);
+        /* global*/
+        w_n = target_C_WB_RPY_HS*b_n;
+        estimated_angle_size = acos(w_n(2) / sqrt(pow(w_n(0), 2) + pow(w_n(1), 2) + pow(w_n(2), 2)));
+        Angle_vec_global = w_n.segment(0, 2) / sqrt(pow(w_n(0), 2) + pow(w_n(1), 2)) * estimated_angle_size;
+        Angle_vec_local = target_C_WB_Y_HS.transpose().block(0, 0, 2, 2) * Angle_vec_global;
+        Plane_Angle << -Angle_vec_local(1), Angle_vec_local(0);
+    }
+    //    std::cout<<"Rol(deg)="<<Plane_Angle(0)*R2D<<std::endl;
+    //    std::cout<<"Pitch(deg)="<<Plane_Angle(1)*R2D<<std::endl;
+    //    std::cout<<"-------------------------------"<<std::endl;
     Roll_set = Low_pass_Filter_HS(Plane_Angle(0), Roll_set(0), 0.999);
     Pitch_set = Low_pass_Filter_HS(Plane_Angle(1), Pitch_set(0), 0.999);
-    // std::cout << "Roll=" << Roll_set(0) << "/" << "Pitch=" << Pitch_set(0) << std::endl;
+    //std::cout<<"PA(0)="<<Plane_Angle(0)*R2D<<"/"<<"PA(1)="<<Plane_Angle(1)*R2D<<std::endl;
+    filtered_Pitch_local_vec << 0.0, Pitch_set(0), 0.0;
 }
 
 void CRobot::Get_Opt_F_HS(void) {
@@ -7347,8 +8857,8 @@ void CRobot::Get_Opt_F_HS(void) {
     VectorNd r_FL(3);
     VectorNd r_FR(3);
 
-    VectorNd k_p_BC(6);
-    VectorNd k_d_BC(6);
+    VectorNd k_p_QP(6);
+    VectorNd k_d_QP(6);
     double b1, b2, b3, b4, b5, b6;
     VectorNd F_QP_local(12);
     VectorNd F_QP_global(12);
@@ -7358,8 +8868,13 @@ void CRobot::Get_Opt_F_HS(void) {
     double tmp_mu = 1.0;
     W = MatrixNd::Identity(12, 12);
 
-    k_p_BC << 0, 0, 0, 10000, 20000, 0;
-    k_d_BC << 0, 0, 0, 800, 1000, 0;
+    VectorNd tmp_com_pos_err_12d_HS(12);
+    VectorNd tmp_com_vel_err_12d_HS(12);
+
+    //    k_p_QP << 1000, 1000, 0, 10000, 20000, 0;
+    //    k_d_QP << 10, 10, 0, 800, 1000, 0;
+    k_p_QP << 1000, 1000, 0, 20000, 20000, 0;
+    k_d_QP << 10, 10, 0, 1000, 1000, 0;
     //    k_p_BC << 0, 0, 0, 5000, 10000, 0;
     //    k_d_BC << 0, 0, 0, 20, 50, 0;
 
@@ -7377,12 +8892,22 @@ void CRobot::Get_Opt_F_HS(void) {
 
     tmp_A_BC = A_BC.transpose();
 
+    tmp_com_pos_err_12d_HS = target_C_WB_12d_HS*EP_pos_local_err_HS;
+    tmp_com_vel_err_12d_HS = target_C_WB_12d_HS*EP_vel_local_err_HS;
+
+    com_pos_err = (Contact_Info_HS(0) * tmp_com_pos_err_12d_HS.segment(0, 3) + Contact_Info_HS(1) * tmp_com_pos_err_12d_HS.segment(0, 3) + Contact_Info_HS(2) * tmp_com_pos_err_12d_HS.segment(0, 3) + Contact_Info_HS(3) * tmp_com_pos_err_12d_HS.segment(0, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    com_vel_err = (Contact_Info_HS(0) * tmp_com_vel_err_12d_HS.segment(0, 3) + Contact_Info_HS(1) * tmp_com_vel_err_12d_HS.segment(0, 3) + Contact_Info_HS(2) * tmp_com_vel_err_12d_HS.segment(0, 3) + Contact_Info_HS(3) * tmp_com_vel_err_12d_HS.segment(0, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+
+    //    b1 = Robot_mass * (target_com_acc_HS(0)) + k_p_QP(0)*(com_pos_err(0)) + k_d_QP(0)*(com_vel_err(0));
+    //    b2 = Robot_mass * (target_com_acc_HS(1)) + k_p_QP(1)*(com_pos_err(1)) + k_d_QP(1)*(com_vel_err(1));
+    //b3 = Robot_mass * (target_com_acc_HS(2)) + k_p_QP(2)*(target_com_pos_HS(2) - actual_com_pos_HS(2)) + k_d_QP(2)*(target_com_vel_HS(2) - actual_com_vel_HS(2)) + Robot_Weight;
     b1 = Robot_mass * (target_com_acc_HS(0));
     b2 = Robot_mass * (target_com_acc_HS(1));
     b3 = Robot_mass * (target_com_acc_HS(2)) + Robot_Weight;
 
-    b4 = k_p_BC(3)*(target_base_ori_HS(0) - actual_base_ori_HS(0)) + k_d_BC(3)*(target_base_ori_vel_HS(0) - actual_base_ori_vel_HS(0));
-    b5 = k_p_BC(4)*(target_base_ori_HS(1) - actual_base_ori_HS(1)) + k_d_BC(4)*(target_base_ori_vel_HS(1) - actual_base_ori_vel_HS(1));
+
+    b4 = k_p_QP(3)*(target_base_ori_HS(0) - actual_base_ori_HS(0)) + k_d_QP(3)*(target_base_ori_vel_HS(0) - actual_base_ori_vel_HS(0));
+    b5 = k_p_QP(4)*(target_base_ori_HS(1) - actual_base_ori_HS(1)) + k_d_QP(4)*(target_base_ori_vel_HS(1) - actual_base_ori_vel_HS(1));
     b6 = 0;
 
     b_BC << b1, b2, b3, b4, b5, b6;
@@ -7468,26 +8993,171 @@ void CRobot::Get_Opt_F_HS(void) {
     OSQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
 }
 
-void CRobot::Estimate_Base_offset(void) {
-    double tmp_base_z_offset;
-    tmp_base_z_offset = pre_actual_base_pos_HS(2) - tmp_actual_base_pos_HS(2);
-
-    if ((Standard_leg(1) == 1 && cnt_HS == 1651) || (Standard_leg(2) == 1 && cnt_HS == 2001) || (Standard_leg(0) == 1 && cnt_HS == 2351) || (Standard_leg(3) == 1 && cnt_HS == 2701)) {
-        if ((cnt_HS == 1651) || (cnt_HS == 2001) || (cnt_HS == 2351) || (cnt_HS == 2701)) {
-            base_z_offset_HS = tmp_base_z_offset;
-            std::cout << "success" << std::endl;
-        }
-    }
-    if (Standard_leg(1) == 1 && cnt_HS == 1651) {
-        base_z_offset_HS = target_EP_HS(5);
-    } else if (Standard_leg(0) == 1 && cnt_HS == 2001) {
-        base_z_offset_HS = target_EP_HS(8);
-    } else if (Standard_leg(2) == 1 && cnt_HS == 2351) {
-        base_z_offset_HS = target_EP_HS(2);
-    } else if (Standard_leg(3) == 1 && cnt_HS == 2701) {
-        base_z_offset_HS = target_EP_HS(11);
-    }
-}
+//void CRobot::Get_Opt_F_HS(void) {
+//    double Fz_RL_max, Fz_RL_min;
+//    double Fz_RR_max, Fz_RR_min;
+//    double Fz_FL_max, Fz_FL_min;
+//    double Fz_FR_max, Fz_FR_min;
+//
+//    double Rear_body_mass = 13.826;
+//    double Front_body_mass = 10.507;
+//    double One_leg_mass = 5.295;
+//    double Robot_mass = Rear_body_mass + Front_body_mass + One_leg_mass * 4;
+//    double Robot_Weight = Robot_mass*GRAVITY;
+//
+//    double one_leg_weight = 120;
+//
+//    MatrixNd A_BC(6, 12);
+//    MatrixNd tmp_A_BC(12, 6);
+//    VectorNd b_BC(6);
+//    MatrixNd W(12, 12);
+//
+//    VectorNd r_RL(3);
+//    VectorNd r_RR(3);
+//    VectorNd r_FL(3);
+//    VectorNd r_FR(3);
+//
+//    VectorNd k_p_QP(6);
+//    VectorNd k_d_QP(6);
+//    double b1, b2, b3, b4, b5, b6;
+//    VectorNd F_QP_local(12);
+//    VectorNd F_QP_global(12);
+//
+//    double alpha = 1.0;
+//    double beta = 4.0;
+//    double tmp_mu = 1.0;
+//    W = MatrixNd::Identity(12, 12);
+//
+//    VectorNd tmp_com_pos_err_12d_HS(12);
+//    VectorNd tmp_com_vel_err_12d_HS(12);
+//
+//    k_p_QP << 1000, 1000, 0, 10000, 20000, 0;
+//    k_d_QP << 10, 10, 0, 800, 1000, 0;
+//    //    k_p_QP << 1000, 1000, 0, 20000, 20000, 0;
+//    //    k_d_QP << 10, 10, 0, 1000, 1000, 0;
+//    //    k_p_BC << 0, 0, 0, 5000, 10000, 0;
+//    //    k_d_BC << 0, 0, 0, 20, 50, 0;
+//
+//    r_RL << semi_target_EP_HS(0), semi_target_EP_HS(1), semi_target_EP_HS(2);
+//    r_RR << semi_target_EP_HS(3), semi_target_EP_HS(4), semi_target_EP_HS(5);
+//    r_FL << semi_target_EP_HS(6), semi_target_EP_HS(7), semi_target_EP_HS(8);
+//    r_FR << semi_target_EP_HS(9), semi_target_EP_HS(10), semi_target_EP_HS(11);
+//
+//    A_BC << Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0, 0\
+//, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0\
+//, 0, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3)\
+//          , 0, -Contact_Info_HS(0) * (r_RL(2) - semi_target_com_pos_HS(2)), Contact_Info_HS(0) * (r_RL(1) - semi_target_com_pos_HS(1)), 0, -Contact_Info_HS(1) * (r_RR(2) - semi_target_com_pos_HS(2)), Contact_Info_HS(1) * (r_RR(1) - semi_target_com_pos_HS(1)), 0, -Contact_Info_HS(2) * (r_FL(2) - semi_target_com_pos_HS(2)), Contact_Info_HS(2) * (r_FL(1) - semi_target_com_pos_HS(1)), 0, -Contact_Info_HS(3) * (r_FR(2) - semi_target_com_pos_HS(2)), Contact_Info_HS(3) * (r_FR(1) - semi_target_com_pos_HS(1))\
+//          , Contact_Info_HS(0) * (r_RL(2) - semi_target_com_pos_HS(2)), 0, -Contact_Info_HS(0)*(r_RL(0) - semi_target_com_pos_HS(0)), Contact_Info_HS(1) * (r_RR(2) - semi_target_com_pos_HS(2)), 0, -Contact_Info_HS(1)*(r_RR(0) - semi_target_com_pos_HS(0)), Contact_Info_HS(2) * (r_FL(2) - semi_target_com_pos_HS(2)), 0, -Contact_Info_HS(2)*(r_FL(0) - semi_target_com_pos_HS(0)), Contact_Info_HS(3) * (r_FR(2) - semi_target_com_pos_HS(2)), 0, -Contact_Info_HS(3)*(r_FR(0) - semi_target_com_pos_HS(0))\
+//          , -Contact_Info_HS(0) * (r_RL(1) - semi_target_com_pos_HS(1)), Contact_Info_HS(0) * (r_RL(0) - semi_target_com_pos_HS(0)), 0, -Contact_Info_HS(1) * (r_RR(1) - semi_target_com_pos_HS(1)), Contact_Info_HS(1)*(r_RR(0) - semi_target_com_pos_HS(0)), 0, -Contact_Info_HS(2) * (r_FL(1) - semi_target_com_pos_HS(1)), Contact_Info_HS(2)*(r_FL(0) - semi_target_com_pos_HS(0)), 0, -Contact_Info_HS(3) * (r_FR(1) - semi_target_com_pos_HS(1)), Contact_Info_HS(3)*(r_FR(0) - semi_target_com_pos_HS(0)), 0;
+//
+//    tmp_A_BC = A_BC.transpose();
+//
+//    //    tmp_com_pos_err_12d_HS = target_C_WB_12d_HS*EP_pos_local_err_HS;
+//    //    tmp_com_vel_err_12d_HS = target_C_WB_12d_HS*EP_vel_local_err_HS;
+//    //
+//    //    com_pos_err = (Contact_Info_HS(0) * tmp_com_pos_err_12d_HS.segment(0, 3) + Contact_Info_HS(1) * tmp_com_pos_err_12d_HS.segment(0, 3) + Contact_Info_HS(2) * tmp_com_pos_err_12d_HS.segment(0, 3) + Contact_Info_HS(3) * tmp_com_pos_err_12d_HS.segment(0, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+//    //    com_vel_err = (Contact_Info_HS(0) * tmp_com_vel_err_12d_HS.segment(0, 3) + Contact_Info_HS(1) * tmp_com_vel_err_12d_HS.segment(0, 3) + Contact_Info_HS(2) * tmp_com_vel_err_12d_HS.segment(0, 3) + Contact_Info_HS(3) * tmp_com_vel_err_12d_HS.segment(0, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+//
+//    //    b1 = Robot_mass * (target_com_acc_HS(0)) + k_p_QP(0)*(com_pos_err(0)) + k_d_QP(0)*(com_vel_err(0));
+//    //    b2 = Robot_mass * (target_com_acc_HS(1)) + k_p_QP(1)*(com_pos_err(1)) + k_d_QP(1)*(com_vel_err(1));
+//    b1 = Robot_mass * (semi_target_com_acc_HS(0));
+//    b2 = Robot_mass * (semi_target_com_acc_HS(1));
+//    //b3 = Robot_mass * (target_com_acc_HS(2)) + k_p_QP(2)*(target_com_pos_HS(2) - actual_com_pos_HS(2)) + k_d_QP(2)*(target_com_vel_HS(2) - actual_com_vel_HS(2)) + Robot_Weight;
+//    b3 = Robot_mass * (semi_target_com_acc_HS(2)) + Robot_Weight;
+//
+//    b4 = k_p_QP(3)*(0 - semi_actual_base_ori_HS(0)) + k_d_QP(3)*(0.0 - semi_actual_base_ori_vel_HS(0));
+//    b5 = k_p_QP(4)*(semi_target_base_ori_HS(1) - semi_actual_base_ori_HS(1)) + k_d_QP(4)*(0.0 - semi_actual_base_ori_vel_HS(1));
+//    b6 = 0;
+//
+//    b_BC << b1, b2, b3, b4, b5, b6;
+//
+//    _P = (tmp_A_BC * A_BC + alpha * W);
+//    _q = -(tmp_A_BC * b_BC);
+//
+//    // ===================== OSQP  ====================== //
+//    int jj = 0;
+//    int kk = 0;
+//    int max_jj = 0;
+//
+//    // ===================== P_x ====================== //
+//    for (unsigned int i = 0; i < P_nnz; ++i) {
+//        P_x[i] = _P(jj, kk);
+//        jj = jj + 1;
+//
+//        if (jj > max_jj) {
+//            jj = 0;
+//            kk = kk + 1;
+//            max_jj = max_jj + 1;
+//        }
+//    }
+//
+//    for (unsigned int i = 0; i < A_nnz; ++i) {
+//        q[i] = _q(i);
+//    }
+//
+//    // ===================== Constraints ====================== //
+//    if (Contact_Info_HS(0) == 0) {
+//        Fz_RL_max = 0;
+//        Fz_RL_min = 0;
+//    } else {
+//        Fz_RL_max = Robot_Weight* beta;
+//        Fz_RL_min = 0;
+//    }
+//
+//    if (Contact_Info_HS(1) == 0) {
+//        Fz_RR_max = 0;
+//        Fz_RR_min = 0;
+//    } else {
+//        Fz_RR_max = Robot_Weight* beta;
+//        Fz_RR_min = 0;
+//    }
+//
+//    if (Contact_Info_HS(2) == 0) {
+//        Fz_FL_max = 0;
+//        Fz_FL_min = 0;
+//    } else {
+//        Fz_FL_max = Robot_Weight* beta;
+//        Fz_FL_min = 0;
+//    }
+//
+//    if (Contact_Info_HS(3) == 0) {
+//        Fz_FR_max = 0;
+//        Fz_FR_min = 0;
+//    } else {
+//        Fz_FR_max = Robot_Weight* beta;
+//        Fz_FR_min = 0;
+//    }
+//
+//    _d_u << tmp_mu * one_leg_weight, tmp_mu * one_leg_weight, Fz_RL_max, tmp_mu * one_leg_weight, tmp_mu * one_leg_weight, Fz_RR_max, tmp_mu * one_leg_weight, tmp_mu * one_leg_weight, Fz_FL_max, tmp_mu *one_leg_weight, tmp_mu * one_leg_weight, Fz_FR_max;
+//    _d_l << -tmp_mu * one_leg_weight, -tmp_mu * one_leg_weight, Fz_RL_min, -tmp_mu * one_leg_weight, -tmp_mu * one_leg_weight, Fz_RR_min, -tmp_mu * one_leg_weight, -tmp_mu * one_leg_weight, Fz_FL_min, -tmp_mu * one_leg_weight, -tmp_mu * one_leg_weight, Fz_FR_min;
+//
+//
+//    for (unsigned int i = 0; i < A_nnz; ++i) {
+//        l[i] = _d_l(i);
+//        u[i] = _d_u(i);
+//    }
+//
+//    osqp_update_P(QP_work, P_x, OSQP_NULL, 78);
+//    osqp_update_lin_cost(QP_work, q);
+//    osqp_update_bounds(QP_work, l, u);
+//
+//    // Solve updated problem
+//    osqp_solve(QP_work);
+//
+//    for (unsigned int i = 0; i < A_nnz; ++i) {
+//        //        Fc(i + 7) = fc_weight * QP_work->solution->x[i];
+//        F_QP_global(i) = QP_work->solution->x[i];
+//    }
+//    //F_QP_local = target_C_WB_12d_HS.transpose() * F_QP_global;
+//
+//    target_C_WB_RP_12d_HS.block(0, 0, 3, 3) = target_C_WB_RP_HS;
+//    target_C_WB_RP_12d_HS.block(3, 3, 3, 3) = target_C_WB_RP_HS;
+//    target_C_WB_RP_12d_HS.block(6, 6, 3, 3) = target_C_WB_RP_HS;
+//    target_C_WB_RP_12d_HS.block(9, 9, 3, 3) = target_C_WB_RP_HS;
+//
+//    F_QP_local = target_C_WB_RP_12d_HS.transpose() * F_QP_global;
+//    OSQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
+//}
 
 VectorNd CRobot::Low_pass_Filter_HS(double _updated_value, double _pre_estimated_value, double _alpha) {
     double estimated_value;
@@ -7504,169 +9174,270 @@ VectorNd CRobot::Low_pass_Filter_HS(double _updated_value, double _pre_estimated
     return value_set;
 }
 
-void CRobot::Generate_Target_Base_HS(void) {
-    //    double init_com_z_HS;
-    //    double goal_com_z_HS;
-    //    double target_com_z_HS;
-    double Base_time_HS = 0.25;
-    double lamda = 0.02;
-    if ((cnt_HS == 1652) || (cnt_HS == 2002) || (cnt_HS == 2352) || (cnt_HS == 2702)) {
-        //        init_com_z_HS = actual_com_pos_HS(2);
-        //        goal_com_z_HS = goal_com_pos_HS(2);
-        //        std::cout << "init_com_z:" << init_com_z_HS << std::endl;
-        //        std::cout << "goal_com_z:" << goal_com_z_HS << std::endl;
-        //        std::cout << "---------------------" << std::endl;
-        //        if (target_EP_HS[2] > lamda && target_EP_HS[5] > lamda && target_EP_HS[8] > lamda && target_EP_HS[11] > lamda) {
-        //            Base_Gen_flag_HS = true;
-        //        }
-        target_EP_HS = actual_EP_HS;
-        std::cout << "A" << std::endl;
-    }
-
-    //    if (Base_Gen_flag_HS == true) {
-    //        if (cnt_Base_HS < Base_time_HS / dt) {
-    //            //target_com_z_HS = init_com_z_HS + (goal_com_z_HS - init_com_z_HS) / 2.0 * (1 - cos(PI / Base_time_HS * cnt_Base_HS * dt));
-    //
-    //            //target_com_z_set_HS=Low_pass_Filter_HS(actual_com_pos_HS(2), target_com_z_set_HS(0), 0.999);
-    //            cnt_Base_HS++;
-    //        } else {
-    //            target_com_z_HS = goal_com_z_HS;
-    //            Base_Gen_flag_HS = false;
-    //        }
-    //        //target_com_pos_HS(2) = target_com_z_HS;
-    //        actual_com_pos_HS(2) = target_com_z_set_HS(0);
-    //    } else {
-    //        cnt_Base_HS = 0;
-    //    }
-    //    std::cout << "Cnt_Base:" << cnt_Base_HS << std::endl;
-    //    std::cout << "target_com_z_gen:" << target_com_z_HS << std::endl;
-    //    std::cout << "target_EP:" << target_EP_HS[2] << " / " << target_EP_HS[5] << " / " << target_EP_HS[8] << " / " << target_EP_HS[11] << std::endl;
-    //    std::cout << "Flag:" << Base_Gen_flag_HS << std::endl;
-    //    std::cout << "________________________" << std::endl;
-
-
-    //    if(Standard_leg(1)==1 && cnt_HS==1651){
-    //      base_z_offset_HS=target_EP_HS(5);
-    //    }
-    //    else if(Standard_leg(0)==1 && cnt_HS==2001){
-    //      base_z_offset_HS=target_EP_HS(8);
-    //    }
-    //    else if(Standard_leg(2)==1&&cnt_HS==2351){
-    //      base_z_offset_HS=target_EP_HS(2);
-    //    }
-    //    else if(Standard_leg(3)==1&&cnt_HS==2701){
-    //      base_z_offset_HS=target_EP_HS(11);
-    //    }
-}
-
 VectorNd CRobot::Get_Base_pos_HS2(VectorNd _Com_Pos) {
-    VectorNd offset_B2C(3);
     VectorNd Base_Pos(3);
 
-    offset_B2C << -0.06, 0.0, -0.0;
-    Base_Pos = _Com_Pos - target_C_WB_HS*offset_B2C;
+    Base_Pos = _Com_Pos - target_C_WB_RPY_HS*offset_B2C;
     return Base_Pos;
 }
 
 VectorNd CRobot::Get_COM_pos_HS2(VectorNd _Base_Pos) {
-    VectorNd offset_B2C(3);
     VectorNd Com_Pos(3);
 
-    offset_B2C << -0.06, 0.0, -0.0;
-    Com_Pos = _Base_Pos + target_C_WB_HS*offset_B2C;
+    Com_Pos = _Base_Pos + target_C_WB_RPY_HS*offset_B2C;
     return Com_Pos;
 }
 
 void CRobot::Regenerate_COM_Trajectory_HS(double com_err) {
-    double threshold = 0.03;
-    double step_time_com = step_time_HS;
+    double threshold_high = 0.05;
+    //    double threshold_low = -0.001;
+    double threshold_low = -0.01;
+    double step_time_com = step_time_HS * 4.0;
+    unsigned int tmp_cnt_com_HS = 0;
 
-    std::cout << "Re_flag=" << Regenerate_flag_HS << std::endl;
-    if (abs(com_err) > threshold && Regenerate_flag_HS == false) {
+    if (tmp_Regenerate_flag_HS == true && (com_err > threshold_high || com_err < threshold_low)) { // && Regnerate_flag_HS==false
         Regenerate_flag_HS = true;
-    }
-    if (Regenerate_flag_HS == true) {
-        if (cnt_com_HS == 0) {
-            init_com_z_HS = actual_com_pos_HS(2);
-            target_com_z_HS = init_com_z_HS;
-            goal_com_z_HS = com_height_HS;
-            cnt_com_HS++;
-        } else if (cnt_com_HS < step_time_com / dt) {
-            target_com_z_HS = init_com_z_HS + (goal_com_z_HS - init_com_z_HS) / 2.0 * (1 - cos(PI / step_time_com * cnt_com_HS * dt));
-            cnt_com_HS++;
-        } else {
-            target_com_z_HS = goal_com_z_HS;
-            Regenerate_flag_HS = false;
-            cnt_com_HS = 0;
+        if (com_err > threshold_high) {
+            up_flag_HS = true;
         }
-        target_com_pos_HS(2) = target_com_z_HS;
-        //        target_EP_HS(2)=actual_EP_HS(2);
-        //        target_EP_HS(5)=actual_EP_HS(5);
-        //        target_EP_HS(8)=actual_EP_HS(8);
-        //        target_EP_HS(11)=actual_EP_HS(11);
-        //target_com_pos_HS(2) = init_com_z_HS;
+        if (com_err < threshold_low) {
+            down_flag_HS = true;
+        }
+    }
+
+    if (Regenerate_flag_HS == true && tmp_Regenerate_flag_HS == false) {
+        Count_com_cnt_flag_HS = true;
+    }
+
+
+    if (Regenerate_flag_HS == true) {
+        if (Count_com_cnt_flag_HS == false) {
+            target_com_pos_z_HS = actual_com_pos_HS(2);
+            target_com_vel_z_HS = 0.0;
+            init_com_pos_z_HS = target_com_pos_z_HS;
+            goal_com_pos_z_HS = com_height_HS / cos(abs(filtered_Pitch_local_vec(1)));
+        } else {
+            if ((cnt_com_HS < (step_time_com / dt - fsp_cnt_HS))) {
+                target_com_pos_z_HS = init_com_pos_z_HS + (goal_com_pos_z_HS - init_com_pos_z_HS) / 2.0 * (1 - cos(PI / (step_time_com - fsp_cnt_HS * dt) * cnt_com_HS * dt));
+                //target_com_vel_z_HS = PI / (step_time_com - fsp_cnt_HS * dt) * (goal_com_pos_z_HS - init_com_pos_z_HS) / 2.0 * sin(PI / (step_time_com - fsp_cnt_HS * dt) * cnt_com_HS * dt);
+                cnt_com_HS++;
+            } else {
+                target_com_pos_z_HS = goal_com_pos_z_HS;
+                target_com_vel_z_HS = 0.0;
+                cnt_com_HS = 0;
+                Regenerate_flag_HS = false;
+                Count_com_cnt_flag_HS = false;
+                up_flag_HS = false;
+            }
+        }
+        target_com_pos_HS(2) = target_com_pos_z_HS;
+        target_com_vel_HS(2) = target_com_vel_z_HS;
+        if (up_flag_HS == true) {
+            goal_EP_HS(2) = foot_height_HS - save_actual_EP_HS(2);
+            goal_EP_HS(5) = foot_height_HS - save_actual_EP_HS(5);
+            goal_EP_HS(8) = foot_height_HS - save_actual_EP_HS(8);
+            goal_EP_HS(11) = foot_height_HS - save_actual_EP_HS(11);
+        }
+    } else {
+        goal_EP_HS(2) = foot_height_HS;
+        goal_EP_HS(5) = foot_height_HS;
+        goal_EP_HS(8) = foot_height_HS;
+        goal_EP_HS(11) = foot_height_HS;
     }
 }
 
-void CRobot::Estimate_GRF(VectorNd EP_pos_global, VectorNd target_COM_pos_global, VectorNd target_COM_acc_global) {
+void CRobot::Slope_Controller(void) {
+    Angle_Estimation();
+    //std::cout<<"slope_cnt_HS="<<slope_cnt_HS<<std::endl;
+    //    if (filtered_Pitch_local_vec(1) < 5 * D2R && filtered_Pitch_local_vec(1)>-5 * D2R) {
+    //        Base_control_flag_HS = false;
+    //    } else {
+    //        Base_control_flag_HS = true;
+    //    }
+    //
+    if (slope_cnt_HS == 0) {
+        filtered_Pitch_global_vec = target_C_WB_RPY_HS*filtered_Pitch_local_vec;
+        //filtered_Pitch_global_vec = target_C_WB_Y_HS*filtered_Pitch_local_vec; (Dont use this)
 
-    double Rear_body_mass = 13.826;
-    double Front_body_mass = 10.507;
-    double One_leg_mass = 5.295;
-    double Robot_mass = Rear_body_mass + Front_body_mass + One_leg_mass * 4;
-    double Robot_Weight = Robot_mass*GRAVITY;
+        goal_base_ori_HS(0) = filtered_Pitch_global_vec(0);
+        goal_base_ori_HS(1) = filtered_Pitch_global_vec(1);
 
-    double b1, b2, b3, b4, b5, b6;
-    MatrixNd A_GRF(6, 12);
-    VectorNd b_GRF(6, 1);
-    MatrixNd tmp_A_GRF_global(6, 6);
-    //    MatrixNd A_GRF(3, 12);
-    //    VectorNd b_GRF(3, 1);
-    //    MatrixNd tmp_A_GRF_global(3, 3);
-    VectorNd r_RL(3), r_RR(3), r_FL(3), r_FR(3);
-    VectorNd F_RL_GRF_global(3), F_RR_GRF_global(3), F_FL_GRF_global(3), F_FR_GRF_global(3);
-    VectorNd F_RL_GRF_local(3), F_RR_GRF_local(3), F_FL_GRF_local(3), F_FR_GRF_local(3);
-    VectorNd F_GRF_global(12);
+        init_base_ori_HS(0) = target_base_ori_HS(0);
+        init_base_ori_HS(1) = target_base_ori_HS(1);
 
-    r_RL << EP_pos_global(0), EP_pos_global(1), EP_pos_global(2);
-    r_RR << EP_pos_global(3), EP_pos_global(4), EP_pos_global(5);
-    r_FL << EP_pos_global(6), EP_pos_global(7), EP_pos_global(8);
-    r_FR << EP_pos_global(9), EP_pos_global(10), EP_pos_global(11);
+        target_base_ori_HS(0) = init_base_ori_HS(0);
+        target_base_ori_HS(1) = init_base_ori_HS(1);
 
-    b1 = Robot_mass * (target_COM_acc_global(0));
-    b2 = Robot_mass * (target_COM_acc_global(1));
-    b3 = Robot_mass * (target_COM_acc_global(2)) + Robot_Weight;
+        slope_cnt_HS++;
+    } else if (slope_cnt_HS < step_cnt_HS * 1.0) {
+        target_base_ori_HS(0) = init_base_ori_HS(0)+(goal_base_ori_HS(0) - init_base_ori_HS(0)) / 2.0 * (1 - cos(PI / (step_cnt_HS * 1.0) * slope_cnt_HS));
+        target_base_ori_HS(1) = init_base_ori_HS(1)+(goal_base_ori_HS(1) - init_base_ori_HS(1)) / 2.0 * (1 - cos(PI / (step_cnt_HS * 1.0) * slope_cnt_HS));
+        slope_cnt_HS++;
+        if (slope_cnt_HS == step_cnt_HS * 1.0) {
+            slope_cnt_HS = 0;
+        }
+    }
 
-    b4 = 0;
-    b5 = 0;
-    b6 = 0;
+    if (slope_cnt_HS2 == 0) {
+        goal_com_pos_HS(2) = com_height_HS / cos(abs(target_base_ori_HS(1)));
+        init_com_pos_HS(2) = actual_com_pos_HS(2);
+        target_com_pos_HS(2) = init_com_pos_HS(2);
+        slope_cnt_HS2++;
+    } else if (slope_cnt_HS2 < step_cnt_HS * 1.0) {
+        target_com_pos_HS(2) = init_com_pos_HS(2)+(goal_com_pos_HS(2) - init_com_pos_HS(2)) / 2.0 * (1 - cos(PI / (step_cnt_HS * 1.0) * slope_cnt_HS2));
+        slope_cnt_HS2++;
+        if (slope_cnt_HS2 == step_cnt_HS * 1.0) {
+            slope_cnt_HS2 = 0;
+        }
+    }
+}
 
-    A_GRF << Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0, 0\
-, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0\
-, 0, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3)\
-          , 0, -Contact_Info_HS(0) * (r_RL(2) - target_COM_pos_global(2)), Contact_Info_HS(0) * (r_RL(1) - target_COM_pos_global(1)), 0, -Contact_Info_HS(1) * (r_RR(2) - target_COM_pos_global(2)), Contact_Info_HS(1) * (r_RR(1) - target_COM_pos_global(1)), 0, -Contact_Info_HS(2) * (r_FL(2) - target_COM_pos_global(2)), Contact_Info_HS(2) * (r_FL(1) - target_COM_pos_global(1)), 0, -Contact_Info_HS(3) * (r_FR(2) - target_COM_pos_global(2)), Contact_Info_HS(3) * (r_FR(1) - target_COM_pos_global(1))\
-          , Contact_Info_HS(0) * (r_RL(2) - target_COM_pos_global(2)), 0, -Contact_Info_HS(0)*(r_RL(0) - target_COM_pos_global(0)), Contact_Info_HS(1) * (r_RR(2) - target_COM_pos_global(2)), 0, -Contact_Info_HS(1)*(r_RR(0) - target_COM_pos_global(0)), Contact_Info_HS(2) * (r_FL(2) - target_COM_pos_global(2)), 0, -Contact_Info_HS(2)*(r_FL(0) - target_COM_pos_global(0)), Contact_Info_HS(3) * (r_FR(2) - target_COM_pos_global(2)), 0, -Contact_Info_HS(3)*(r_FR(0) - target_COM_pos_global(0))\
-          , -Contact_Info_HS(0) * (r_RL(1) - target_COM_pos_global(1)), Contact_Info_HS(0) * (r_RL(0) - target_COM_pos_global(0)), 0, -Contact_Info_HS(1) * (r_RR(1) - target_COM_pos_global(1)), Contact_Info_HS(1)*(r_RR(0) - target_COM_pos_global(0)), 0, -Contact_Info_HS(2) * (r_FL(1) - target_COM_pos_global(1)), Contact_Info_HS(2)*(r_FL(0) - target_COM_pos_global(0)), 0, -Contact_Info_HS(3) * (r_FR(1) - target_COM_pos_global(1)), Contact_Info_HS(3)*(r_FR(0) - target_COM_pos_global(0)), 0;
-    //    //
-    //    A_GRF << target_Contact_Info(0), 0, 0, target_Contact_Info(1), 0, 0, target_Contact_Info(2), 0, 0, target_Contact_Info(3), 0, 0\
-//, 0, target_Contact_Info(0), 0, 0, target_Contact_Info(1), 0, 0, target_Contact_Info(2), 0, 0, target_Contact_Info(3), 0\
-//, 0, 0, target_Contact_Info(0), 0, 0, target_Contact_Info(1), 0, 0, target_Contact_Info(2), 0, 0, target_Contact_Info(3);
+void CRobot::Global_Transform_XY(void) {
 
-    b_GRF << b1, b2, b3, b4, b5, b6;
-    //b_GRF << b1, b2, b3;
+    target_base_pos_HS = Get_Base_pos_HS2(target_com_pos_HS);
 
-    tmp_A_GRF_global = A_GRF * A_GRF.transpose();
-    F_GRF_global = A_GRF.transpose() * tmp_A_GRF_global.inverse() * b_GRF;
+    actual_base_pos_HS(0) = target_base_pos_HS(0);
+    actual_base_pos_HS(1) = target_base_pos_HS(1);
 
-    F_RL_GRF_global << F_GRF_global(0), F_GRF_global(1), F_GRF_global(2);
-    F_RR_GRF_global << F_GRF_global(3), F_GRF_global(4), F_GRF_global(5);
-    F_FL_GRF_global << F_GRF_global(6), F_GRF_global(7), F_GRF_global(8);
-    F_FR_GRF_global << F_GRF_global(9), F_GRF_global(10), F_GRF_global(11);
+    actual_com_pos_HS(0) = actual_base_pos_HS(0)+(target_C_WB_RPY_HS(0, 0) * offset_B2C(0) + target_C_WB_RPY_HS(0, 1) * offset_B2C(1) + target_C_WB_RPY_HS(0, 2) * offset_B2C(2));
+    actual_com_pos_HS(1) = actual_base_pos_HS(1)+(target_C_WB_RPY_HS(1, 0) * offset_B2C(0) + target_C_WB_RPY_HS(1, 1) * offset_B2C(1) + target_C_WB_RPY_HS(1, 2) * offset_B2C(2));
 
-    F_RL_GRF_local = target_C_WB_HS.transpose() * F_RL_GRF_global;
-    F_RR_GRF_local = target_C_WB_HS.transpose() * F_RR_GRF_global;
-    F_FL_GRF_local = target_C_WB_HS.transpose() * F_FL_GRF_global;
-    F_FR_GRF_local = target_C_WB_HS.transpose() * F_FR_GRF_global;
+    actual_EP_HS(0) = actual_base_pos_HS(0)+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(0) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(1) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(2));
+    actual_EP_HS(1) = actual_base_pos_HS(1)+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(0) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(1) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(2));
 
-    F_GRF_local << 0, 0, 0, 0, 0, 0, 0, F_RL_GRF_local, F_RR_GRF_local, F_FL_GRF_local, F_FR_GRF_local;
+    actual_EP_HS(3) = actual_base_pos_HS(0)+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(3) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(4) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(5));
+    actual_EP_HS(4) = actual_base_pos_HS(1)+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(3) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(4) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(5));
+
+    actual_EP_HS(6) = actual_base_pos_HS(0)+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(6) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(7) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(8));
+    actual_EP_HS(7) = actual_base_pos_HS(1)+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(6) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(7) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(8));
+
+    actual_EP_HS(9) = actual_base_pos_HS(0)+(target_C_WB_RPY_HS(0, 0) * actual_EP_local_HS(9) + target_C_WB_RPY_HS(0, 1) * actual_EP_local_HS(10) + target_C_WB_RPY_HS(0, 2) * actual_EP_local_HS(11));
+    actual_EP_HS(10) = actual_base_pos_HS(1)+(target_C_WB_RPY_HS(1, 0) * actual_EP_local_HS(9) + target_C_WB_RPY_HS(1, 1) * actual_EP_local_HS(10) + target_C_WB_RPY_HS(1, 2) * actual_EP_local_HS(11));
+}
+
+VectorNd CRobot::Bezier_Curve_trajectory(VectorNd Contact_info, VectorNd init_EP_pos_3d, VectorNd goal_EP_pos_3d, VectorNd tmp_act_EP_local) {
+    double b0, b1, b2, b3, b4;
+    double b0_dot, b1_dot, b2_dot, b3_dot, b4_dot;
+    //    VectorNd P0(3), P1(3), P2(3), P3(3), P4(3);
+    double t_bez;
+    double alpha = 1.2;
+    double h_foot;
+    double tmp_EP_z_size;
+
+    VectorNd bezi_pos(3);
+    VectorNd bezi_vel(3);
+    VectorNd bezi_val(6);
+
+    contact_num = Contact_info(0) + Contact_info(1) + Contact_info(2) + Contact_info(3);
+    //    std::cout << "Cnt_bez=" << cnt_bez << std::endl;
+    //    std::cout << "contact_num=" << contact_num << std::endl;
+    if (contact_num == 3) {
+        if (cnt_bez == 0) {
+            tmp_EP_z_size = abs(tmp_act_EP_local(2)) / cos(abs(semi_target_base_ori_HS(1)));
+            if (tmp_EP_z_size > foot_height_HS) {
+                h_foot = foot_height_HS + 0.05;
+
+            } else {
+                h_foot = tmp_EP_z_size / 2.0;
+            }
+
+            P0 << init_EP_pos_3d(0), init_EP_pos_3d(1), init_EP_pos_3d(2);
+            P1 << init_EP_pos_3d(0), (init_EP_pos_3d(1) + (goal_EP_pos_3d(1) - init_EP_pos_3d(1))*1.0 / 4.0), init_EP_pos_3d(2) + h_foot*alpha;
+            P2 << (init_EP_pos_3d(0) + (goal_EP_pos_3d(0) - init_EP_pos_3d(0))*2.0 / 4.0), (init_EP_pos_3d(1) + (goal_EP_pos_3d(1) - init_EP_pos_3d(1))*2.0 / 4.0), init_EP_pos_3d(2) + h_foot;
+            P3 << goal_EP_pos_3d(0), (init_EP_pos_3d(1) + (goal_EP_pos_3d(1) - init_EP_pos_3d(1))*3.0 / 4.0), init_EP_pos_3d(2) + h_foot*alpha;
+            P4 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2);
+            bezi_pos = P0;
+            bezi_vel << 0.0, 0.0, 0.0;
+            cnt_bez++;
+        } else if (cnt_bez < tsp_cnt_HS) {
+            t_bez = cnt_bez*dt;
+            b0 = pow((1 - t_bez / tsp_time_HS), 4);
+            b1 = 4 * pow((1 - t_bez / tsp_time_HS), 3)*(t_bez / tsp_time_HS);
+            b2 = 6 * pow((1 - t_bez / tsp_time_HS), 2) * pow((t_bez / tsp_time_HS), 2);
+            b3 = 4 * (1 - t_bez / tsp_time_HS) * pow((t_bez / tsp_time_HS), 3);
+            b4 = pow((t_bez / tsp_time_HS), 4);
+
+            b0_dot = 4 * pow((1 - t_bez / tsp_time_HS), 3)*(-1 / tsp_time_HS);
+            b1_dot = 12 * pow((1 - t_bez / tsp_time_HS), 2)*(-1 / tsp_time_HS)*(t_bez / tsp_time_HS) + 4 * pow((1 - t_bez / tsp_time_HS), 3)*(1 / tsp_time_HS);
+            b2_dot = 12 * (1 - t_bez / tsp_time_HS)*(-1 / tsp_time_HS) * pow((t_bez / tsp_time_HS), 2) + 12 * pow((1 - t_bez / tsp_time_HS), 2)*(t_bez / tsp_time_HS)*(1 / tsp_time_HS);
+            b3_dot = 4 * pow((t_bez / tsp_time_HS), 3)*(-1 / tsp_time_HS) + 12 * (1 - t_bez / tsp_time_HS) * pow((t_bez / tsp_time_HS), 2)*(1 / tsp_time_HS);
+            b4_dot = 4 * pow((t_bez / tsp_time_HS), 3)*(1 / tsp_time_HS);
+
+            bezi_pos = P0 * b0 + P1 * b1 + P2 * b2 + P3 * b3 + P4*b4;
+            bezi_vel = P0 * b0_dot + P1 * b1_dot + P2 * b2_dot + P3 * b3_dot + P4*b4_dot;
+
+            cnt_bez++;
+
+            if (cnt_bez == tsp_cnt_HS) {
+                cnt_bez = 0;
+                bezi_vel << 0.0, 0.0, 0.0;
+            }
+        }
+        bezi_val << bezi_pos, bezi_vel;
+    }
+    return bezi_val;
+}
+
+VectorNd CRobot::Bezier_Curve_trajectory2(VectorNd Contact_info, VectorNd init_EP_pos_3d, VectorNd goal_EP_pos_3d, VectorNd tmp_act_EP_local) {
+    double b0, b1, b2, b3, b4;
+    double b0_dot, b1_dot, b2_dot, b3_dot, b4_dot;
+
+    double t_bez;
+    double alpha = 1.2;
+    double h_foot;
+    double tmp_EP_z_size;
+
+    VectorNd bezi_pos(3);
+    VectorNd bezi_vel(3);
+    VectorNd bezi_val(6);
+
+    contact_num = Contact_info(0) + Contact_info(1) + Contact_info(2) + Contact_info(3);
+    //    std::cout << "Cnt_bez=" << cnt_bez << std::endl;
+    //    std::cout << "contact_num=" << contact_num << std::endl;
+    if (contact_num == 3) {
+        if (cnt_bez == 0) {
+            tmp_EP_z_size = abs(tmp_act_EP_local(2)) / cos(abs(target_base_ori_HS(1)));
+            if (tmp_EP_z_size > foot_height_HS) {
+                h_foot = foot_height_HS + 0.05;
+            } else {
+                //h_foot = 0;
+                h_foot = foot_height_HS + 0.05;
+            }
+            std::cout << "tmp_EP_z_size=" << tmp_EP_z_size << std::endl;
+            std::cout << "h_foot=" << h_foot << std::endl;
+            P0 << init_EP_pos_3d(0), init_EP_pos_3d(1), init_EP_pos_3d(2);
+            P1 << init_EP_pos_3d(0), init_EP_pos_3d(1), init_EP_pos_3d(2) + h_foot*alpha;
+            P2 << (init_EP_pos_3d(0) + (goal_EP_pos_3d(0) - init_EP_pos_3d(0))*2.0 / 4.0), (init_EP_pos_3d(1) + (goal_EP_pos_3d(1) - init_EP_pos_3d(1))*2.0 / 4.0), init_EP_pos_3d(2) + h_foot;
+            P3 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + h_foot*alpha;
+            P4 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2);
+            bezi_pos = P0;
+            bezi_vel << 0.0, 0.0, 0.0;
+            cnt_bez++;
+        } else if (cnt_bez < tsp_cnt_HS) {
+            t_bez = cnt_bez*dt;
+            b0 = pow((1 - t_bez / tsp_time_HS), 4);
+            b1 = 4 * pow((1 - t_bez / tsp_time_HS), 3)*(t_bez / tsp_time_HS);
+            b2 = 6 * pow((1 - t_bez / tsp_time_HS), 2) * pow((t_bez / tsp_time_HS), 2);
+            b3 = 4 * (1 - t_bez / tsp_time_HS) * pow((t_bez / tsp_time_HS), 3);
+            b4 = pow((t_bez / tsp_time_HS), 4);
+
+            b0_dot = 4 * pow((1 - t_bez / tsp_time_HS), 3)*(-1 / tsp_time_HS);
+            b1_dot = 12 * pow((1 - t_bez / tsp_time_HS), 2)*(-1 / tsp_time_HS)*(t_bez / tsp_time_HS) + 4 * pow((1 - t_bez / tsp_time_HS), 3)*(1 / tsp_time_HS);
+            b2_dot = 12 * (1 - t_bez / tsp_time_HS)*(-1 / tsp_time_HS) * pow((t_bez / tsp_time_HS), 2) + 12 * pow((1 - t_bez / tsp_time_HS), 2)*(t_bez / tsp_time_HS)*(1 / tsp_time_HS);
+            b3_dot = 4 * pow((t_bez / tsp_time_HS), 3)*(-1 / tsp_time_HS) + 12 * (1 - t_bez / tsp_time_HS) * pow((t_bez / tsp_time_HS), 2)*(1 / tsp_time_HS);
+            b4_dot = 4 * pow((t_bez / tsp_time_HS), 3)*(1 / tsp_time_HS);
+
+            bezi_pos = P0 * b0 + P1 * b1 + P2 * b2 + P3 * b3 + P4*b4;
+            bezi_vel = P0 * b0_dot + P1 * b1_dot + P2 * b2_dot + P3 * b3_dot + P4*b4_dot;
+
+            cnt_bez++;
+
+            if (cnt_bez == tsp_cnt_HS) {
+                cnt_bez = 0;
+                bezi_vel << 0.0, 0.0, 0.0;
+            }
+        }
+        bezi_val << bezi_pos, bezi_vel;
+    }
+    return bezi_val;
 }
