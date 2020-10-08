@@ -665,7 +665,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm() { //* Writing realtime code here
             }
             PongBotQ.Global_Transform_XY();
             PongBotQ.ComputeTorqueControl_HS();
-            //PongBotQ.print_HS();
+            PongBotQ.print_HS();
             break;
     }
 
@@ -916,7 +916,7 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
 //    PongBotQ.speed_x = (msg->axes[1]) * 0.22;
 //    PongBotQ.speed_y = (msg->axes[0]) * 0.15;
 //    PongBotQ.speed_yaw = (msg->axes[3]) * 10.0 * (4.0 * PI / 180);
-    PongBotQ.speed_x = (msg->axes[1]) * 0.11;
+    PongBotQ.speed_x = (msg->axes[1]) * 0.15;
     PongBotQ.speed_y = (msg->axes[0]) * 0.08;
     PongBotQ.speed_yaw = (msg->axes[3]) * 10.0 * (PI / 180);
 }
@@ -1374,33 +1374,31 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1() {
 //    TmpData[1] = -PongBotQ.actual_EP_local_HS[5]/ cos(abs(PongBotQ.target_base_ori_HS(1)));
 //    TmpData[2] = -PongBotQ.actual_EP_local_HS[8]/ cos(abs(PongBotQ.target_base_ori_HS(1)));
 //    TmpData[3] = -PongBotQ.actual_EP_local_HS[11]/ cos(abs(PongBotQ.target_base_ori_HS(1)));
-    TmpData[0] = PongBotQ.target_EP_HS(2);
-    TmpData[1] = PongBotQ.actual_EP_HS[2];
+    TmpData[0] = PongBotQ.actual_EP_local_HS2(0);
+    TmpData[1] = PongBotQ.actual_EP_local_HS2[1];
+    
     TmpData[2] = PongBotQ.target_base_pos_HS[2];
     TmpData[3] = PongBotQ.actual_base_pos_HS[2];
     
-    TmpData[4] = PongBotQ.kp_EP_HS[2]/3000;
-    TmpData[5] = PongBotQ.actual_base_pos_HS[0];    
+    TmpData[4] = PongBotQ.target_EP_HS(2);
+    TmpData[5] = PongBotQ.target_EP_HS(5);
+    TmpData[6] = PongBotQ.target_EP_HS(8);
+    TmpData[7] = PongBotQ.target_EP_HS(11);
     
-    TmpData[6] = PongBotQ.actual_EP_local_HS[0];
-    TmpData[7] = PongBotQ.actual_EP_local_HS[1];
-    TmpData[8] = PongBotQ.actual_EP_local_HS[2];
+    TmpData[8] = PongBotQ.tmp_Regenerate_flag_HS;
     
-    TmpData[9] = PongBotQ.target_EP_local_HS[0];
-    TmpData[10] = PongBotQ.target_EP_local_HS[1];
-    TmpData[11] = PongBotQ.target_EP_local_HS[2];
+    TmpData[9] = PongBotQ.actual_EP_HS[2];
+    TmpData[10] = PongBotQ.actual_EP_HS[5];
+    TmpData[11] = PongBotQ.actual_EP_HS[8];   
+    TmpData[12] = PongBotQ.actual_EP_HS[11];
     
+    TmpData[13] = PongBotQ.tmp_Regenerate_flag_HS2;
+    TmpData[14] = PongBotQ.Task_Control_value_HS[17]/100;
+    TmpData[15] = PongBotQ.Task_Control_value_HS[18]/100;
     
-    TmpData[12] = -PongBotQ.tmp_Regenerate_flag_HS*0.5;
-    
-    TmpData[13] = PongBotQ.target_base_ori_local_HS[1]*R2D;
-    
-    TmpData[14] = PongBotQ.semi_target_base_ori_HS[1]*R2D;
-    TmpData[15] = PongBotQ.semi_actual_base_ori_HS[1]*R2D;
-    
-    TmpData[16] = PongBotQ.semi_target_com_pos_HS[1];
-    //TmpData[17] = PongBotQ.semi_target_com_pos_HS[8];    
-    //TmpData[18] = PongBotQ.semi_target_EP_HS[11];    
+    TmpData[16] = PongBotQ.Base_estimation_flag;
+    TmpData[17] = PongBotQ.target_kd_EP(2);    
+    TmpData[18] = PongBotQ.OSQP_Control_value_HS[18]/100;    
 //    TmpData[15] = PongBotQ.kp_EP_HS[2];
 //    TmpData[16] = PongBotQ.kp_EP_HS[5];
 //    TmpData[17] = PongBotQ.kp_EP_HS[8];    

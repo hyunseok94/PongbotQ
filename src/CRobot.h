@@ -1294,6 +1294,7 @@ public:
     MatrixNd Base_Rotation_Matrix_HS(VectorNd _Base_ori);
     VectorNd Base_Estimation(VectorNd actual_EP_local);
     VectorNd Base_Estimation2(VectorNd actual_EP_local);
+    VectorNd Base_Estimation3(VectorNd _actual_EP_local);
     VectorNd Low_pass_Filter_HS(double _updated_value, double _pre_estimated_value, double _alpha);
     VectorNd Bezier_Curve_trajectory(VectorNd Contact_info, VectorNd init_EP_pos_3d, VectorNd goal_EP_pos_3d, VectorNd tmp_act_EP_local);
     VectorNd Bezier_Curve_trajectory2(VectorNd Contact_info, VectorNd init_EP_pos_3d, VectorNd goal_EP_pos_3d, VectorNd tmp_act_EP_local);
@@ -1319,6 +1320,7 @@ public:
     void QP_Task_Space_Controller(void);
     void Get_Opt_F_HS(void);
     void Fly_Leg_Gain_Controller(unsigned int _i);
+    void Fly_Leg_Gain_Controller2(unsigned int _i);
     void Global_Transform_Z(void);
     void Global_Transform_XY(void);
     void Transform_HS2DH(void);
@@ -1400,6 +1402,8 @@ public:
     MatrixNd target_C_WB_Y_HS = MatrixNd::Zero(3, 3);
     MatrixNd target_C_WB_12d_HS = MatrixNd::Zero(12, 12);
     MatrixNd R_now_HS=MatrixNd::Zero(2, 2);
+    MatrixNd R_now_3d_HS=MatrixNd::Zero(3,3);
+    MatrixNd R_now_12d_HS=MatrixNd::Zero(12,12);
     
     VectorNd init_com_pos_HS = VectorNd::Zero(3);
     VectorNd goal_com_pos_HS = VectorNd::Zero(3);
@@ -1506,6 +1510,7 @@ public:
 
     bool Regenerate_flag_HS = false;
     bool tmp_Regenerate_flag_HS=false;
+    bool tmp_Regenerate_flag_HS2=false;
     bool Count_com_cnt_flag_HS=false;
     bool up_flag_HS=false;
     bool down_flag_HS=false;
@@ -1548,6 +1553,25 @@ public:
     VectorNd semi_target_base_ori_HS2=VectorNd::Zero(3);
     
     MatrixNd target_C_WB_RP_12d_HS=MatrixNd::Zero(12,12);
+    
+    double tmp_pos=0;
+    double tmp_vel=0;
+    
+    VectorNd tmp_actual_base_pos_local_HS=VectorNd::Zero(3);
+    bool Base_estimation_flag = true;
+    
+    VectorNd RL_semi_local=VectorNd::Zero(3);
+    VectorNd RR_semi_local=VectorNd::Zero(3);
+    VectorNd FL_semi_local=VectorNd::Zero(3);
+    VectorNd FR_semi_local=VectorNd::Zero(3);
+    
+    VectorNd actual_EP_local_HS2=VectorNd::Zero(12);
+    VectorNd pre_init_base_ori_HS=VectorNd::Zero(3);
+    
+    VectorNd semi_target_base_ori_vel_HS=VectorNd::Zero(3);
+    
+    VectorNd actual_base_ori_local_HS=VectorNd::Zero(3);
+    VectorNd actual_base_ori_vel_local_HS=VectorNd::Zero(3);
 private:
 };
 
