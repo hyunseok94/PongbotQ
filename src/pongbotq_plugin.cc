@@ -1128,6 +1128,10 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
 //
 ////    cout << "msg->axes[2] = " << msg->axes[2] << endl;
 //    PongBotQ.tmp_base_ori(2) = (msg->axes[2]) * max_yaw_ori;
+//    
+//    PongBotQ.speed_x = (msg->axes[1]) * 0.06;
+//    PongBotQ.speed_y = (msg->axes[0]) * 0.04;
+//    PongBotQ.speed_yaw = (msg->axes[3]) * 4.0 * (PI / 180);
 //}
 
 void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) { //Joystick Wire mode

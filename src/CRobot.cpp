@@ -34,15 +34,15 @@ void CRobot::setRobotModel(Model* getModel) {
     base2hip_pos << RL_base2hip_pos, RR_base2hip_pos, FL_base2hip_pos, FR_base2hip_pos;
 
     // global init foot position
-//    tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 - 0.04, 0.0;
-//    tar_init_RR_foot_pos << RR_base2hip_pos(0), RR_base2hip_pos(1) - 0.105 + 0.04, 0.0;
-//    tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105 - 0.04, 0.0;
-//    tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105 + 0.04, 0.0;
+    //    tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 - 0.04, 0.0;
+    //    tar_init_RR_foot_pos << RR_base2hip_pos(0), RR_base2hip_pos(1) - 0.105 + 0.04, 0.0;
+    //    tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105 - 0.04, 0.0;
+    //    tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105 + 0.04, 0.0;
 
-        tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
-        tar_init_RR_foot_pos << RR_base2hip_pos(0), RR_base2hip_pos(1) - 0.105 + 0.0, 0.0;
-        tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
-        tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105 + 0.0, 0.0;
+    tar_init_RL_foot_pos << RL_base2hip_pos(0), RL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
+    tar_init_RR_foot_pos << RR_base2hip_pos(0), RR_base2hip_pos(1) - 0.105 + 0.0, 0.0;
+    tar_init_FL_foot_pos << FL_base2hip_pos(0), FL_base2hip_pos(1) + 0.105 - 0.0, 0.0;
+    tar_init_FR_foot_pos << FR_base2hip_pos(0), FR_base2hip_pos(1) - 0.105 + 0.0, 0.0;
 
     com_height = 0.42; //0.42;
 
@@ -5365,7 +5365,7 @@ void CRobot::Global_Transform_Z_HS(void) {
     VectorNd tmp_target_EP_HS(12);
     VectorNd actual_base_pos_12d_HS(12);
 
-    offset_B2C << -0.04, 0.0, -0.0;
+    offset_B2C << -0.05, 0.0, -0.0;
 
     target_C_WB_RPY_HS = Base_Rotation_Matrix_HS(target_base_ori_HS);
     target_C_WB_12d_HS.block(0, 0, 3, 3) = target_C_WB_RPY_HS;
@@ -5484,9 +5484,9 @@ void CRobot::WalkReady_Pos_Traj_HS(void) {
             init_com_pos_HS = Get_COM_pos_HS2(init_base_pos_HS);
             init_base_pos_12d_HS << init_base_pos_HS, init_base_pos_HS, init_base_pos_HS, init_base_pos_HS;
             init_EP_HS = init_base_pos_12d_HS + target_C_WB_12d_HS * (actual_EP_local_HS);
-            std::cout << init_base_pos_HS.transpose() << std::endl;
-            std::cout << init_com_pos_HS.transpose() << std::endl;
-            std::cout << init_EP_HS.transpose() << std::endl;
+//            std::cout << init_base_pos_HS.transpose() << std::endl;
+//            std::cout << init_com_pos_HS.transpose() << std::endl;
+//            std::cout << init_EP_HS.transpose() << std::endl;
 
             goal_com_pos_HS << 0.0, 0.0, com_height_HS;
             goal_EP_HS << tar_init_RL_foot_pos, tar_init_RR_foot_pos, tar_init_FL_foot_pos, tar_init_FR_foot_pos;
@@ -5500,7 +5500,7 @@ void CRobot::WalkReady_Pos_Traj_HS(void) {
         } else if (cnt_HS < step_time_HS / dt) {
             target_com_pos_HS = init_com_pos_HS + (goal_com_pos_HS - init_com_pos_HS) / 2.0 * (1 - cos(PI / step_time_HS * cnt_HS * dt));
             //target_com_vel_HS = PI / step_time_HS * (goal_com_pos_HS - init_com_pos_HS) / 2.0 * sin(PI / step_time_HS * cnt_HS * dt);
-            target_com_acc_HS = (PI / step_time_HS)*(PI / step_time_HS)* (goal_com_pos_HS - init_com_pos_HS) / 2.0 * cos(PI / step_time_HS * cnt_HS * dt);
+            //target_com_acc_HS = (PI / step_time_HS)*(PI / step_time_HS)* (goal_com_pos_HS - init_com_pos_HS) / 2.0 * cos(PI / step_time_HS * cnt_HS * dt);
             target_EP_HS = init_EP_HS + (goal_EP_HS - init_EP_HS) / 2.0 * (1 - cos(PI / step_time_HS * cnt_HS * dt));
             target_EP_vel_HS = PI / step_time_HS * (goal_EP_HS - init_EP_HS) / 2.0 * sin(PI / step_time_HS * cnt_HS * dt);
 
@@ -5650,7 +5650,7 @@ void CRobot::FootStepPlanning_HS3(VectorNd _now_com_pos, VectorNd _now_base_ori,
     tmp_FL_goal_dely = tmp_FL_goal_delx + R_goal*r_del_local_y;
     tmp_RR_goal_dely = tmp_RR_goal_delx + ((tmp_FR_goal_delx(0) - tmp_RR_goal_delx(0)) * n_y_global(0)+(tmp_FR_goal_delx(1) - tmp_RR_goal_delx(1)) * n_y_global(1))*(n_y_global) + R_goal * r_del_local_y / 2.0;
     tmp_RL_goal_dely = tmp_RL_goal_delx + ((tmp_FL_goal_delx(0) - tmp_RL_goal_delx(0)) * n_y_global(0)+(tmp_FL_goal_delx(1) - tmp_RL_goal_delx(1)) * n_y_global(1))*(n_y_global) + R_goal * r_del_local_y / 2.0;
-    
+
     goal_EP_HS(0) = tmp_RL_goal_dely(0);
     goal_EP_HS(1) = tmp_RL_goal_dely(1);
     goal_EP_HS(3) = tmp_RR_goal_dely(0);
@@ -5777,13 +5777,13 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
 
             // Z direction
             if (adaptive_flag_HS == true) {
-                if (_i == (tsp_cnt_HS)) {
-                    actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
-                    target_EP_HS(2) = actual_EP_HS(2);
-                    target_EP_HS(5) = actual_EP_HS(5);
-                    target_EP_HS(8) = actual_EP_HS(8);
-                    target_EP_HS(11) = actual_EP_HS(11);
-                }
+                //if (_i == (tsp_cnt_HS)) {
+                actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
+                target_EP_HS(2) = actual_EP_HS(2);
+                target_EP_HS(5) = actual_EP_HS(5);
+                target_EP_HS(8) = actual_EP_HS(8);
+                target_EP_HS(11) = actual_EP_HS(11);
+                //}
             } else {
                 target_EP_HS(2) = target_EP_HS(2);
                 target_EP_HS(5) = target_EP_HS(5);
@@ -5871,13 +5871,13 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
             target_EP_HS(10) = pre_init_EP_HS(10);
 
             if (adaptive_flag_HS == true) {
-                if (_i == (step_cnt_HS + tsp_cnt_HS)) {
-                    actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
-                    target_EP_HS(2) = actual_EP_HS(2);
-                    target_EP_HS(5) = actual_EP_HS(5);
-                    target_EP_HS(8) = actual_EP_HS(8);
-                    target_EP_HS(11) = actual_EP_HS(11);
-                }
+                //if (_i == (step_cnt_HS + tsp_cnt_HS)) {
+                actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
+                target_EP_HS(2) = actual_EP_HS(2);
+                target_EP_HS(5) = actual_EP_HS(5);
+                target_EP_HS(8) = actual_EP_HS(8);
+                target_EP_HS(11) = actual_EP_HS(11);
+                //}
             } else {
                 target_EP_HS(2) = target_EP_HS(2);
                 target_EP_HS(5) = target_EP_HS(5);
@@ -5962,13 +5962,13 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
             target_EP_HS(10) = pre_init_EP_HS(10);
 
             if (adaptive_flag_HS == true) {
-                if (_i == (step_cnt_HS * 2 + tsp_cnt_HS)) {
-                    actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
-                    target_EP_HS(2) = actual_EP_HS(2);
-                    target_EP_HS(5) = actual_EP_HS(5);
-                    target_EP_HS(8) = actual_EP_HS(8);
-                    target_EP_HS(11) = actual_EP_HS(11);
-                }
+                //if (_i == (step_cnt_HS * 2 + tsp_cnt_HS)) {
+                actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
+                target_EP_HS(2) = actual_EP_HS(2);
+                target_EP_HS(5) = actual_EP_HS(5);
+                target_EP_HS(8) = actual_EP_HS(8);
+                target_EP_HS(11) = actual_EP_HS(11);
+                //}
             } else {
                 target_EP_HS(2) = target_EP_HS(2);
                 target_EP_HS(5) = target_EP_HS(5);
@@ -6052,13 +6052,13 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
             target_EP_vel_HS = VectorNd::Zero(12);
 
             if (adaptive_flag_HS == true) {
-                if (_i == (step_cnt_HS * 3 + tsp_cnt_HS)) {
-                    actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
-                    target_EP_HS(2) = actual_EP_HS(2);
-                    target_EP_HS(5) = actual_EP_HS(5);
-                    target_EP_HS(8) = actual_EP_HS(8);
-                    target_EP_HS(11) = actual_EP_HS(11);
-                }
+                //if (_i == (step_cnt_HS * 3 + tsp_cnt_HS)) {
+                actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
+                target_EP_HS(2) = actual_EP_HS(2);
+                target_EP_HS(5) = actual_EP_HS(5);
+                target_EP_HS(8) = actual_EP_HS(8);
+                target_EP_HS(11) = actual_EP_HS(11);
+                //}
             } else {
                 target_EP_HS(2) = target_EP_HS(2);
                 target_EP_HS(5) = target_EP_HS(5);
@@ -6160,7 +6160,7 @@ VectorNd CRobot::Bezier_Curve_trajectory3(VectorNd Contact_info, VectorNd init_E
             P0 << init_EP_pos_3d(0), init_EP_pos_3d(1), init_EP_pos_3d(2);
             P1 << init_EP_pos_3d(0), init_EP_pos_3d(1), init_EP_pos_3d(2);
 
-            
+
             P2 << init_EP_pos_3d(0) - Dist_2d_global(0) / 2.0, init_EP_pos_3d(1) - Dist_2d_global(1) / 2.0, init_EP_pos_3d(2) + h_foot*alpha;
             P3 << (init_EP_pos_3d(0) + (goal_EP_pos_3d(0) - init_EP_pos_3d(0))*2.0 / 4.0), (init_EP_pos_3d(1) + (goal_EP_pos_3d(1) - init_EP_pos_3d(1))*2.0 / 4.0), init_EP_pos_3d(2) + h_foot;
             P4 << goal_EP_pos_3d(0) + Dist_2d_global(0) / 2.0, goal_EP_pos_3d(1) + Dist_2d_global(1) / 2.0, init_EP_pos_3d(2) + h_foot*alpha;
@@ -6222,8 +6222,8 @@ void CRobot::Fly_Leg_Gain_Controller4(unsigned int _i) {
 
     init_kp_EP << goal_kp_EP_HS(0), goal_kp_EP_HS(1), goal_kp_EP_HS(2);
     init_kd_EP << goal_kd_EP_HS(0), goal_kd_EP_HS(1), goal_kd_EP_HS(2);
-    goal_kp_EP << goal_kp_EP_HS(0) / 100, goal_kp_EP_HS(1)/100, goal_kp_EP_HS(2) / 100;
-    goal_kd_EP << goal_kd_EP_HS(0) / 10, goal_kd_EP_HS(1)/10, goal_kd_EP_HS(2) / 10;
+    goal_kp_EP << goal_kp_EP_HS(0) / 100, goal_kp_EP_HS(1) / 100, goal_kp_EP_HS(2) / 100;
+    goal_kd_EP << goal_kd_EP_HS(0) / 10, goal_kd_EP_HS(1) / 10, goal_kd_EP_HS(2) / 10;
 
     if (_i < tsp_cnt_HS) {
         if (_i < tsp_cnt_HS * (0.5)) {
@@ -6366,7 +6366,7 @@ void CRobot::COM_XY_Traj_Gen_COM_VER_HS3(VectorNd _init_com_pos, VectorNd _goal_
             swing_dist_y = 0.0;
         } else {
             swing_dist_x = 0.0;
-            swing_dist_y = 0.12;
+            swing_dist_y = 0.10;
             //swing_dist_y = 0.08;
         }
     }
@@ -6715,7 +6715,7 @@ void CRobot::Get_Opt_F_HS(void) {
 
     double alpha = 1.0;
     double beta = 1.0;
-    double tmp_mu = 0.5;
+    double tmp_mu = 0.8;
     W = MatrixNd::Identity(12, 12);
 
     VectorNd target_base_pos_rel(3);
@@ -6771,7 +6771,8 @@ void CRobot::Get_Opt_F_HS(void) {
     target_plane_dist = com_height_HS / cos(target_base_ori_HS(1));
 
     standard_leg_height_HS = -((Contact_Info_HS(0) * (actual_EP_local_HS(2)) + Contact_Info_HS(1) * (actual_EP_local_HS(5)) + Contact_Info_HS(2) * (actual_EP_local_HS(8)) + Contact_Info_HS(3) * (actual_EP_local_HS(11)))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-    actual_plane_dist = (standard_leg_height_HS + offset_B2C(2)) / cos(target_base_ori_HS(1));
+    //actual_plane_dist = (standard_leg_height_HS + offset_B2C(2)) / cos(target_base_ori_HS(1));
+    actual_plane_dist = (standard_leg_height_HS + offset_B2C(2)) / cos(actual_base_ori_local_HS(1));
 
     tmp_actual_plane_dist_vel << -target_C_WB_RP_HS * actual_EP_vel_local_HS.segment(0, 3), -target_C_WB_RP_HS * actual_EP_vel_local_HS.segment(3, 3), -target_C_WB_RP_HS * actual_EP_vel_local_HS.segment(6, 3), -target_C_WB_RP_HS * actual_EP_vel_local_HS.segment(9, 3);
     actual_plane_dist_vel = (-Contact_Info_HS(0) * (tmp_actual_plane_dist_vel(2)) - Contact_Info_HS(1) * (tmp_actual_plane_dist_vel(5)) - Contact_Info_HS(2) * (tmp_actual_plane_dist_vel(8)) - Contact_Info_HS(3) * (tmp_actual_plane_dist_vel(11))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
@@ -6892,7 +6893,7 @@ void CRobot::Slope_Controller3(void) {
         filtered_Pitch_global_vec = target_C_WB_RPY_HS*filtered_Pitch_local_vec;
         goal_base_ori_HS(0) = filtered_Pitch_global_vec(0);
         goal_base_ori_HS(1) = filtered_Pitch_global_vec(1);
-        
+
         init_base_ori_HS(0) = target_base_ori_HS(0);
         init_base_ori_HS(1) = target_base_ori_HS(1);
 
@@ -6900,18 +6901,18 @@ void CRobot::Slope_Controller3(void) {
         target_base_ori_HS(1) = init_base_ori_HS(1);
         target_base_ori_vel_HS(1) = 0;
 
-        goal_base_ori_local_HS(1)=filtered_Pitch_local_vec(1);
-        init_base_ori_local_HS(1) =target_base_ori_local_HS(1);
-        target_base_ori_local_HS(1)=init_base_ori_local_HS(1);
-        target_base_ori_vel_local_HS(1)=0;
-        
+        goal_base_ori_local_HS(1) = filtered_Pitch_local_vec(1);
+        init_base_ori_local_HS(1) = target_base_ori_local_HS(1);
+        target_base_ori_local_HS(1) = init_base_ori_local_HS(1);
+        target_base_ori_vel_local_HS(1) = 0;
+
         slope_cnt_HS++;
     } else if (slope_cnt_HS < step_cnt_HS * 1.0) {
         tmp_slope_cnt_HS = slope_cnt_HS;
         target_base_ori_HS(0) = init_base_ori_HS(0)+(goal_base_ori_HS(0) - init_base_ori_HS(0)) / 2.0 * (1 - cos(PI / (step_cnt_HS) * tmp_slope_cnt_HS));
         target_base_ori_HS(1) = init_base_ori_HS(1)+(goal_base_ori_HS(1) - init_base_ori_HS(1)) / 2.0 * (1 - cos(PI / (step_cnt_HS) * tmp_slope_cnt_HS));
         target_base_ori_vel_HS(1) = PI / (step_cnt_HS)*(goal_base_ori_HS(1) - init_base_ori_HS(1)) / 2.0 * sin(PI / (step_cnt_HS) * tmp_slope_cnt_HS);
-        
+
         target_base_ori_local_HS(1) = init_base_ori_local_HS(1)+(goal_base_ori_local_HS(1) - init_base_ori_local_HS(1)) / 2.0 * (1 - cos(PI / (step_cnt_HS) * tmp_slope_cnt_HS));
         slope_cnt_HS++;
         if (slope_cnt_HS == step_cnt_HS * 1.0) {
@@ -6930,7 +6931,7 @@ void CRobot::Slope_Controller3(void) {
         tmp_slope_cnt_HS2 = slope_cnt_HS2 - 1;
         target_com_pos_HS(2) = init_com_pos_HS(2)+(goal_com_pos_HS(2) - init_com_pos_HS(2)) / 2.0 * (1 - cos(PI / (step_cnt_HS) * tmp_slope_cnt_HS2));
         target_com_vel_HS(2) = PI / (step_cnt_HS) * (goal_com_pos_HS(2) - init_com_pos_HS(2)) / 2.0 * sin(PI / (step_cnt_HS) * tmp_slope_cnt_HS2);
-        target_com_acc_HS(2) = pow((PI / (step_cnt_HS)),2) * (goal_com_pos_HS(2) - init_com_pos_HS(2)) / 2.0 * cos(PI / (step_cnt_HS) * tmp_slope_cnt_HS2);
+        target_com_acc_HS(2) = pow((PI / (step_cnt_HS)), 2) * (goal_com_pos_HS(2) - init_com_pos_HS(2)) / 2.0 * cos(PI / (step_cnt_HS) * tmp_slope_cnt_HS2);
         slope_cnt_HS2++;
 
         if (slope_cnt_HS2 == step_cnt_HS * 1.0) {
@@ -6986,7 +6987,6 @@ void CRobot::Angle_Estimation(void) {
     Roll_set = Low_pass_Filter_HS(Plane_Angle(0), Roll_set(0), 0.999);
     Pitch_set = Low_pass_Filter_HS(Plane_Angle(1), Pitch_set(0), 0.999);
 
-    //std::cout<<"PA(0)="<<Plane_Angle(0)*R2D<<"/"<<"PA(1)="<<Plane_Angle(1)*R2D<<std::endl;
     filtered_Pitch_local_vec << 0.0, Pitch_set(0), 0.0;
 }
 
@@ -7008,13 +7008,13 @@ VectorNd CRobot::Low_pass_Filter_HS(double _updated_value, double _pre_estimated
 void CRobot::print_HS(void) {
 
     std::cout << "cnt_HS=" << cnt_HS << std::endl;
-    std::cout<<"CONTACT_info="<<Contact_Info_HS.transpose()<<std::endl;
+    std::cout << "CONTACT_info=" << Contact_Info_HS.transpose() << std::endl;
     std::cout << "--------------------------" << std::endl;
-    std::cout<<"kp_EP="<<kp_EP_HS.transpose()<<std::endl;
-    std::cout<<"kd_EP="<<kp_EP_HS.transpose()<<std::endl;
-     std::cout << "--------------------------" << std::endl;
-    std::cout<<"Task="<<Task_Control_value_HS.transpose()<<std::endl;
-    std::cout<<"QP="<<OSQP_Control_value_HS.transpose()<<std::endl;
+    std::cout << "kp_EP=" << kp_EP_HS.transpose() << std::endl;
+    std::cout << "kd_EP=" << kp_EP_HS.transpose() << std::endl;
+    std::cout << "--------------------------" << std::endl;
+    std::cout << "Task=" << Task_Control_value_HS.transpose() << std::endl;
+    std::cout << "QP=" << OSQP_Control_value_HS.transpose() << std::endl;
     // std::cout << "tar_base_pos(G) : " << target_base_pos_HS(0) << "/" << target_base_pos_HS(1) << "/" << target_base_pos_HS(2) << std::endl;
     //std::cout << "target_com_pos : " << target_com_pos_HS(0) << "/" << target_com_pos_HS(1) << "/" << target_com_pos_HS(2) << std::endl;
 
