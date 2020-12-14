@@ -39,11 +39,15 @@
        <plugin name="plugin" filename="libpongbot_q_v1.so"/>
     </include>
 
-   <include>
+   <!-- <include>
       <uri>model://OBS_STAIR</uri>
       <pose frame=''> 2.5 -0.7 0.9 0 0 0</pose>
-    </include>
+    </include> -->
 
+    <!--<include>
+      <uri>model://OBS_CAVE</uri>
+      <pose frame=''> 6.5 0.0 1.0 0 0 1.570796</pose>
+    </include>-->
     <!--<include>
       <uri>model://OBS_PLATE</uri>
       <pose frame=''> 1.9 0.0 0.0 3.141592 0 0</pose>
@@ -58,10 +62,18 @@
       <uri>model://step_type1</uri>
       <pose frame=''> 1.0 -0.5 0.0 0 0 1.57075</pose>
     </include>-->
-  <!--<include>
+
+   <include>
       <uri>model://SLOPE_GENERATOR</uri>
-      <pose frame=''> 4.5 1.5 1.0 0 0 0</pose>
+      <pose frame=''> 4.5 1.5 2.5 0 0 0</pose>
       <plugin name="plugin" filename="libslope_generator_pkgs.so"/>
+    </include>
+
+    <!--<include>
+      <uri>model://test_bed</uri>
+      <pose frame=''> 0.5 0 1 0 0 0</pose>rkr
+      <plugin name="plugin" filename="libtest_bed_pkgs.so"/>
     </include>-->
+
   </world>
 </sdf>

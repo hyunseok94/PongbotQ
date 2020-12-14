@@ -1272,16 +1272,18 @@ public:
     VectorNd target_com_pos_HS = VectorNd::Zero(3);
     VectorNd goal_com_pos_HS = VectorNd::Zero(3);
     VectorNd target_base_pos_HS = VectorNd::Zero(3);
-    VectorNd semi_target_com_pos_HS = VectorNd::Zero(3);
+    VectorNd semi_target_com_pos_HS_yaw = VectorNd::Zero(3);
+    VectorNd semi_init_com_pos_HS_pitch = VectorNd::Zero(3);
+    VectorNd semi_goal_com_pos_HS_pitch = VectorNd::Zero(3);
 
     //CoM Velocity 
     VectorNd target_com_vel_HS = VectorNd::Zero(3);
     VectorNd target_base_vel_HS = VectorNd::Zero(3);
-    VectorNd semi_target_com_vel_HS = VectorNd::Zero(3);
+    VectorNd semi_target_com_vel_HS_yaw= VectorNd::Zero(3);
 
     //CoM Acceleration
     VectorNd target_com_acc_HS = VectorNd::Zero(3);
-    VectorNd semi_target_com_acc_HS = VectorNd::Zero(3);
+    VectorNd semi_target_com_acc_HS_yaw = VectorNd::Zero(3);
 
 
     //End point Position
@@ -1289,8 +1291,13 @@ public:
     VectorNd init_EP_HS = VectorNd::Zero(12);
     VectorNd target_EP_HS = VectorNd::Zero(12);
     VectorNd goal_EP_HS = VectorNd::Zero(12);
-    VectorNd semi_target_EP_HS = VectorNd::Zero(12);
+    VectorNd semi_target_EP_HS_yaw = VectorNd::Zero(12);
+    VectorNd semi_pre_init_EP_HS_pitch = VectorNd::Zero(12);
+    VectorNd semi_init_EP_HS_pitch = VectorNd::Zero(12);
+    VectorNd semi_goal_EP_HS_pitch = VectorNd::Zero(12);
     VectorNd actual_EP_HS = VectorNd::Zero(12);
+    VectorNd tmp_actual_EP_HS = VectorNd::Zero(12);
+    
 
     VectorNd target_EP_local_HS = VectorNd::Zero(12);
     VectorNd actual_EP_local_hip_HS = VectorNd::Zero(12);
@@ -1318,13 +1325,13 @@ public:
     VectorNd target_base_ori_HS = VectorNd::Zero(3);
     VectorNd goal_base_ori_HS = VectorNd::Zero(3);
 
-    VectorNd semi_target_base_ori_HS = VectorNd::Zero(3);
+    VectorNd semi_target_base_ori_HS_yaw = VectorNd::Zero(3);
     VectorNd target_base_ori_local_HS = VectorNd::Zero(3);
     VectorNd actual_base_ori_local_HS = VectorNd::Zero(3);
 
     //Orientation velocity
     VectorNd target_base_ori_vel_HS = VectorNd::Zero(3);
-    VectorNd semi_target_base_ori_vel_HS = VectorNd::Zero(3);
+    VectorNd semi_target_base_ori_vel_HS_yaw = VectorNd::Zero(3);
     VectorNd target_base_ori_vel_local_HS = VectorNd::Zero(3);
     VectorNd actual_base_ori_vel_local_HS = VectorNd::Zero(3);
 
@@ -1344,13 +1351,14 @@ public:
     bool walk_stop_flag_HS = false;
     bool pre_sub_ctrl_flag = false;
     bool speed_stop_flag_HS = false;
-    bool adaptive_flag_HS = true;
     bool init_Force_flag_HS = true;
     bool z1_gain_flag = false;
     bool z2_gain_flag = false;
     bool z3_gain_flag = false;
     bool z4_gain_flag = false;
-
+    
+     bool adaptive_flag_HS = true;
+    //bool adaptive_flag_HS = false;
     //Cycle time
     int tsp_cnt_HS = 400, fsp_cnt_HS = 350;
     unsigned int step_cnt_HS = tsp_cnt_HS + fsp_cnt_HS;
@@ -1360,8 +1368,12 @@ public:
     unsigned int preview_cnt_HS = step_cnt_HS * 4;
 
     //Walk Info
-    double com_height_HS = 0.45;
-    double foot_height_HS = 0.20;
+    //double com_height_HS = 0.45;
+    double com_height_HS = 0.43;
+    //double com_height_HS = 0.40;
+    //double foot_height_HS = 0.20;
+    double foot_height_HS = 0.18;
+    //double foot_height_HS = 0.10;
     double tmp_foot_height_HS = foot_height_HS;
     double swing_dist_y = 0.0;
     double swing_dist_x = 0.0;
@@ -1424,6 +1436,12 @@ public:
     VectorNd Roll_set = VectorNd::Zero(2);
     VectorNd Pitch_set = VectorNd::Zero(2);
     
+    VectorNd semi_F_QP_global_yaw=VectorNd::Zero(12);
+    
+    double tmp_Friction1=0.0;
+    double tmp_Friction2=0.0;
+    double target_plane_dist_HS=0.0;
+    double actual_plane_dist_HS=0.0;
 private:
 };
 

@@ -48,6 +48,11 @@ Model* pongbot_q_model = new Model();
 
 //struct input_event event;
 
+#define SAVE_LENGTH 160
+#define SAVE_COUNT  60000 //60000
+//#define SAVE_COUNT  180000 //60000
+#define NO_OF_JOINTS 13
+
 namespace gazebo
 {
 
@@ -293,9 +298,9 @@ namespace gazebo
 
         double alpha_roll = 0.998;
         double alpha_pitch = 0.999;
-
+       
         unsigned int ctrl_cnt = 0;
-
+        unsigned int cnt_measure=0;
         common::Time current_time;
 
         //        ros::Subscriber S_mode;
@@ -309,7 +314,7 @@ namespace gazebo
         ros::Subscriber server_sub4;
         ros::Subscriber server_sub5;
         ros::Subscriber server_sub6;
-
+       
 
         bool moving_flag = false;
         //ROS MODE
@@ -322,8 +327,7 @@ namespace gazebo
         //For model load
 
         void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);
-        void UpdateAlgorithm();
-
+        void UpdateAlgorithm(void);
         // Callback function
         void PongBot_Q_ROSmode(const std_msgs::Int32Ptr &msg);
         //        void Callback(const std_msgs::Int32Ptr &msg);
@@ -349,7 +353,7 @@ namespace gazebo
         void ROSMsgPublish1();
         void ROSMsgPublish2();
 
-
+        void dh_save(void);
     };
     GZ_REGISTER_MODEL_PLUGIN(PongBotQ_plugin);
 }
@@ -384,9 +388,10 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
 
 }
 
-void gazebo::PongBotQ_plugin::UpdateAlgorithm()
+void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
 { //* Writing realtime code here!!
     //********************* Base Pose for rviz *****************************//
+
     pose = this->model->GetWorldPose();
 
     //************************** Time ********************************//
@@ -1018,6 +1023,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm()
                 PongBotQ.WalkReady_Pos_Traj_HS();
             } else {
                 PongBotQ.Walking_Gait_Traj_HS();
+                cnt_measure++;
             }
             PongBotQ.ComputeTorqueControl_HS();
 
@@ -1203,7 +1209,9 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
 //    PongBotQ.speed_x = (msg->axes[1]) * 0.22;
 //    PongBotQ.speed_y = (msg->axes[0]) * 0.15;
 //    PongBotQ.speed_yaw = (msg->axes[3]) * 10.0 * (4.0 * PI / 180);
-    PongBotQ.speed_x = (msg->axes[1]) * 0.06;
+//    PongBotQ.speed_x = (msg->axes[1]) * 0.06;
+//    PongBotQ.speed_x = (msg->axes[1]) * 0.1;
+    PongBotQ.speed_x = (msg->axes[1]) * 0.05;
     PongBotQ.speed_y = (msg->axes[0]) * 0.04;
     PongBotQ.speed_yaw = (msg->axes[3]) * 4.0 * (PI / 180);
 }
@@ -1327,8 +1335,10 @@ void gazebo::PongBotQ_plugin::InitROSPubSetting()
     // DH Publisher
     ros_pub1 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data1/", 1000);
     ros_pub2 = n.advertise<std_msgs::Float64MultiArray>("/tmp_data2/", 1000);
-    ros_msg1.data.resize(80);
-    ros_msg2.data.resize(80);
+//    ros_msg1.data.resize(80);
+//    ros_msg2.data.resize(80);
+    ros_msg1.data.resize(30);
+    ros_msg2.data.resize(30);
 
     P_RL_force = n.advertise<geometry_msgs::WrenchStamped>("RL_force", 1000);
     P_RR_force = n.advertise<geometry_msgs::WrenchStamped>("RR_force", 1000);
@@ -1605,31 +1615,44 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
 {
     //********************* DH : Data plot ***************************//
 
-    PongBotQ.tmp_data1[0] = PongBotQ.target_com_pos_HS(0);
-    PongBotQ.tmp_data1[1] = PongBotQ.zmp_ref_x_array_HS(0);
-    PongBotQ.tmp_data1[2] = PongBotQ.target_com_pos_HS(1);
-    PongBotQ.tmp_data1[3] = PongBotQ.zmp_ref_y_array_HS(0);
+    PongBotQ.tmp_data1[0] = PongBotQ.target_EP_HS(2);
+    PongBotQ.tmp_data1[1] = PongBotQ.target_EP_HS(5);
+    PongBotQ.tmp_data1[2] = PongBotQ.target_EP_HS(8);
+    PongBotQ.tmp_data1[3] = PongBotQ.target_EP_HS(11);
     
-    PongBotQ.tmp_data1[4] = PongBotQ.target_EP_HS(0);
-    PongBotQ.tmp_data1[5] = PongBotQ.target_EP_HS(3);
-    PongBotQ.tmp_data1[6] = PongBotQ.target_EP_HS[6];
-    PongBotQ.tmp_data1[7] = PongBotQ.target_EP_HS(9);
+    PongBotQ.tmp_data1[4] = PongBotQ.tmp_actual_EP_HS(2);
+    PongBotQ.tmp_data1[5] = PongBotQ.tmp_actual_EP_HS(5);
+    PongBotQ.tmp_data1[6] = PongBotQ.tmp_actual_EP_HS[8];
+    PongBotQ.tmp_data1[7] = PongBotQ.tmp_actual_EP_HS(11);
     
-    PongBotQ.tmp_data1[8] = PongBotQ.actual_EP_local_HS(2);
-    PongBotQ.tmp_data1[9] = PongBotQ.actual_EP_local_HS(5);
-    PongBotQ.tmp_data1[10] = PongBotQ.actual_EP_local_HS[8];
-    PongBotQ.tmp_data1[11] = PongBotQ.actual_EP_local_HS(11);
+    PongBotQ.tmp_data1[8] = PongBotQ.Task_Control_value_HS(9);
+    PongBotQ.tmp_data1[9] = PongBotQ.Task_Control_value_HS(12);
+    PongBotQ.tmp_data1[10] = PongBotQ.Task_Control_value_HS[15];
+    PongBotQ.tmp_data1[11] = PongBotQ.Task_Control_value_HS(18);
 
-    PongBotQ.tmp_data1[12] = PongBotQ.target_EP_local_HS(2);
-    PongBotQ.tmp_data1[13] = PongBotQ.target_EP_local_HS(5);
-    PongBotQ.tmp_data1[14] = PongBotQ.target_EP_local_HS[8];
-    PongBotQ.tmp_data1[15] = PongBotQ.target_EP_local_HS(11);
+    PongBotQ.tmp_data1[12] = PongBotQ.semi_F_QP_global_yaw(0);
+    PongBotQ.tmp_data1[13] = PongBotQ.semi_F_QP_global_yaw(3);
+    PongBotQ.tmp_data1[14] = PongBotQ.semi_F_QP_global_yaw[6];
+    PongBotQ.tmp_data1[15] = PongBotQ.semi_F_QP_global_yaw(9);
 
-    PongBotQ.tmp_data1[16] = PongBotQ.kp_EP_HS[2]/10000;
-    PongBotQ.tmp_data1[17] = PongBotQ.kp_EP_HS[5]/10000;
-    PongBotQ.tmp_data1[18] = PongBotQ.kp_EP_HS[8]/10000;
-    PongBotQ.tmp_data1[19] = PongBotQ.kp_EP_HS[11]/10000;
-    for (unsigned int i = 0; i < 80; ++i) {
+    PongBotQ.tmp_data1[16] = PongBotQ.semi_F_QP_global_yaw[1];
+    PongBotQ.tmp_data1[17] = PongBotQ.semi_F_QP_global_yaw[4];
+    PongBotQ.tmp_data1[18] = PongBotQ.semi_F_QP_global_yaw[7];
+    PongBotQ.tmp_data1[19] = PongBotQ.semi_F_QP_global_yaw[10];
+    
+    PongBotQ.tmp_data1[20] = PongBotQ.semi_F_QP_global_yaw[2];
+    PongBotQ.tmp_data1[21] = PongBotQ.semi_F_QP_global_yaw[5];
+    PongBotQ.tmp_data1[22] = PongBotQ.semi_F_QP_global_yaw[8];
+    PongBotQ.tmp_data1[23] = PongBotQ.semi_F_QP_global_yaw[11];
+    
+    PongBotQ.tmp_data1[24] = PongBotQ.kp_EP_HS(2);
+    PongBotQ.tmp_data1[25] = PongBotQ.kp_EP_HS(5);
+    PongBotQ.tmp_data1[26] = PongBotQ.kp_EP_HS(8);
+    PongBotQ.tmp_data1[27] = PongBotQ.kp_EP_HS(11);
+    PongBotQ.tmp_data1[28] = cnt_measure * 0.001;
+    
+//    for (unsigned int i = 0; i < 80; ++i) {
+    for (unsigned int i = 0; i < 30; ++i) {
         ros_msg1.data[i] = PongBotQ.tmp_data1(i);
     }
 
@@ -1646,3 +1669,5 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish2()
 
     ros_pub2.publish(ros_msg2);
 }
+
+
