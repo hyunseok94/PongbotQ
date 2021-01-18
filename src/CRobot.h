@@ -1232,7 +1232,8 @@ public:
     //****************************************************Hyun's Code
     // 1. Functions
     void Global_Transform_Z_HS(void);
-    MatrixNd Base_Rotation_Matrix_HS(VectorNd _Base_ori);
+    //MatrixNd Base_Rotation_Matrix_HS(VectorNd _Base_ori);
+    void Base_Rotation_Matrix_HS(void);
     VectorNd FK_HS(VectorNd joint_pos_HS);
     VectorNd Localization_Hip2Base_Pos_HS(VectorNd EP_pos_local);
 
@@ -1254,6 +1255,7 @@ public:
     void Task_Space_Controller(void);
     void Task_Gain_Setting_HS(void);
     void Get_Opt_F_HS(void);
+    void Get_Opt_F_HS2(void);
     void TF_Global2Semi(void);
     void Slope_Controller3(void);
     void Angle_Estimation(void);
@@ -1313,13 +1315,26 @@ public:
     VectorNd EP_vel_local_err_HS = VectorNd::Zero(12);
 
     //Orientation
-    MatrixNd target_C_WB_12d_HS = MatrixNd::Zero(12, 12);
-    MatrixNd target_C_WB_Y_12d_HS = MatrixNd::Zero(12, 12);
-    MatrixNd target_C_WB_RPY_HS = MatrixNd::Zero(3, 3);
-    MatrixNd target_C_WB_RP_HS = MatrixNd::Zero(3, 3);
+    
+    
+    
+    
+    
+    MatrixNd target_C_WB_YPR_HS = MatrixNd::Zero(3, 3);
+    MatrixNd target_C_WB_YPR_12d_HS = MatrixNd::Zero(12, 12);
+    
+    MatrixNd target_C_WB_PR_HS = MatrixNd::Zero(3, 3);    
+    MatrixNd target_C_WB_PR_12d_HS = MatrixNd::Zero(12, 12);
+    
     MatrixNd target_C_WB_Y_HS = MatrixNd::Zero(3, 3);
+    MatrixNd target_C_WB_Y_12d_HS = MatrixNd::Zero(12, 12);
     MatrixNd target_C_WB_Y_2d_HS = MatrixNd::Zero(2, 2);
 
+    MatrixNd target_C_WB_R_HS = MatrixNd::Zero(3, 3);
+    MatrixNd target_C_WB_R_12d_HS = MatrixNd::Zero(12, 12);
+
+    MatrixNd target_C_WB_P_HS = MatrixNd::Zero(3, 3);
+    
     VectorNd pre_init_base_ori_HS = VectorNd::Zero(3);
     VectorNd init_base_ori_HS = VectorNd::Zero(3);
     VectorNd target_base_ori_HS = VectorNd::Zero(3);
@@ -1360,7 +1375,8 @@ public:
      bool adaptive_flag_HS = true;
     //bool adaptive_flag_HS = false;
     //Cycle time
-    int tsp_cnt_HS = 400, fsp_cnt_HS = 350;
+//    int tsp_cnt_HS = 400, fsp_cnt_HS = 350;
+     int tsp_cnt_HS = 700, fsp_cnt_HS = 50;
     unsigned int step_cnt_HS = tsp_cnt_HS + fsp_cnt_HS;
     double tsp_time_HS = tsp_cnt_HS*dt;
     double fsp_time_HS = fsp_cnt_HS*dt;
@@ -1442,6 +1458,35 @@ public:
     double tmp_Friction2=0.0;
     double target_plane_dist_HS=0.0;
     double actual_plane_dist_HS=0.0;
+    
+    VectorNd pre_actual_EP_HS=VectorNd::Zero(12);
+    VectorNd pre_actual_EP_vel_HS=VectorNd::Zero(12);
+    VectorNd actual_EP_vel_HS=VectorNd::Zero(12);
+    VectorNd actual_EP_acc_HS=VectorNd::Zero(12);
+    
+    VectorNd tmp_standard_leg_height_HS=VectorNd::Zero(2);
+    double linear_acc_x = 0.0;
+    double linear_acc_y = 0.0;
+    double linear_acc_z = 0.0;
+    void Base_Estimation_Test(void);
+    VectorNd x_bar = VectorNd::Zero(2);
+    MatrixNd p_bar = MatrixNd::Zero(2, 2);
+    VectorNd x_hat = VectorNd::Zero(2);
+    MatrixNd p_hat = MatrixNd::Zero(2, 2);   
+    bool init_estimation=true;
+    
+    VectorNd actual_base_pos_HS=VectorNd::Zero(3);
+    double tmp_z = 0.0;
+    VectorNd Base_Estimation2(VectorNd actual_EP_pos_local);
+    void Angle_Estimation2(void);
+    
+    VectorNd b_r_RL=VectorNd::Zero(3);
+    VectorNd b_r_RR=VectorNd::Zero(3);
+    VectorNd b_r_FL=VectorNd::Zero(3);
+    VectorNd b_r_FR=VectorNd::Zero(3);
+    
+    bool slope_traj_gen_flag_HS=false;
+    
 private:
 };
 
