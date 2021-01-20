@@ -143,7 +143,9 @@ namespace gazebo
         double FL_torque_x, FL_torque_y, FL_torque_z;
         double FR_force_x, FR_force_y, FR_force_z;
         double FR_torque_x, FR_torque_y, FR_torque_z;
-
+        double Base_height=0.0;
+        gazebo::math::Pose Base_pose;
+        
         //rqt telecommunication
         ros::NodeHandle n;
 
@@ -599,10 +601,8 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
             PongBotQ.com_stop_flag_HS = false;
             PongBotQ.foot_height_HS = PongBotQ.tmp_foot_height_HS;
             PongBotQ.init_Force_flag_HS = true;
-//            PongBotQ.target_base_ori_HS(2) = 0.0;
-            
-            PongBotQ.target_base_ori_HS=VectorNd::Zero(3);
-            PongBotQ.target_base_ori_vel_HS=VectorNd::Zero(3);
+
+            PongBotQ.target_base_ori_local_HS=VectorNd::Zero(3);
             
             PongBotQ.Contact_Info_HS << 1, 1, 1, 1;
             PongBotQ.CommandFlag = GOTO_SLOW_WALK_POS_HS;
@@ -1021,12 +1021,19 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
 
             if (PongBotQ.WalkReady_flag_HS == true) {
                 PongBotQ.WalkReady_Pos_Traj_HS();
+                
             } else {
                 PongBotQ.Walking_Gait_Traj_HS();
+                
                 cnt_measure++;
             }
             PongBotQ.ComputeTorqueControl_HS();
 
+            Base_pose=this->model->GetWorldPose();
+            Base_height=Base_pose.pos.z;
+            //Base_height=this->FRONT_BODY->GetWorldCoGPose().pos.z;
+//            std::cout<<Base_height<<std::endl;
+//            std::cout<<"--------"<<std::endl;
             //PongBotQ.print_HS();
             break;
             
@@ -1619,16 +1626,16 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
 {
     //********************* DH : Data plot ***************************//
 
-    PongBotQ.tmp_data1[0] = PongBotQ.tmp_z;
-    PongBotQ.tmp_data1[1] = PongBotQ.actual_base_pos_HS(2);
-    PongBotQ.tmp_data1[2] = PongBotQ.actual_plane_dist_HS;
-    PongBotQ.tmp_data1[3] = PongBotQ.x_hat(0);
-//    PongBotQ.tmp_data1[4] = PongBotQ.actual_EP_local_HS(8);
+    PongBotQ.tmp_data1[0] = PongBotQ.measure_z;
+    PongBotQ.tmp_data1[1] = PongBotQ.x_hat(0);
+    PongBotQ.tmp_data1[2] = Base_height;
+    PongBotQ.tmp_data1[3] = PongBotQ.base_hold_flag;
+    PongBotQ.tmp_data1[4] = PongBotQ.Plane_Angle(0)*R2D;
     
-    PongBotQ.tmp_data1[5] = PongBotQ.target_base_ori_local_HS(1)*R2D;
-    PongBotQ.tmp_data1[6] = PongBotQ.Plane_Angle(0)*R2D;
-    PongBotQ.tmp_data1[7] = PongBotQ.Plane_Angle(1) * R2D;
-    PongBotQ.tmp_data1[8] = PongBotQ.Contact_Info_HS(0) + PongBotQ.Contact_Info_HS(1) + PongBotQ.Contact_Info_HS(2) + PongBotQ.Contact_Info_HS(3);
+    PongBotQ.tmp_data1[5] = PongBotQ.target_plane_dist_HS;
+    PongBotQ.tmp_data1[6] = PongBotQ.actual_plane_dist_HS;
+    PongBotQ.tmp_data1[7] = PongBotQ.actual_plane_dist_vel_HS;
+    PongBotQ.tmp_data1[8] = PongBotQ.initial_flag_HS;
     
 //    PongBotQ.tmp_data1[8] = PongBotQ.Task_Control_value_HS(9);
 //    PongBotQ.tmp_data1[9] = PongBotQ.Task_Control_value_HS(12);
@@ -1638,7 +1645,7 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
     //PongBotQ.tmp_data1[8] = PongBotQ.target_plane_dist_HS;
     PongBotQ.tmp_data1[9] = PongBotQ.target_base_ori_local_HS(0)*R2D;
     PongBotQ.tmp_data1[10] = PongBotQ.target_base_ori_local_HS(1)*R2D;
-    PongBotQ.tmp_data1[11] = PongBotQ.target_base_ori_HS(2)*R2D;
+    PongBotQ.tmp_data1[11] = PongBotQ.target_yaw_HS*R2D;
 //
 //    PongBotQ.tmp_data1[12] = PongBotQ.semi_F_QP_global_yaw(0);
 //    PongBotQ.tmp_data1[13] = PongBotQ.semi_F_QP_global_yaw(3);
@@ -1654,26 +1661,26 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
     PongBotQ.tmp_data1[14] = PongBotQ.actual_EP_HS[8];
     PongBotQ.tmp_data1[15] = PongBotQ.actual_EP_HS[11];
     
-    PongBotQ.tmp_data1[16] = PongBotQ.actual_EP_vel_HS[2];
-    PongBotQ.tmp_data1[17] = PongBotQ.actual_EP_vel_HS[5];
-    PongBotQ.tmp_data1[18] = PongBotQ.actual_EP_vel_HS[8];
-    PongBotQ.tmp_data1[19] = PongBotQ.actual_EP_vel_HS[11];
+    PongBotQ.tmp_data1[16] = PongBotQ.target_EP_HS[2];
+    PongBotQ.tmp_data1[17] = PongBotQ.target_EP_HS[5];
+    PongBotQ.tmp_data1[18] = PongBotQ.target_EP_HS[8];
+    PongBotQ.tmp_data1[19] = PongBotQ.target_EP_HS[11];
     
     
 //    PongBotQ.tmp_data1[20] = PongBotQ.semi_F_QP_global_yaw[2];
 //    PongBotQ.tmp_data1[21] = PongBotQ.semi_F_QP_global_yaw[5];
 //    PongBotQ.tmp_data1[22] = PongBotQ.semi_F_QP_global_yaw[8];
 //    PongBotQ.tmp_data1[23] = PongBotQ.semi_F_QP_global_yaw[11];
-    PongBotQ.tmp_data1[20] = PongBotQ.Contact_Info_HS[0];
-    PongBotQ.tmp_data1[21] = PongBotQ.Contact_Info_HS[1];
-    PongBotQ.tmp_data1[22] = PongBotQ.Contact_Info_HS[2];
-    PongBotQ.tmp_data1[23] = PongBotQ.Contact_Info_HS[3];
+    PongBotQ.tmp_data1[20] = PongBotQ.actual_EP_vel_HS[2];
+    PongBotQ.tmp_data1[21] = PongBotQ.actual_EP_vel_HS[5];
+    PongBotQ.tmp_data1[22] = PongBotQ.actual_EP_vel_HS[8];
+    PongBotQ.tmp_data1[23] = PongBotQ.actual_EP_vel_HS[11];
     
-    PongBotQ.tmp_data1[24] = PongBotQ.actual_EP_acc_HS(2);
-    PongBotQ.tmp_data1[25] = PongBotQ.actual_EP_acc_HS(5);
-    PongBotQ.tmp_data1[26] = PongBotQ.actual_EP_acc_HS(8);
-    PongBotQ.tmp_data1[27] = PongBotQ.tmp_standard_leg_height_HS(0);
-    PongBotQ.tmp_data1[28] = 0;
+    PongBotQ.tmp_data1[24] = PongBotQ.target_EP_vel_HS(2);
+    PongBotQ.tmp_data1[25] = PongBotQ.target_EP_vel_HS(5);
+    PongBotQ.tmp_data1[26] = PongBotQ.target_EP_vel_HS(8);
+    PongBotQ.tmp_data1[27] = PongBotQ.target_EP_vel_HS(11);
+    PongBotQ.tmp_data1[28] = PongBotQ.Early_Contact_flag_HS;
     
 //    for (unsigned int i = 0; i < 80; ++i) {
     for (unsigned int i = 0; i < 30; ++i) {

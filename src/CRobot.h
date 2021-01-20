@@ -394,7 +394,7 @@ public:
 
     VectorNd angle_err = VectorNd::Zero(13);
     VectorNd EP_err = VectorNd::Zero(12);
-    VectorNd EP_vel_err = VectorNd::Zero(12);
+    //VectorNd EP_vel_err = VectorNd::Zero(12);
 
     VectorNd init_target_pos = VectorNd::Zero(13);
 
@@ -1243,9 +1243,10 @@ public:
 
     void Walking_Gait_Traj_HS(void);
     void Walking_Traj_First_HS(unsigned int _i);
-    void FootStepPlanning_HS3(VectorNd _now_com_pos, VectorNd _now_base_ori, VectorNd _now_EP_pos, VectorNd _tar_vel);
+    void FootStepPlanning_HS3(VectorNd _now_com_pos, double _now_yaw, VectorNd _now_EP_pos, VectorNd _tar_vel);
     void Walking_Traj_COM_VER_HS5(unsigned int _i);
     VectorNd Bezier_Curve_trajectory3(VectorNd Contact_info, VectorNd init_EP_pos_3d, VectorNd goal_EP_pos_3d, VectorNd tmp_act_EP_local);
+    VectorNd Bezier_Curve_trajectory4(VectorNd Contact_info, VectorNd init_EP_pos_3d, VectorNd goal_EP_pos_3d, VectorNd tmp_act_EP_local);
     void Fly_Leg_Gain_Controller4(unsigned int _i);
     void COM_XY_Traj_Gen_COM_VER_HS3(VectorNd _init_com_pos, VectorNd _goal_com_pos);
     void Preview_con_HS();
@@ -1253,6 +1254,7 @@ public:
 
     void ComputeTorqueControl_HS(void);
     void Task_Space_Controller(void);
+    void Task_Space_Controller2(void);
     void Task_Gain_Setting_HS(void);
     void Get_Opt_F_HS(void);
     void Get_Opt_F_HS2(void);
@@ -1273,14 +1275,14 @@ public:
     VectorNd init_com_pos_HS = VectorNd::Zero(3);
     VectorNd target_com_pos_HS = VectorNd::Zero(3);
     VectorNd goal_com_pos_HS = VectorNd::Zero(3);
-    VectorNd target_base_pos_HS = VectorNd::Zero(3);
+    //VectorNd target_base_pos_HS = VectorNd::Zero(3);
     VectorNd semi_target_com_pos_HS_yaw = VectorNd::Zero(3);
     VectorNd semi_init_com_pos_HS_pitch = VectorNd::Zero(3);
     VectorNd semi_goal_com_pos_HS_pitch = VectorNd::Zero(3);
 
     //CoM Velocity 
     VectorNd target_com_vel_HS = VectorNd::Zero(3);
-    VectorNd target_base_vel_HS = VectorNd::Zero(3);
+    //VectorNd target_base_vel_HS = VectorNd::Zero(3);
     VectorNd semi_target_com_vel_HS_yaw= VectorNd::Zero(3);
 
     //CoM Acceleration
@@ -1316,12 +1318,9 @@ public:
 
     //Orientation
     
-    
-    
-    
-    
     MatrixNd target_C_WB_YPR_HS = MatrixNd::Zero(3, 3);
     MatrixNd target_C_WB_YPR_12d_HS = MatrixNd::Zero(12, 12);
+    MatrixNd actual_C_WB_YPR_12d_HS = MatrixNd::Zero(12, 12);
     
     MatrixNd target_C_WB_PR_HS = MatrixNd::Zero(3, 3);    
     MatrixNd target_C_WB_PR_12d_HS = MatrixNd::Zero(12, 12);
@@ -1335,18 +1334,24 @@ public:
 
     MatrixNd target_C_WB_P_HS = MatrixNd::Zero(3, 3);
     
-    VectorNd pre_init_base_ori_HS = VectorNd::Zero(3);
-    VectorNd init_base_ori_HS = VectorNd::Zero(3);
-    VectorNd target_base_ori_HS = VectorNd::Zero(3);
-    VectorNd goal_base_ori_HS = VectorNd::Zero(3);
-
+    MatrixNd actual_C_WB_P_HS = MatrixNd::Zero(3, 3);
+    MatrixNd actual_C_WB_R_HS = MatrixNd::Zero(3, 3);
+    MatrixNd actual_C_WB_YPR_HS = MatrixNd::Zero(3, 3);
+    
+//    VectorNd pre_init_base_ori_HS = VectorNd::Zero(3);
+//    VectorNd init_base_ori_HS = VectorNd::Zero(3);
+//    VectorNd target_base_ori_HS = VectorNd::Zero(3);
+//    VectorNd goal_base_ori_HS = VectorNd::Zero(3);
+    double pre_init_yaw_HS = 0.0;
+    double init_yaw_HS = 0.0;
+    double target_yaw_HS = 0.0;
+    double goal_yaw_HS = 0.0;
+    
     VectorNd semi_target_base_ori_HS_yaw = VectorNd::Zero(3);
     VectorNd target_base_ori_local_HS = VectorNd::Zero(3);
     VectorNd actual_base_ori_local_HS = VectorNd::Zero(3);
 
     //Orientation velocity
-    VectorNd target_base_ori_vel_HS = VectorNd::Zero(3);
-    VectorNd semi_target_base_ori_vel_HS_yaw = VectorNd::Zero(3);
     VectorNd target_base_ori_vel_local_HS = VectorNd::Zero(3);
     VectorNd actual_base_ori_vel_local_HS = VectorNd::Zero(3);
 
@@ -1371,6 +1376,7 @@ public:
     bool z2_gain_flag = false;
     bool z3_gain_flag = false;
     bool z4_gain_flag = false;
+    bool initial_flag_HS=true;
     
      bool adaptive_flag_HS = true;
     //bool adaptive_flag_HS = false;
@@ -1399,12 +1405,20 @@ public:
     VectorNd kd_joint_HS = VectorNd::Zero(13);
     VectorNd kp_EP_HS = VectorNd::Zero(12);
     VectorNd kd_EP_HS = VectorNd::Zero(12);
+    VectorNd kp_Base_HS = VectorNd::Zero(12);
+    VectorNd kd_Base_HS = VectorNd::Zero(12);
     VectorNd init_kp_EP_HS = VectorNd::Zero(12);
     VectorNd init_kd_EP_HS = VectorNd::Zero(12);
+    VectorNd init_kp_Base_HS = VectorNd::Zero(12);
+    VectorNd init_kd_Base_HS = VectorNd::Zero(12);
     VectorNd target_kp_EP_HS = VectorNd::Zero(12);
     VectorNd target_kd_EP_HS = VectorNd::Zero(12);
+    VectorNd target_kp_Base_HS = VectorNd::Zero(12);
+    VectorNd target_kd_Base_HS = VectorNd::Zero(12);
     VectorNd goal_kp_EP_HS = VectorNd::Zero(12);
     VectorNd goal_kd_EP_HS = VectorNd::Zero(12);
+    VectorNd goal_kp_Base_HS = VectorNd::Zero(12);
+    VectorNd goal_kd_Base_HS = VectorNd::Zero(12);
     VectorNd Task_Control_value_HS = VectorNd::Zero(19);
     VectorNd OSQP_Control_value_HS = VectorNd::Zero(19);
 
@@ -1473,10 +1487,11 @@ public:
     MatrixNd p_bar = MatrixNd::Zero(2, 2);
     VectorNd x_hat = VectorNd::Zero(2);
     MatrixNd p_hat = MatrixNd::Zero(2, 2);   
-    bool init_estimation=true;
+    VectorNd pre_x_hat=VectorNd::Zero(2);
     
-    VectorNd actual_base_pos_HS=VectorNd::Zero(3);
-    double tmp_z = 0.0;
+    
+    
+    double measure_z = 0.0;
     VectorNd Base_Estimation2(VectorNd actual_EP_pos_local);
     void Angle_Estimation2(void);
     
@@ -1486,7 +1501,55 @@ public:
     VectorNd b_r_FR=VectorNd::Zero(3);
     
     bool slope_traj_gen_flag_HS=false;
+    bool base_hold_flag=false;
+    VectorNd semi_r_RL = VectorNd::Zero(3);
+    VectorNd semi_r_RR = VectorNd::Zero(3);
+    VectorNd semi_r_FL = VectorNd::Zero(3);
+    VectorNd semi_r_FR = VectorNd::Zero(3);
     
+    VectorNd tmp_actual_EP_local_HS2=VectorNd::Zero(12);
+    VectorNd static_actual_EP_local_HS = VectorNd::Zero(12);
+    double actual_plane_dist_vel_HS = 0.0;
+    double pre_actual_plane_dist_HS=0.0;
+    
+    VectorNd pre_actual_base_pos_HS = VectorNd::Zero(3);
+    
+ 
+    VectorNd target_base_pos_HS=VectorNd::Zero(3);
+    VectorNd actual_base_pos_HS=VectorNd::Zero(3);
+    VectorNd target_base_vel_HS=VectorNd::Zero(3);
+    VectorNd actual_base_vel_HS = VectorNd::Zero(3);
+    
+    VectorNd target_base_pos_12d_HS = VectorNd::Zero(12);
+    VectorNd actual_base_pos_12d_HS = VectorNd::Zero(12);
+    VectorNd target_base_vel_12d_HS = VectorNd::Zero(12);
+    VectorNd actual_base_vel_12d_HS = VectorNd::Zero(12);
+    
+    VectorNd EP_pos_err=VectorNd::Zero(12);
+    VectorNd EP_vel_err=VectorNd::Zero(12);
+    VectorNd Base_pos_err=VectorNd::Zero(12);
+    VectorNd Base_vel_err=VectorNd::Zero(12);
+    
+    VectorNd F_task_global_HS=VectorNd::Zero(12);
+    VectorNd F_task_local_HS=VectorNd::Zero(12);
+
+    
+    VectorNd P0_up = VectorNd::Zero(3);
+    VectorNd P1_up = VectorNd::Zero(3);
+    VectorNd P2_up = VectorNd::Zero(3);
+    VectorNd P3_up = VectorNd::Zero(3);
+    VectorNd P4_up = VectorNd::Zero(3);
+
+    VectorNd P0_down = VectorNd::Zero(3);
+    VectorNd P1_down = VectorNd::Zero(3);
+    VectorNd P2_down = VectorNd::Zero(3);
+    VectorNd P3_down = VectorNd::Zero(3);
+    VectorNd P4_down = VectorNd::Zero(3);
+    
+    VectorNd Leg_state = VectorNd::Zero(5);
+    void Break_leg(void);
+    bool Early_Contact_flag_HS=false;
+    void Task_Space_Controller3(void);
 private:
 };
 

@@ -26,7 +26,7 @@ include_directories(${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE
 
 add_library(${PROJECT_NAME} src/pongbotq_plugin.cc src/CRobot.cpp src/QuadProgpp/Array.cc src/QuadProgpp/QuadProg++.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${RBDL_LIBRARY} ${RBDL_URDFReader_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqp)
+target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqpstatic)
 
 catkin_package(
 #   INCLUDE_DIRS include
