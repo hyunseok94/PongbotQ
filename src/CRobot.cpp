@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <math.h>
 #include "CRobot.h"
+#include "QuadProgpp/Array.hh"
+#include "QuadProgpp/QuadProg++.hh"
+
+
+using namespace quadprogpp;
 
 CRobot::CRobot() {
 }
@@ -5365,15 +5370,16 @@ void CRobot::Global_Transform_Z_HS(void) {
     VectorNd tmp_target_EP_HS(12);
     VectorNd standard_leg(4);
 
-    offset_B2C << -0.04, 0.0, -0.0;
+    //offset_B2C << -0.04, 0.0, -0.0;
+    offset_B2C << -0.05, 0.0, -0.0;
 
     actual_pos_HS = actual_pos;
     actual_EP_local_hip_HS = FK_HS(actual_pos_HS);
     actual_EP_local_HS = Localization_Hip2Base_Pos_HS(actual_EP_local_hip_HS);
-    
+
     actual_base_ori_local_HS << IMURoll, IMUPitch, IMUYaw;
     actual_base_ori_vel_local_HS << IMURoll_dot, IMUPitch_dot, IMUYaw_dot;
-    
+
     Base_Rotation_Matrix_HS();
 
     target_C_WB_YPR_12d_HS.block(0, 0, 3, 3) = target_C_WB_YPR_HS;
@@ -5385,23 +5391,23 @@ void CRobot::Global_Transform_Z_HS(void) {
     target_C_WB_PR_12d_HS.block(3, 3, 3, 3) = target_C_WB_PR_HS;
     target_C_WB_PR_12d_HS.block(6, 6, 3, 3) = target_C_WB_PR_HS;
     target_C_WB_PR_12d_HS.block(9, 9, 3, 3) = target_C_WB_PR_HS;
-    
+
     target_C_WB_Y_12d_HS.block(0, 0, 3, 3) = target_C_WB_Y_HS;
     target_C_WB_Y_12d_HS.block(3, 3, 3, 3) = target_C_WB_Y_HS;
     target_C_WB_Y_12d_HS.block(6, 6, 3, 3) = target_C_WB_Y_HS;
     target_C_WB_Y_12d_HS.block(9, 9, 3, 3) = target_C_WB_Y_HS;
-    
+
     actual_C_WB_YPR_12d_HS.block(0, 0, 3, 3) = actual_C_WB_YPR_HS;
     actual_C_WB_YPR_12d_HS.block(3, 3, 3, 3) = actual_C_WB_YPR_HS;
     actual_C_WB_YPR_12d_HS.block(6, 6, 3, 3) = actual_C_WB_YPR_HS;
     actual_C_WB_YPR_12d_HS.block(9, 9, 3, 3) = actual_C_WB_YPR_HS;
-    
-    
-    measure_z = -(Contact_Info_HS(0) * (actual_EP_local_HS(2) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(1) * (actual_EP_local_HS(5) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(2) * (actual_EP_local_HS(8) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(3) * (actual_EP_local_HS(11) / cos(abs(actual_base_ori_local_HS(1))))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+
+
+    measure_z = -(Contact_Info_HS(0) * actual_EP_local_HS(2) / cos(abs(actual_base_ori_local_HS(1))) + Contact_Info_HS(1) * actual_EP_local_HS(5) / cos(abs(actual_base_ori_local_HS(1))) + Contact_Info_HS(2) * actual_EP_local_HS(8) / cos(abs(actual_base_ori_local_HS(1))) + Contact_Info_HS(3) * actual_EP_local_HS(11) / cos(abs(actual_base_ori_local_HS(1)))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
 
     Base_Estimation_Test();
     actual_base_pos_HS << target_base_pos_HS(0), target_base_pos_HS(1), x_hat(0);
-    
+
 
     actual_EP_HS << actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
     //actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
@@ -5414,84 +5420,86 @@ void CRobot::Global_Transform_Z_HS(void) {
 
     actual_EP_acc_HS = (actual_EP_vel_HS - pre_actual_EP_vel_HS) / dt;
     pre_actual_EP_vel_HS = actual_EP_vel_HS;
-    
+
     if (initial_flag_HS == true) {
         pre_actual_base_pos_HS = actual_base_pos_HS;
     }
 
     actual_base_vel_HS = (actual_base_pos_HS - pre_actual_base_pos_HS) / dt;
     pre_actual_base_pos_HS = actual_base_pos_HS;
-    
-//    if (Contact_Info_HS(0) == 1) {
-//        tmp_actual_EP_local_HS2(2) = actual_EP_local_HS(2);
-//    } else {
-//        tmp_actual_EP_local_HS2(2) = static_actual_EP_local_HS(2);
-//    }
-//
-//    if (Contact_Info_HS(1) == 1) {
-//        tmp_actual_EP_local_HS2(5) = actual_EP_local_HS(5);
-//    } else {
-//        tmp_actual_EP_local_HS2(5) = static_actual_EP_local_HS(5);
-//    }
-//
-//    if (Contact_Info_HS(2) == 1) {
-//        tmp_actual_EP_local_HS2(8) = actual_EP_local_HS(8);
-//    } else {
-//        tmp_actual_EP_local_HS2(8) = static_actual_EP_local_HS(8);
-//    }
-//
-//    if (Contact_Info_HS(3) == 1) {
-//        tmp_actual_EP_local_HS2(11) = actual_EP_local_HS(11);
-//    } else {
-//        tmp_actual_EP_local_HS2(11) = static_actual_EP_local_HS(11);
-//    }
-//    
-    
-  //  tmp_actual_EP_local_HS2 = actual_EP_local_HS;
+
+    //    if (Contact_Info_HS(0) == 1) {
+    //        tmp_actual_EP_local_HS2(2) = actual_EP_local_HS(2);
+    //    } else {
+    //        tmp_actual_EP_local_HS2(2) = static_actual_EP_local_HS(2);
+    //    }
+    //
+    //    if (Contact_Info_HS(1) == 1) {
+    //        tmp_actual_EP_local_HS2(5) = actual_EP_local_HS(5);
+    //    } else {
+    //        tmp_actual_EP_local_HS2(5) = static_actual_EP_local_HS(5);
+    //    }
+    //
+    //    if (Contact_Info_HS(2) == 1) {
+    //        tmp_actual_EP_local_HS2(8) = actual_EP_local_HS(8);
+    //    } else {
+    //        tmp_actual_EP_local_HS2(8) = static_actual_EP_local_HS(8);
+    //    }
+    //
+    //    if (Contact_Info_HS(3) == 1) {
+    //        tmp_actual_EP_local_HS2(11) = actual_EP_local_HS(11);
+    //    } else {
+    //        tmp_actual_EP_local_HS2(11) = static_actual_EP_local_HS(11);
+    //    }
+    //    
+
+    //  tmp_actual_EP_local_HS2 = actual_EP_local_HS;
     //standard_leg = Base_Estimation2(tmp_actual_EP_local_HS2);
-//    if (base_hold_flag == true) {
-       // measure_z = -((standard_leg(0) * (tmp_actual_EP_local_HS2(2)) + standard_leg(1) * (tmp_actual_EP_local_HS2(5)) + standard_leg(2) * (tmp_actual_EP_local_HS2(8)) + standard_leg(3) * (tmp_actual_EP_local_HS2(11)))) / cos(abs(target_base_ori_local_HS(1)));
-  //  } else {
-      //measure_z = -(Contact_Info_HS(0) * (actual_EP_local_HS(2) / cos(abs(target_base_ori_local_HS(1)))) + Contact_Info_HS(1) * (actual_EP_local_HS(5) / cos(abs(target_base_ori_local_HS(1)))) + Contact_Info_HS(2) * (actual_EP_local_HS(8) / cos(abs(target_base_ori_local_HS(1)))) + Contact_Info_HS(3) * (actual_EP_local_HS(11) / cos(abs(target_base_ori_local_HS(1))))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-//    measure_z = -(Contact_Info_HS(0) * (actual_EP_local_HS(2) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(1) * (actual_EP_local_HS(5) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(2) * (actual_EP_local_HS(8) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(3) * (actual_EP_local_HS(11) / cos(abs(actual_base_ori_local_HS(1))))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-//   // }
-//    
-//    Base_Estimation_Test();
-//    actual_base_pos_HS << target_base_pos_HS(0), target_base_pos_HS(1), x_hat(0);
+    //    if (base_hold_flag == true) {
+    // measure_z = -((standard_leg(0) * (tmp_actual_EP_local_HS2(2)) + standard_leg(1) * (tmp_actual_EP_local_HS2(5)) + standard_leg(2) * (tmp_actual_EP_local_HS2(8)) + standard_leg(3) * (tmp_actual_EP_local_HS2(11)))) / cos(abs(target_base_ori_local_HS(1)));
+    //  } else {
+    //measure_z = -(Contact_Info_HS(0) * (actual_EP_local_HS(2) / cos(abs(target_base_ori_local_HS(1)))) + Contact_Info_HS(1) * (actual_EP_local_HS(5) / cos(abs(target_base_ori_local_HS(1)))) + Contact_Info_HS(2) * (actual_EP_local_HS(8) / cos(abs(target_base_ori_local_HS(1)))) + Contact_Info_HS(3) * (actual_EP_local_HS(11) / cos(abs(target_base_ori_local_HS(1))))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    //    measure_z = -(Contact_Info_HS(0) * (actual_EP_local_HS(2) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(1) * (actual_EP_local_HS(5) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(2) * (actual_EP_local_HS(8) / cos(abs(actual_base_ori_local_HS(1)))) + Contact_Info_HS(3) * (actual_EP_local_HS(11) / cos(abs(actual_base_ori_local_HS(1))))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    //   // }
+    //    
+    //    Base_Estimation_Test();
+    //    actual_base_pos_HS << target_base_pos_HS(0), target_base_pos_HS(1), x_hat(0);
     //actual_base_pos_HS << target_base_pos_HS(0), target_base_pos_HS(1), measure_z;
 
 
 }
 
 void CRobot::Base_Rotation_Matrix_HS(void) {
-     target_C_WB_Y_HS << cos(target_yaw_HS), -sin(target_yaw_HS), 0\
+    target_C_WB_Y_HS << cos(target_yaw_HS), -sin(target_yaw_HS), 0\
 , sin(target_yaw_HS), cos(target_yaw_HS), 0\
 , 0, 0, 1;
-        
-     target_C_WB_P_HS << cos(target_base_ori_local_HS(1)), 0, sin(target_base_ori_local_HS(1))\
+
+    target_C_WB_P_HS << cos(target_base_ori_local_HS(1)), 0, sin(target_base_ori_local_HS(1))\
             , 0, 1, 0\
 , -sin(target_base_ori_local_HS(1)), 0, cos(target_base_ori_local_HS(1));
 
-     
+
     target_C_WB_R_HS << 1, 0, 0\
 , 0, cos(target_base_ori_local_HS(0)), -sin(target_base_ori_local_HS(0))\
            , 0, sin(target_base_ori_local_HS(0)), cos(target_base_ori_local_HS(0));
 
-   
+
     target_C_WB_Y_2d_HS = target_C_WB_Y_HS.block(0, 0, 2, 2);
     target_C_WB_PR_HS = target_C_WB_P_HS * target_C_WB_R_HS;
     target_C_WB_YPR_HS = target_C_WB_Y_HS*target_C_WB_PR_HS;
-    
+
     actual_C_WB_P_HS << cos(actual_base_ori_local_HS(1)), 0, sin(actual_base_ori_local_HS(1))\
             , 0, 1, 0\
 , -sin(actual_base_ori_local_HS(1)), 0, cos(actual_base_ori_local_HS(1));
 
-     
+
     actual_C_WB_R_HS << 1, 0, 0\
 , 0, cos(actual_base_ori_local_HS(0)), -sin(actual_base_ori_local_HS(0))\
            , 0, sin(actual_base_ori_local_HS(0)), cos(actual_base_ori_local_HS(0));
-    actual_C_WB_YPR_HS = target_C_WB_Y_HS * actual_C_WB_P_HS*actual_C_WB_R_HS;
     
+    actual_C_WB_PR_HS = actual_C_WB_P_HS*actual_C_WB_R_HS;
+    actual_C_WB_YPR_HS = target_C_WB_Y_HS * actual_C_WB_PR_HS;
+
 }
 
 VectorNd CRobot::FK_HS(VectorNd joint_pos_HS) {
@@ -5566,7 +5574,7 @@ void CRobot::WalkReady_Pos_Traj_HS(void) {
     step_time_HS = 2.0;
     VectorNd init_base_pos_HS(3);
     VectorNd init_base_pos_12d_HS(12);
-   // if (WalkReady_flag_HS == true) {
+    // if (WalkReady_flag_HS == true) {
     if (cnt_HS == 0) {
         init_base_pos_HS = -(actual_EP_local_HS.segment(0, 3) + actual_EP_local_HS.segment(3, 3) + actual_EP_local_HS.segment(6, 3) + actual_EP_local_HS.segment(9, 3)) / 4.0;
         init_com_pos_HS = Get_COM_pos_HS2(init_base_pos_HS);
@@ -5600,7 +5608,7 @@ void CRobot::WalkReady_Pos_Traj_HS(void) {
     //}
     //tmp_actual_EP_local_HS = actual_EP_local_HS;
     target_base_pos_HS = Get_Base_pos_HS2(target_com_pos_HS);
-    std::cout<<cnt_HS<<std::endl;
+    //std::cout << cnt_HS << std::endl;
 }
 
 VectorNd CRobot::Get_COM_pos_HS2(VectorNd _Base_Pos) {
@@ -5632,8 +5640,6 @@ void CRobot::Walking_Gait_Traj_HS(void) {
 
         Fly_Leg_Gain_Controller4(cnt_HS - preview_cnt_HS);
 
-        Slope_Controller3();
-
         if (cnt_HS == preview_cnt_HS + step_cnt_HS * 4.0 - 1) {
             cnt_HS = preview_cnt_HS - 1;
         }
@@ -5641,12 +5647,12 @@ void CRobot::Walking_Gait_Traj_HS(void) {
         cnt_HS++;
     }
     COM_XY_Traj_Gen_COM_VER_HS3(init_com_pos_HS, goal_com_pos_HS);
-   // tmp_actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
-   
-    std::cout<<"----Init----"<<std::endl;
-    std::cout << Leg_state.transpose() << std::endl;
+    // tmp_actual_EP_HS << target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_RPY_HS * actual_EP_local_HS.segment(9, 3);
+
+    // std::cout << "----Init----" << std::endl;
+    // std::cout << Leg_state.transpose() << std::endl;
     Break_leg();
-    std::cout<<"Early_contact_flag="<<Early_Contact_flag_HS<<std::endl;
+    //std::cout << "Early_contact_flag=" << Early_Contact_flag_HS << std::endl;
     //std::cout << target_EP_vel_HS(2) << "," << target_EP_vel_HS(5) << "," << target_EP_vel_HS(8) << "," << target_EP_vel_HS(11) << std::endl;
 }
 
@@ -5795,9 +5801,9 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
         if (_i < tsp_cnt_HS) { //cnt:1400~1649 (250)
             if (adaptive_flag_HS == true) {
                 //actual_EP_HS << target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
-//                actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
+                //                actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
                 //actual_EP_HS << actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
-                
+
                 target_EP_HS(2) = actual_EP_HS(2);
                 //target_EP_HS(5) = actual_EP_HS(5);
                 target_EP_HS(8) = actual_EP_HS(8);
@@ -5824,7 +5830,7 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
                     Contact_Info_HS << 1, 1, 1, 1;
                 } else {
                     Contact_Info_HS << 1, 0, 1, 1;
-                    Leg_state(0)=2;
+                    Leg_state(0) = 2;
                 }
                 tmp_actual_EP_local_HS = actual_EP_local_HS;
                 static_actual_EP_local_HS = actual_EP_local_HS;
@@ -5872,7 +5878,7 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
             // Z direction
             if (adaptive_flag_HS == true) {
                 //actual_EP_HS << target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
-//                actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
+                //                actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
                 //actual_EP_HS << actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
                 target_EP_HS(2) = actual_EP_HS(2);
                 target_EP_HS(5) = actual_EP_HS(5);
@@ -5891,7 +5897,7 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
         } else if (_i < step_cnt_HS + tsp_cnt_HS) { //cnt:1750~1999
             if (adaptive_flag_HS == true) {
                 //actual_EP_HS << target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), target_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
-               //actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
+                //actual_EP_HS << actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + target_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
                 //actual_EP_HS << actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(0, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(3, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(6, 3), actual_base_pos_HS + actual_C_WB_YPR_HS * actual_EP_local_HS.segment(9, 3);
                 //target_EP_HS(2) = actual_EP_HS(2);
                 target_EP_HS(5) = actual_EP_HS(5);
@@ -5919,14 +5925,14 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
                     Contact_Info_HS << 1, 1, 1, 1;
                 } else {
                     Contact_Info_HS << 0, 1, 1, 1;
-                    Leg_state(0)=1;
+                    Leg_state(0) = 1;
                 }
                 tmp_actual_EP_local_HS = actual_EP_local_HS;
                 static_actual_EP_local_HS = actual_EP_local_HS;
             }
 
             tmp_bezi_val = Bezier_Curve_trajectory3(Contact_Info_HS, pre_init_EP_HS.segment(0, 3), init_EP_HS.segment(0, 3), tmp_actual_EP_local_HS.segment(0, 3));
-//            tmp_bezi_val = Bezier_Curve_trajectory4(Contact_Info_HS, pre_init_EP_HS.segment(0, 3), init_EP_HS.segment(0, 3), tmp_actual_EP_local_HS.segment(0, 3));
+            //            tmp_bezi_val = Bezier_Curve_trajectory4(Contact_Info_HS, pre_init_EP_HS.segment(0, 3), init_EP_HS.segment(0, 3), tmp_actual_EP_local_HS.segment(0, 3));
             target_EP_HS.segment(0, 3) = tmp_bezi_val.segment(0, 3);
             target_EP_vel_HS.segment(0, 3) = tmp_bezi_val.segment(3, 3);
 
@@ -6014,7 +6020,7 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
                     Contact_Info_HS << 1, 1, 1, 1;
                 } else {
                     Contact_Info_HS << 1, 1, 0, 1;
-                    Leg_state(0)=3;
+                    Leg_state(0) = 3;
                 }
                 tmp_actual_EP_local_HS = actual_EP_local_HS;
                 static_actual_EP_local_HS = actual_EP_local_HS;
@@ -6105,7 +6111,7 @@ void CRobot::Walking_Traj_COM_VER_HS5(unsigned int _i) { //RR/FL/RL/FR
                     Contact_Info_HS << 1, 1, 1, 1;
                 } else {
                     Contact_Info_HS << 1, 1, 1, 0;
-                    Leg_state(0)=4;
+                    Leg_state(0) = 4;
                 }
                 tmp_actual_EP_local_HS = actual_EP_local_HS;
                 static_actual_EP_local_HS = actual_EP_local_HS;
@@ -6232,23 +6238,23 @@ VectorNd CRobot::Bezier_Curve_trajectory3(VectorNd Contact_info, VectorNd init_E
         if (cnt_bez_HS == 0) {
             tmp_EP_z_size = abs(tmp_act_EP_local(2)) / cos(abs(target_base_ori_local_HS(1)));
 
-            if (now_vel_HS(2) > 0) {
-                if (Contact_info(0) == 0 || Contact_info(2) == 0) {
-                    tmp_h_foot = foot_height_HS / 1.2;
-                }
-                if (Contact_info(1) == 0 || Contact_info(3) == 0) {
-                    tmp_h_foot = foot_height_HS + 0.05;
-                }
-            } else if (now_vel_HS(2) < 0) {
-                if (Contact_info(0) == 0 || Contact_info(2) == 0) {
-                    tmp_h_foot = foot_height_HS + 0.05;
-                }
-                if (Contact_info(1) == 0 || Contact_info(3) == 0) {
-                    tmp_h_foot = foot_height_HS / 1.2;
-                }
-            } else {
+//            if (now_vel_HS(2) > 0) {
+//                if (Contact_info(0) == 0 || Contact_info(2) == 0) {
+//                    tmp_h_foot = foot_height_HS / 1.2;
+//                }
+//                if (Contact_info(1) == 0 || Contact_info(3) == 0) {
+//                    tmp_h_foot = foot_height_HS + 0.05;
+//                }
+//            } else if (now_vel_HS(2) < 0) {
+//                if (Contact_info(0) == 0 || Contact_info(2) == 0) {
+//                    tmp_h_foot = foot_height_HS + 0.05;
+//                }
+//                if (Contact_info(1) == 0 || Contact_info(3) == 0) {
+//                    tmp_h_foot = foot_height_HS / 1.2;
+//                }
+//            } else {
                 tmp_h_foot = foot_height_HS + 0.05;
-            }
+          //  }
 
             if (tmp_EP_z_size > 0.4) {
                 h_foot = tmp_h_foot;
@@ -6269,10 +6275,10 @@ VectorNd CRobot::Bezier_Curve_trajectory3(VectorNd Contact_info, VectorNd init_E
 
             //            P5 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), goal_EP_pos_3d(2);
             //            P6 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), goal_EP_pos_3d(2);
-//            P5 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-target_base_ori_local_HS(1));
-//            P6 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-target_base_ori_local_HS(1));
-//            P5 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-actual_base_ori_local_HS(1));
-//            P6 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-actual_base_ori_local_HS(1));
+            //            P5 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-target_base_ori_local_HS(1));
+            //            P6 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-target_base_ori_local_HS(1));
+            //            P5 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-actual_base_ori_local_HS(1));
+            //            P6 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + Dist_2d_global(0) * tan(-actual_base_ori_local_HS(1));
             P5 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) - 2 * Dist_2d_global(0) * tan(abs(target_base_ori_local_HS(1)));
             P6 << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) - 2 * Dist_2d_global(0) * tan(abs(target_base_ori_local_HS(1)));
 
@@ -6286,8 +6292,8 @@ VectorNd CRobot::Bezier_Curve_trajectory3(VectorNd Contact_info, VectorNd init_E
                 Leg_state(Leg_state(0)) = 1;
             } else {
                 Leg_state(Leg_state(0)) = -1;
-            } 
-                
+            }
+
             b0 = pow((1 - t_bez / (tmp_tsp_time_HS)), 6);
             b1 = 6 * pow((1 - t_bez / (tmp_tsp_time_HS)), 5) * pow((t_bez / (tmp_tsp_time_HS)), 1);
             b2 = 15 * pow((1 - t_bez / (tmp_tsp_time_HS)), 4) * pow((t_bez / (tmp_tsp_time_HS)), 2);
@@ -6308,7 +6314,7 @@ VectorNd CRobot::Bezier_Curve_trajectory3(VectorNd Contact_info, VectorNd init_E
             bezi_vel = P0 * b0_dot + P1 * b1_dot + P2 * b2_dot + P3 * b3_dot + P4 * b4_dot + P5 * b5_dot + P6*b6_dot;
             cnt_bez_HS++;
 
-           
+
             if (cnt_bez_HS == tsp_cnt_HS) {
                 cnt_bez_HS = 0;
                 //bezi_pos = P4;
@@ -6338,7 +6344,7 @@ VectorNd CRobot::Bezier_Curve_trajectory4(VectorNd Contact_info, VectorNd init_E
     double tmp_EP_z_size;
 
     //double tmp_tsp_time_HS = tsp_time_HS - 0.001;
-    double tmp_tsp_time_HS = tsp_time_HS/2.0;
+    double tmp_tsp_time_HS = tsp_time_HS / 2.0;
 
     VectorNd bezi_pos(3);
     VectorNd bezi_vel(3);
@@ -6395,11 +6401,11 @@ VectorNd CRobot::Bezier_Curve_trajectory4(VectorNd Contact_info, VectorNd init_E
             P2_down << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2) + h_foot;
             P3_down << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2);
             P4_down << goal_EP_pos_3d(0), goal_EP_pos_3d(1), init_EP_pos_3d(2);
-            
+
             bezi_pos = P0;
             bezi_vel << 0.0, 0.0, 0.0;
             cnt_bez_HS++;
-        } else if (cnt_bez_HS < tsp_cnt_HS/2.0) {
+        } else if (cnt_bez_HS < tsp_cnt_HS / 2.0) {
             t_bez = (cnt_bez_HS) * dt;
 
             b0_up = pow((1 - t_bez / (tmp_tsp_time_HS)), 4);
@@ -6417,23 +6423,22 @@ VectorNd CRobot::Bezier_Curve_trajectory4(VectorNd Contact_info, VectorNd init_E
             bezi_pos = P0_up * b0_up + P1_up * b1_up + P2_up * b2_up + P3_up * b3_up + P4_up * b4_up;
             bezi_vel = P0_up * b0_dot_up + P1_up * b1_dot_up + P2_up * b2_dot_up + P3_up * b3_dot_up + P4_up * b4_dot_up;
             cnt_bez_HS++;
-          
 
-        }
-        else if (cnt_bez_HS < tsp_cnt_HS){
+
+        } else if (cnt_bez_HS < tsp_cnt_HS) {
             t_bez = (cnt_bez_HS) * dt - tmp_tsp_time_HS;
-            
+
             b0_down = pow((1 - t_bez / (tmp_tsp_time_HS)), 4);
             b1_down = 4 * pow((1 - t_bez / (tmp_tsp_time_HS)), 3) * pow((t_bez / (tmp_tsp_time_HS)), 1);
             b2_down = 6 * pow((1 - t_bez / (tmp_tsp_time_HS)), 2) * pow((t_bez / (tmp_tsp_time_HS)), 2);
             b3_down = 4 * pow((1 - t_bez / (tmp_tsp_time_HS)), 1) * pow((t_bez / (tmp_tsp_time_HS)), 3);
             b4_down = pow((t_bez / (tmp_tsp_time_HS)), 4);
 
-//            b0_dot_down = 4 * pow((1 - t_bez / (tmp_tsp_time_HS)), 3)*(-1 / (tmp_tsp_time_HS));
-//            b1_dot_down = 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 2)*(-1 / (tmp_tsp_time_HS)) * pow((t_bez / (tmp_tsp_time_HS)), 1) + 4 * pow((1 - t_bez / (tmp_tsp_time_HS)), 3)*(1 / (tmp_tsp_time_HS));
-//            b2_dot_down = 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 1)*(-1 / (tmp_tsp_time_HS)) * pow((t_bez / (tmp_tsp_time_HS)), 2) + 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 2) * pow((t_bez / (tmp_tsp_time_HS)), 1)*(1 / (tmp_tsp_time_HS));
-//            b3_dot_down = 4 * (-1 / (tmp_tsp_time_HS)) * pow((t_bez / (tmp_tsp_time_HS)), 3) + 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 1) * pow((t_bez / (tmp_tsp_time_HS)), 2)*(1 / (tmp_tsp_time_HS));
-//            b4_dot_down = 4 * pow((t_bez / (tmp_tsp_time_HS)), 3)*(1 / (tmp_tsp_time_HS));
+            //            b0_dot_down = 4 * pow((1 - t_bez / (tmp_tsp_time_HS)), 3)*(-1 / (tmp_tsp_time_HS));
+            //            b1_dot_down = 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 2)*(-1 / (tmp_tsp_time_HS)) * pow((t_bez / (tmp_tsp_time_HS)), 1) + 4 * pow((1 - t_bez / (tmp_tsp_time_HS)), 3)*(1 / (tmp_tsp_time_HS));
+            //            b2_dot_down = 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 1)*(-1 / (tmp_tsp_time_HS)) * pow((t_bez / (tmp_tsp_time_HS)), 2) + 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 2) * pow((t_bez / (tmp_tsp_time_HS)), 1)*(1 / (tmp_tsp_time_HS));
+            //            b3_dot_down = 4 * (-1 / (tmp_tsp_time_HS)) * pow((t_bez / (tmp_tsp_time_HS)), 3) + 12 * pow((1 - t_bez / (tmp_tsp_time_HS)), 1) * pow((t_bez / (tmp_tsp_time_HS)), 2)*(1 / (tmp_tsp_time_HS));
+            //            b4_dot_down = 4 * pow((t_bez / (tmp_tsp_time_HS)), 3)*(1 / (tmp_tsp_time_HS));
 
             bezi_pos = P0_down * b0_down + P1_down * b1_down + P2_down * b2_down + P3_down * b3_down + P4_down * b4_down;
             ///bezi_vel = P0_down * b0_dot_down + P1_down * b1_dot_down + P2_down * b2_dot_down + P3_down * b3_dot_down + P4_down * b4_dot_down + P5_down * b5_dot_down + P6_down*b6_dot_down;
@@ -6485,34 +6490,34 @@ void CRobot::Fly_Leg_Gain_Controller4(unsigned int _i) {
     goal_kp_EP_global << goal_kp_EP_HS(0), goal_kp_EP_HS(1), 0;
     //    goal_kd_EP_global << goal_kd_EP_HS(0), goal_kd_EP_HS(1), goal_kd_EP_HS(2) / 10;
     goal_kd_EP_global << goal_kd_EP_HS(0), goal_kd_EP_HS(1), goal_kd_EP_HS(2);
-//    goal_kd_EP_global << goal_kd_EP_HS(0), goal_kd_EP_HS(1), 0;
+    //    goal_kd_EP_global << goal_kd_EP_HS(0), goal_kd_EP_HS(1), 0;
 
-//    tmp_R_pitch << cos(abs(target_base_ori_local_HS(1))), 0, sin(abs(target_base_ori_local_HS(1)))\
+    //    tmp_R_pitch << cos(abs(target_base_ori_local_HS(1))), 0, sin(abs(target_base_ori_local_HS(1)))\
 //                 , 0, 1, 0\
 //, sin(abs(target_base_ori_local_HS(1))), 0, cos(abs(target_base_ori_local_HS(1)));
 
-    
-//    tmp_init_kp_EP_local = target_C_WB_P_HS*init_kp_EP_global;
-//    tmp_init_kd_EP_local = target_C_WB_P_HS*init_kd_EP_global;
-//    tmp_goal_kp_EP_local = target_C_WB_P_HS*goal_kp_EP_global;
-//    tmp_goal_kd_EP_local = target_C_WB_P_HS*goal_kd_EP_global;
-//
-//    init_kp_EP_local(0) = abs(tmp_init_kp_EP_local(0));
-//    init_kp_EP_local(1) = abs(tmp_init_kp_EP_local(1));
-//    init_kp_EP_local(2) = abs(tmp_init_kp_EP_local(2));
-//
-//    init_kd_EP_local(0) = abs(tmp_init_kd_EP_local(0));
-//    init_kd_EP_local(1) = abs(tmp_init_kd_EP_local(1));
-//    init_kd_EP_local(2) = abs(tmp_init_kd_EP_local(2));
-//
-//    goal_kp_EP_local(0) = abs(tmp_goal_kp_EP_local(0));
-//    goal_kp_EP_local(1) = abs(tmp_goal_kp_EP_local(1));
-//    goal_kp_EP_local(2) = abs(tmp_goal_kp_EP_local(2));
-//
-//    goal_kd_EP_local(0) = abs(tmp_goal_kd_EP_local(0));
-//    goal_kd_EP_local(1) = abs(tmp_goal_kd_EP_local(1));
-//    goal_kd_EP_local(2) = abs(tmp_goal_kd_EP_local(2));
- 
+
+    //    tmp_init_kp_EP_local = target_C_WB_P_HS*init_kp_EP_global;
+    //    tmp_init_kd_EP_local = target_C_WB_P_HS*init_kd_EP_global;
+    //    tmp_goal_kp_EP_local = target_C_WB_P_HS*goal_kp_EP_global;
+    //    tmp_goal_kd_EP_local = target_C_WB_P_HS*goal_kd_EP_global;
+    //
+    //    init_kp_EP_local(0) = abs(tmp_init_kp_EP_local(0));
+    //    init_kp_EP_local(1) = abs(tmp_init_kp_EP_local(1));
+    //    init_kp_EP_local(2) = abs(tmp_init_kp_EP_local(2));
+    //
+    //    init_kd_EP_local(0) = abs(tmp_init_kd_EP_local(0));
+    //    init_kd_EP_local(1) = abs(tmp_init_kd_EP_local(1));
+    //    init_kd_EP_local(2) = abs(tmp_init_kd_EP_local(2));
+    //
+    //    goal_kp_EP_local(0) = abs(tmp_goal_kp_EP_local(0));
+    //    goal_kp_EP_local(1) = abs(tmp_goal_kp_EP_local(1));
+    //    goal_kp_EP_local(2) = abs(tmp_goal_kp_EP_local(2));
+    //
+    //    goal_kd_EP_local(0) = abs(tmp_goal_kd_EP_local(0));
+    //    goal_kd_EP_local(1) = abs(tmp_goal_kd_EP_local(1));
+    //    goal_kd_EP_local(2) = abs(tmp_goal_kd_EP_local(2));
+
     init_kp_EP_local = init_kp_EP_global;
     init_kd_EP_local = init_kd_EP_global;
     goal_kp_EP_local = goal_kp_EP_global;
@@ -6700,7 +6705,7 @@ void CRobot::COM_XY_Traj_Gen_COM_VER_HS3(VectorNd _init_com_pos, VectorNd _goal_
             swing_dist_x = 0.0;
             swing_dist_y = 0.0;
         } else {
-//            swing_dist_x = 0.05 * cos(target_base_ori_local_HS(1));
+            //            swing_dist_x = 0.05 * cos(target_base_ori_local_HS(1));
             swing_dist_x = 0.05;
             //swing_dist_x = 0.0;
             swing_dist_y = 0.08;
@@ -6710,7 +6715,7 @@ void CRobot::COM_XY_Traj_Gen_COM_VER_HS3(VectorNd _init_com_pos, VectorNd _goal_
 
     //    init_com_pos_2d << _init_com_pos(0), _init_com_pos(1);
     //    goal_com_pos_2d << _goal_com_pos(0), _goal_com_pos(1);
-    tmp_target_yaw = init_yaw_HS+(goal_yaw_HS - init_yaw_HS) / 2.0 * (1 - cos(PI / (step_cnt_HS * 4) * cnt_preview_HS));
+    tmp_target_yaw = init_yaw_HS + (goal_yaw_HS - init_yaw_HS) / 2.0 * (1 - cos(PI / (step_cnt_HS * 4) * cnt_preview_HS));
 
     swing_com_x_2d_global << swing_dist_x * cos(tmp_target_yaw), swing_dist_x * sin(tmp_target_yaw);
     swing_com_y_2d_global << -swing_dist_y * sin(tmp_target_yaw), swing_dist_y * cos(tmp_target_yaw);
@@ -6944,11 +6949,20 @@ void CRobot::ComputeTorqueControl_HS(void) {
     //Task_Space_Controller2();
     Task_Space_Controller3();
 
+    //Get_Opt_F_HS();
+    //Get_Opt_F_HS2();
+    Get_Opt_F_HS3();
     CTC_Torque = C_term + G_term + J_A.transpose() * Task_Control_value_HS - J_A.transpose() * OSQP_Control_value_HS;
+    
+
+     //QuadPP_SOLVE_TEST();
+    //CTC_Torque = C_term + G_term + J_A.transpose() * Task_Control_value_HS - J_A.transpose() * QUADPROGPP_Control_value_HS;
+
     for (int nJoint = 0; nJoint < nDOF; nJoint++) {
         joint[nJoint].torque = CTC_Torque(6 + nJoint);
     }
-    initial_flag_HS=false;
+    initial_flag_HS = false;
+    std::cout << "----End-----" << std::endl;
 }
 
 void CRobot::Task_Space_Controller(void) {
@@ -6960,7 +6974,7 @@ void CRobot::Task_Space_Controller(void) {
 
     target_base_pos_12d_HS << target_base_pos_HS, target_base_pos_HS, target_base_pos_HS, target_base_pos_HS;
     target_EP_local_HS = target_C_WB_YPR_12d_HS.transpose()*(target_EP_HS - target_base_pos_12d_HS);
- 
+
     target_base_vel_HS = target_com_vel_HS;
     target_base_vel_12d_HS << target_base_vel_HS, target_base_vel_HS, target_base_vel_HS, target_base_vel_HS;
     target_EP_vel_local_HS = target_C_WB_YPR_12d_HS.transpose()*(target_EP_vel_HS - target_base_vel_12d_HS);
@@ -6995,76 +7009,77 @@ void CRobot::Task_Space_Controller(void) {
     if (Leg_state(0) != 0) {
         std::cout << "kp_EP=" << kp_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "kd_EP=" << kd_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "kp_Base=" << kp_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "kd_Base=" << kd_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+        //        std::cout << "kp_Base=" << kp_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+        //        std::cout << "kd_Base=" << kd_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "---" << std::endl;
         std::cout << "EP(d)=" << target_EP_local_HS((Leg_state(0) - 1)*3 + 0) << "," << target_EP_local_HS((Leg_state(0) - 1)*3 + 1) << "," << target_EP_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "EP(a)=" << actual_EP_local_HS((Leg_state(0) - 1)*3 + 0) << "," << actual_EP_local_HS((Leg_state(0) - 1)*3 + 1) << "," << actual_EP_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "EP_vel(d)=" << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 0) << "," << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 1) << "," << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "EP_vel(a)=" << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 0) << "," << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 1) << "," << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "Base_d=" << target_base_pos_HS.transpose() << std::endl;
-//        std::cout << "Base_a=" << actual_base_pos_HS.transpose() << std::endl;
+        //        std::cout << "Base_d=" << target_base_pos_HS.transpose() << std::endl;
+        //        std::cout << "Base_a=" << actual_base_pos_HS.transpose() << std::endl;
         std::cout << "---" << std::endl;
         std::cout << "EP_pos_err=" << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 0) << "," << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 1) << "," << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "EP_vel_err=" << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 0) << "," << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 1) << "," << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "base_pos_err=" << Base_pos_err((Leg_state(0) - 1)*3 + 0) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 1) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "base_vel_err=" << Base_vel_err((Leg_state(0) - 1)*3 + 0) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 1) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 2) << std::endl;
+        //        std::cout << "base_pos_err=" << Base_pos_err((Leg_state(0) - 1)*3 + 0) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 1) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 2) << std::endl;
+        //        std::cout << "base_vel_err=" << Base_vel_err((Leg_state(0) - 1)*3 + 0) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 1) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 2) << std::endl;
     }
-    
+
     for (int i = 0; i < 12; ++i) {
         EP_Control_value[i] = kp_EP_HS[i]*(EP_pos_local_err_HS[i]) + kd_EP_HS[i]*(EP_vel_local_err_HS[i]);
     }
 
-    tmp_F_task_HS=target_C_WB_PR_12d_HS*EP_Control_value;
-     if (Leg_state(0) != 0) {
+    tmp_F_task_HS = target_C_WB_PR_12d_HS*EP_Control_value;
+    if (Leg_state(0) != 0) {
         std::cout << "F(motion)=" << tmp_F_task_HS((Leg_state(0) - 1)*3 + 0) << "," << tmp_F_task_HS((Leg_state(0) - 1)*3 + 1) << "," << tmp_F_task_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
     }
 
-    
+
     Task_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, EP_Control_value[0], EP_Control_value[1], EP_Control_value[2], EP_Control_value[3], EP_Control_value[4], EP_Control_value[5], EP_Control_value[6], EP_Control_value[7], EP_Control_value[8], EP_Control_value[9], EP_Control_value[10], EP_Control_value[11];
 
-//    Get_Opt_F_HS();
+    //    Get_Opt_F_HS();
     Get_Opt_F_HS2();
-    
-        std::cout<<"----End-----"<<std::endl;
+
+
+    std::cout << "----End-----" << std::endl;
 }
 
 void CRobot::Task_Space_Controller2(void) {
-    
+
     VectorNd EP_Control_value(12);
     VectorNd tmp_F_task_global_HS(12);
     Task_Gain_Setting_HS();
 
     actual_base_pos_12d_HS << actual_base_pos_HS, actual_base_pos_HS, actual_base_pos_HS, actual_base_pos_HS;
     target_base_pos_12d_HS << target_base_pos_HS, target_base_pos_HS, target_base_pos_HS, target_base_pos_HS;
-     
+
     actual_base_vel_12d_HS << actual_base_vel_HS, actual_base_vel_HS, actual_base_vel_HS, actual_base_vel_HS;
-    
+
     target_base_vel_HS = target_com_vel_HS;
     target_base_vel_12d_HS << target_base_vel_HS, target_base_vel_HS, target_base_vel_HS, target_base_vel_HS;
-    
+
     EP_pos_err = target_EP_HS - actual_EP_HS;
-//    std::cout << "EP_d=" << target_EP_HS.transpose() << std::endl;
-//    std::cout << "EP_a=" << actual_EP_HS.transpose() << std::endl;
-//    std::cout << "------------" << std::endl;
-//    
-//    std::cout << "Base_d=" << target_base_pos_HS.transpose() << std::endl;
-//    std::cout << "Base_a=" << actual_base_pos_HS.transpose() << std::endl;
-//    std::cout << "------------" << std::endl;
-    
-    
+    //    std::cout << "EP_d=" << target_EP_HS.transpose() << std::endl;
+    //    std::cout << "EP_a=" << actual_EP_HS.transpose() << std::endl;
+    //    std::cout << "------------" << std::endl;
+    //    
+    //    std::cout << "Base_d=" << target_base_pos_HS.transpose() << std::endl;
+    //    std::cout << "Base_a=" << actual_base_pos_HS.transpose() << std::endl;
+    //    std::cout << "------------" << std::endl;
+
+
     EP_vel_err = target_EP_vel_HS - actual_EP_vel_HS;
-    
+
     Base_pos_err = actual_base_pos_12d_HS - target_base_pos_12d_HS;
     Base_vel_err = actual_base_vel_12d_HS - target_base_vel_12d_HS;
 
-    
-    for(int i=0; i<12; i++){
-     F_task_global_HS(i) = kp_EP_HS(i) * (EP_pos_err(i)) + kd_EP_HS(i) * (EP_vel_err(i)) + kp_Base_HS(i) * (Base_pos_err(i)) + kd_Base_HS(i) * (Base_vel_err(i));    
+
+    for (int i = 0; i < 12; i++) {
+        F_task_global_HS(i) = kp_EP_HS(i) * (EP_pos_err(i)) + kd_EP_HS(i) * (EP_vel_err(i)) + kp_Base_HS(i) * (Base_pos_err(i)) + kd_Base_HS(i) * (Base_vel_err(i));
     }
-    
-    tmp_F_task_global_HS<<F_task_global_HS(0),F_task_global_HS(1),(1-Contact_Info_HS(0))*F_task_global_HS(2),F_task_global_HS(3),F_task_global_HS(4),(1-Contact_Info_HS(1))*F_task_global_HS(5),F_task_global_HS(6),F_task_global_HS(7),(1-Contact_Info_HS(2))*F_task_global_HS(8),F_task_global_HS(9),F_task_global_HS(10),(1-Contact_Info_HS(3))*F_task_global_HS(11);
-    
+
+    tmp_F_task_global_HS << F_task_global_HS(0), F_task_global_HS(1), (1 - Contact_Info_HS(0)) * F_task_global_HS(2), F_task_global_HS(3), F_task_global_HS(4), (1 - Contact_Info_HS(1)) * F_task_global_HS(5), F_task_global_HS(6), F_task_global_HS(7), (1 - Contact_Info_HS(2)) * F_task_global_HS(8), F_task_global_HS(9), F_task_global_HS(10), (1 - Contact_Info_HS(3)) * F_task_global_HS(11);
+
     if (Leg_state(0) != 0) {
         std::cout << "kp_EP=" << kp_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "kd_EP=" << kd_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
@@ -7081,55 +7096,56 @@ void CRobot::Task_Space_Controller2(void) {
         std::cout << "base_pos_err=" << Base_pos_err((Leg_state(0) - 1)*3 + 0) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 1) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 2) << std::endl;
         std::cout << "base_vel_err=" << Base_vel_err((Leg_state(0) - 1)*3 + 0) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 1) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 2) << std::endl;
     }
-    
+
     F_task_local_HS = target_C_WB_YPR_12d_HS.transpose() * tmp_F_task_global_HS;
-    
+
     for (int i = 0; i < 12; ++i) {
         EP_Control_value[i] = F_task_local_HS[i];
     }
     if (Leg_state(0) != 0) {
-    std::cout << "F(motion)=" << F_task_local_HS((Leg_state(0) - 1)*3 + 0) << "," << F_task_local_HS((Leg_state(0) - 1)*3 + 1) << "," << F_task_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+        std::cout << "F(motion)=" << F_task_local_HS((Leg_state(0) - 1)*3 + 0) << "," << F_task_local_HS((Leg_state(0) - 1)*3 + 1) << "," << F_task_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
     }
     std::cout << "---" << std::endl;
     Task_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, EP_Control_value[0], EP_Control_value[1], EP_Control_value[2], EP_Control_value[3], EP_Control_value[4], EP_Control_value[5], EP_Control_value[6], EP_Control_value[7], EP_Control_value[8], EP_Control_value[9], EP_Control_value[10], EP_Control_value[11];
 
-//    Get_Opt_F_HS();
+    //    Get_Opt_F_HS();
     Get_Opt_F_HS2();
+
 }
 
 void CRobot::Task_Space_Controller3(void) {
-    
+
     VectorNd target_base_pos_12d_HS(12);
     VectorNd target_base_vel_12d_HS(12);
     VectorNd EP_Control_value(12);
     VectorNd tmp_F_task_HS(12);
-    
+
     VectorNd global_target_EP_local_HS(12);
     VectorNd global_target_EP_vel_local_HS(12);
     VectorNd global_actual_EP_local_HS(12);
     VectorNd global_actual_EP_vel_local_HS(12);
     VectorNd global_F_task_local_HS(12);
-    
+
     Task_Gain_Setting_HS();
 
 
     actual_base_pos_12d_HS << actual_base_pos_HS, actual_base_pos_HS, actual_base_pos_HS, actual_base_pos_HS;
     target_base_pos_12d_HS << target_base_pos_HS, target_base_pos_HS, target_base_pos_HS, target_base_pos_HS;
-     
+
     actual_base_vel_12d_HS << actual_base_vel_HS, actual_base_vel_HS, actual_base_vel_HS, actual_base_vel_HS;
     target_base_vel_HS = target_com_vel_HS;
     target_base_vel_12d_HS << target_base_vel_HS, target_base_vel_HS, target_base_vel_HS, target_base_vel_HS;
-    
+
     global_target_EP_local_HS = target_EP_HS - target_base_pos_12d_HS;
     global_target_EP_vel_local_HS = target_EP_vel_HS - target_base_vel_12d_HS;
-    
+
     J_A.block(0, 0, 6, 19) = J_BASE;
     J_A.block(6, 0, 1, 19) = J_FRONT_BODY.block(2, 0, 1, 19); // only yaw
     J_A.block(7, 0, 3, 19) = J_RL;
     J_A.block(10, 0, 3, 19) = J_RR;
     J_A.block(13, 0, 3, 19) = J_FL;
     J_A.block(16, 0, 3, 19) = J_FR;
-    
+
     J_RL2 << J_RL.block(0, 6, 3, 3);
     J_RR2 << J_RR.block(0, 9, 3, 3);
     J_FL2 << J_FL.block(0, 13, 3, 3);
@@ -7144,55 +7160,49 @@ void CRobot::Task_Space_Controller3(void) {
     actual_EP_vel_local_HS.segment(3, 3) = J_RR2*act_RR_q_dot;
     actual_EP_vel_local_HS.segment(6, 3) = J_FL2*act_FL_q_dot;
     actual_EP_vel_local_HS.segment(9, 3) = J_FR2*act_FR_q_dot;
-    
+
     global_actual_EP_local_HS = actual_C_WB_YPR_12d_HS * actual_EP_local_HS;
     global_actual_EP_vel_local_HS = actual_C_WB_YPR_12d_HS * actual_EP_vel_local_HS;
-    
-    
+
+
     for (int i = 0; i < 12; i++) {
         global_F_task_local_HS(i) = kp_EP_HS(i)*(global_target_EP_local_HS(i) - global_actual_EP_local_HS(i)) + kd_EP_HS(i)*(global_target_EP_vel_local_HS(i) - global_actual_EP_vel_local_HS(i));
     }
-        F_task_local_HS = target_C_WB_YPR_12d_HS.transpose() * global_F_task_local_HS;
-    
- 
-    if (Leg_state(0) != 0) {
-        std::cout << "kp_EP=" << kp_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-        std::cout << "kd_EP=" << kd_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "kp_Base=" << kp_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "kd_Base=" << kd_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-        std::cout << "---" << std::endl;
-        std::cout << "EP(d)=" << target_EP_local_HS((Leg_state(0) - 1)*3 + 0) << "," << target_EP_local_HS((Leg_state(0) - 1)*3 + 1) << "," << target_EP_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-        std::cout << "EP(a)=" << actual_EP_local_HS((Leg_state(0) - 1)*3 + 0) << "," << actual_EP_local_HS((Leg_state(0) - 1)*3 + 1) << "," << actual_EP_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-        std::cout << "EP_vel(d)=" << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 0) << "," << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 1) << "," << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-        std::cout << "EP_vel(a)=" << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 0) << "," << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 1) << "," << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "Base_d=" << target_base_pos_HS.transpose() << std::endl;
-//        std::cout << "Base_a=" << actual_base_pos_HS.transpose() << std::endl;
-        std::cout << "---" << std::endl;
-        std::cout << "EP_pos_err=" << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 0) << "," << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 1) << "," << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-        std::cout << "EP_vel_err=" << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 0) << "," << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 1) << "," << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "base_pos_err=" << Base_pos_err((Leg_state(0) - 1)*3 + 0) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 1) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 2) << std::endl;
-//        std::cout << "base_vel_err=" << Base_vel_err((Leg_state(0) - 1)*3 + 0) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 1) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 2) << std::endl;
-    }
-    
+    F_task_local_HS = target_C_WB_YPR_12d_HS.transpose() * global_F_task_local_HS;
+
+
+    //    if (Leg_state(0) != 0) {
+    //        std::cout << "kp_EP=" << kp_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        std::cout << "kd_EP=" << kd_EP_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_EP_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        //        std::cout << "kp_Base=" << kp_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kp_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        //        std::cout << "kd_Base=" << kd_Base_HS((Leg_state(0) - 1)*3 + 0) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 1) << "," << kd_Base_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        std::cout << "---" << std::endl;
+    //        std::cout << "EP(d)=" << target_EP_local_HS((Leg_state(0) - 1)*3 + 0) << "," << target_EP_local_HS((Leg_state(0) - 1)*3 + 1) << "," << target_EP_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        std::cout << "EP(a)=" << actual_EP_local_HS((Leg_state(0) - 1)*3 + 0) << "," << actual_EP_local_HS((Leg_state(0) - 1)*3 + 1) << "," << actual_EP_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        std::cout << "EP_vel(d)=" << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 0) << "," << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 1) << "," << target_EP_vel_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        std::cout << "EP_vel(a)=" << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 0) << "," << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 1) << "," << actual_EP_vel_local_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        //        std::cout << "Base_d=" << target_base_pos_HS.transpose() << std::endl;
+    //        //        std::cout << "Base_a=" << actual_base_pos_HS.transpose() << std::endl;
+    //        std::cout << "---" << std::endl;
+    //        std::cout << "EP_pos_err=" << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 0) << "," << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 1) << "," << EP_pos_local_err_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        std::cout << "EP_vel_err=" << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 0) << "," << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 1) << "," << EP_vel_local_err_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        //        std::cout << "base_pos_err=" << Base_pos_err((Leg_state(0) - 1)*3 + 0) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 1) << "," << Base_pos_err((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //        //        std::cout << "base_vel_err=" << Base_vel_err((Leg_state(0) - 1)*3 + 0) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 1) << "," << Base_vel_err((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //    }
+
     for (int i = 0; i < 12; ++i) {
         EP_Control_value[i] = F_task_local_HS[i];
     }
 
-    tmp_F_task_HS=target_C_WB_PR_12d_HS*EP_Control_value;
-     if (Leg_state(0) != 0) {
-        std::cout << "F(motion)=" << tmp_F_task_HS((Leg_state(0) - 1)*3 + 0) << "," << tmp_F_task_HS((Leg_state(0) - 1)*3 + 1) << "," << tmp_F_task_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
-    }
+    tmp_F_task_HS = target_C_WB_PR_12d_HS*EP_Control_value;
+    //    if (Leg_state(0) != 0) {
+    //        std::cout << "F(motion)=" << tmp_F_task_HS((Leg_state(0) - 1)*3 + 0) << "," << tmp_F_task_HS((Leg_state(0) - 1)*3 + 1) << "," << tmp_F_task_HS((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //    }
 
-    
+
     Task_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, EP_Control_value[0], EP_Control_value[1], EP_Control_value[2], EP_Control_value[3], EP_Control_value[4], EP_Control_value[5], EP_Control_value[6], EP_Control_value[7], EP_Control_value[8], EP_Control_value[9], EP_Control_value[10], EP_Control_value[11];
 
-//    Get_Opt_F_HS();
-    Get_Opt_F_HS2();
-    
-        std::cout<<"----End-----"<<std::endl;
 }
-
-
 
 void CRobot::Task_Gain_Setting_HS(void) {
     double goal_time_force = 2.0;
@@ -7205,36 +7215,36 @@ void CRobot::Task_Gain_Setting_HS(void) {
             //            goal_kp_EP_HS  << 6000, 6000, 3000, 6000, 6000, 3000, 6000, 6000, 3000, 6000, 6000, 3000;
             //            goal_kd_EP_HS << 150, 150, 100, 150, 150, 100, 150, 150, 100, 150, 150, 100; //Designed Gain
 
-//            goal_kp_EP_HS << 3000, 3000, 1500, 3000, 3000, 1500, 3000, 3000, 1500, 3000, 3000, 1500;
-//            goal_kd_EP_HS << 80, 80, 40, 80, 80, 40, 80, 80, 40, 80, 80, 40; //Designed Gain
+            //            goal_kp_EP_HS << 3000, 3000, 1500, 3000, 3000, 1500, 3000, 3000, 1500, 3000, 3000, 1500;
+            //            goal_kd_EP_HS << 80, 80, 40, 80, 80, 40, 80, 80, 40, 80, 80, 40; //Designed Gain
             goal_kp_EP_HS << 2000, 2000, 1000, 2000, 2000, 1000, 2000, 2000, 1000, 2000, 2000, 1000;
             goal_kd_EP_HS << 70, 70, 50, 70, 70, 50, 70, 70, 50, 70, 70, 50; //Designed Gain
-            
+
             target_kp_EP_HS = init_kp_EP_HS;
             target_kd_EP_HS = init_kd_EP_HS;
 
             init_kp_Base_HS = init_kp_EP_HS;
             init_kd_Base_HS = init_kd_EP_HS;
-            goal_kp_Base_HS=goal_kp_EP_HS;
-            goal_kd_Base_HS=goal_kd_EP_HS;
+            goal_kp_Base_HS = goal_kp_EP_HS;
+            goal_kd_Base_HS = goal_kd_EP_HS;
             target_kp_EP_HS = init_kp_Base_HS;
             target_kd_EP_HS = init_kd_Base_HS;
-            
+
             cnt_force_HS++;
 
         } else if (cnt_force_HS < goal_time_force / dt) {
             target_kp_EP_HS = init_kp_EP_HS + (goal_kp_EP_HS - init_kp_EP_HS) / 2.0 * (1 - cos(PI / goal_time_force * cnt_force_HS * dt));
             target_kd_EP_HS = init_kd_EP_HS + (goal_kd_EP_HS - init_kd_EP_HS) / 2.0 * (1 - cos(PI / goal_time_force * cnt_force_HS * dt));
-            
+
             target_kp_Base_HS = init_kp_Base_HS + (goal_kp_Base_HS - init_kp_Base_HS) / 2.0 * (1 - cos(PI / goal_time_force * cnt_force_HS * dt));
             target_kd_Base_HS = init_kd_Base_HS + (goal_kd_Base_HS - init_kd_Base_HS) / 2.0 * (1 - cos(PI / goal_time_force * cnt_force_HS * dt));
-            
+
 
             cnt_force_HS++;
         } else {
             target_kp_EP_HS = goal_kp_EP_HS;
             target_kd_EP_HS = goal_kd_EP_HS;
-            
+
             target_kp_Base_HS = goal_kp_Base_HS;
             target_kd_Base_HS = goal_kd_Base_HS;
 
@@ -7611,12 +7621,12 @@ void CRobot::Get_Opt_F_HS2(void) {
     VectorNd r_com_FR(3);
 
     semi_target_com_acc_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_acc_HS.segment(0, 2), target_com_acc_HS(2);
-    
+
     k_p_QP << 10, 10, 4000, 3000, 3000, 0;
     k_d_QP << 0.1, 0.1, 40, 30, 30, 10;
 
-    r_com_EP_local<<actual_EP_local_HS.segment(0,3)-offset_B2C,actual_EP_local_HS.segment(3,3)-offset_B2C,actual_EP_local_HS.segment(6,3)-offset_B2C,actual_EP_local_HS.segment(9,3)-offset_B2C;
-    r_com_EP_semi_global=target_C_WB_PR_12d_HS*r_com_EP_local;
+    r_com_EP_local << actual_EP_local_HS.segment(0, 3) - offset_B2C, actual_EP_local_HS.segment(3, 3) - offset_B2C, actual_EP_local_HS.segment(6, 3) - offset_B2C, actual_EP_local_HS.segment(9, 3) - offset_B2C;
+    r_com_EP_semi_global = target_C_WB_PR_12d_HS*r_com_EP_local;
 
     r_com_RL << r_com_EP_semi_global(0), r_com_EP_semi_global(1), r_com_EP_semi_global(2);
     r_com_RR << r_com_EP_semi_global(3), r_com_EP_semi_global(4), r_com_EP_semi_global(5);
@@ -7649,8 +7659,8 @@ void CRobot::Get_Opt_F_HS2(void) {
 
     //standard_leg_height_HS = -((Contact_Info_HS(0) * (actual_EP_local_HS(2)) + Contact_Info_HS(1) * (actual_EP_local_HS(5)) + Contact_Info_HS(2) * (actual_EP_local_HS(8)) + Contact_Info_HS(3) * (actual_EP_local_HS(11)))) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
 
-//    actual_plane_dist_HS = (standard_leg_height_HS + offset_B2C(2)) / cos(target_base_ori_HS(1));
-    
+    //    actual_plane_dist_HS = (standard_leg_height_HS + offset_B2C(2)) / cos(target_base_ori_HS(1));
+
     actual_plane_dist_HS = actual_base_pos_HS(2) + offset_B2C(2) / cos(abs(actual_base_ori_local_HS(1)));
 
     if (initial_flag_HS == true) {
@@ -7693,117 +7703,117 @@ void CRobot::Get_Opt_F_HS2(void) {
     for (unsigned int i = 0; i < A_nnz; ++i) {
         q[i] = _q(i);
     }
-//    N = Robot_Weight / 4.0 * cos(target_base_ori_local_HS(1));
+    //    N = Robot_Weight / 4.0 * cos(target_base_ori_local_HS(1));
     N = Robot_Weight / 4.0 * cos(actual_base_ori_local_HS(1));
     tmp_Friction1 = tmp_mu * N;
     tmp_Friction2 = tmp_mu * Robot_Weight / 4.0;
 
     // ===================== Constraints ====================== //
-//    if (Contact_Info_HS(0) == 0) {
-//        _d_u(0) = 0.0;
-//        _d_l(0) = 0.0;
-//        _d_u(1) = 0.0;
-//        _d_l(1) = 0.0;
-//        _d_u(2) = 0.0;
-//        _d_l(2) = 0.0;
-//    } else {
-//        _d_u(2) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
-//        _d_l(2) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(0) = 0.0;
-//            _d_l(0) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(0) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//            _d_l(0) = 0.0;
-//        } else {
-//            _d_u(0) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//            _d_l(0) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//        }
-//        _d_u(1) = tmp_Friction2;
-//        _d_l(1) = -tmp_Friction2;
-//
-//    }
-//
-//    if (Contact_Info_HS(1) == 0) {
-//        _d_u(3) = 0.0;
-//        _d_l(3) = 0.0;
-//        _d_u(4) = 0.0;
-//        _d_l(4) = 0.0;
-//        _d_u(5) = 0.0;
-//        _d_l(5) = 0.0;
-//    } else {
-//        _d_u(5) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
-//        _d_l(5) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(3) = 0.0;
-//            _d_l(3) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(3) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//            _d_l(3) = 0.0;
-//        } else {
-//            _d_u(3) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//            _d_l(3) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//        }
-//
-//        _d_u(4) = tmp_Friction2;
-//        _d_l(4) = -tmp_Friction2;
-//    }
-//
-//    if (Contact_Info_HS(2) == 0) {
-//        _d_u(6) = 0.0;
-//        _d_l(6) = 0.0;
-//        _d_u(7) = 0.0;
-//        _d_l(7) = 0.0;
-//        _d_u(8) = 0.0;
-//        _d_l(8) = 0.0;
-//    } else {
-//        _d_u(8) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
-//        _d_l(8) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(6) = 0.0;
-//            _d_l(6) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(6) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//            _d_l(6) = 0.0;
-//        } else {
-//            _d_u(6) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//            _d_l(6) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//        }
-//        _d_u(7) = tmp_Friction2;
-//        _d_l(7) = -tmp_Friction2;
-//    }
-//
-//
-//    if (Contact_Info_HS(3) == 0) {
-//        _d_u(9) = 0.0;
-//        _d_l(9) = 0.0;
-//        _d_u(10) = 0.0;
-//        _d_l(10) = 0.0;
-//        _d_u(11) = 0.0;
-//        _d_l(11) = 0.0;
-//    } else {
-//        _d_u(11) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
-//        _d_l(11) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(9) = 0.0;
-//            _d_l(9) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(9) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
-//            _d_l(9) = 0.0;
-//        } else {
-//            _d_u(9) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//            _d_l(9) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
-//        }
-//        _d_u(10) = tmp_Friction2;
-//        _d_l(10) = -tmp_Friction2;
-//    }
+    //    if (Contact_Info_HS(0) == 0) {
+    //        _d_u(0) = 0.0;
+    //        _d_l(0) = 0.0;
+    //        _d_u(1) = 0.0;
+    //        _d_l(1) = 0.0;
+    //        _d_u(2) = 0.0;
+    //        _d_l(2) = 0.0;
+    //    } else {
+    //        _d_u(2) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
+    //        _d_l(2) = 0.0;
+    //
+    //        if (target_base_ori_local_HS(1) < 0.0) {
+    //            _d_u(0) = 0.0;
+    //            _d_l(0) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //        } else if (target_base_ori_local_HS(1) > 0.0) {
+    //            _d_u(0) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //            _d_l(0) = 0.0;
+    //        } else {
+    //            _d_u(0) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //            _d_l(0) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //        }
+    //        _d_u(1) = tmp_Friction2;
+    //        _d_l(1) = -tmp_Friction2;
+    //
+    //    }
+    //
+    //    if (Contact_Info_HS(1) == 0) {
+    //        _d_u(3) = 0.0;
+    //        _d_l(3) = 0.0;
+    //        _d_u(4) = 0.0;
+    //        _d_l(4) = 0.0;
+    //        _d_u(5) = 0.0;
+    //        _d_l(5) = 0.0;
+    //    } else {
+    //        _d_u(5) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
+    //        _d_l(5) = 0.0;
+    //
+    //        if (target_base_ori_local_HS(1) < 0.0) {
+    //            _d_u(3) = 0.0;
+    //            _d_l(3) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //
+    //        } else if (target_base_ori_local_HS(1) > 0.0) {
+    //            _d_u(3) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //            _d_l(3) = 0.0;
+    //        } else {
+    //            _d_u(3) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //            _d_l(3) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //        }
+    //
+    //        _d_u(4) = tmp_Friction2;
+    //        _d_l(4) = -tmp_Friction2;
+    //    }
+    //
+    //    if (Contact_Info_HS(2) == 0) {
+    //        _d_u(6) = 0.0;
+    //        _d_l(6) = 0.0;
+    //        _d_u(7) = 0.0;
+    //        _d_l(7) = 0.0;
+    //        _d_u(8) = 0.0;
+    //        _d_l(8) = 0.0;
+    //    } else {
+    //        _d_u(8) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
+    //        _d_l(8) = 0.0;
+    //
+    //        if (target_base_ori_local_HS(1) < 0.0) {
+    //            _d_u(6) = 0.0;
+    //            _d_l(6) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //
+    //        } else if (target_base_ori_local_HS(1) > 0.0) {
+    //            _d_u(6) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //            _d_l(6) = 0.0;
+    //        } else {
+    //            _d_u(6) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //            _d_l(6) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //        }
+    //        _d_u(7) = tmp_Friction2;
+    //        _d_l(7) = -tmp_Friction2;
+    //    }
+    //
+    //
+    //    if (Contact_Info_HS(3) == 0) {
+    //        _d_u(9) = 0.0;
+    //        _d_l(9) = 0.0;
+    //        _d_u(10) = 0.0;
+    //        _d_l(10) = 0.0;
+    //        _d_u(11) = 0.0;
+    //        _d_l(11) = 0.0;
+    //    } else {
+    //        _d_u(11) = Robot_Weight * beta + tmp_Friction1 * sin(target_base_ori_local_HS(1));
+    //        _d_l(11) = 0.0;
+    //
+    //        if (target_base_ori_local_HS(1) < 0.0) {
+    //            _d_u(9) = 0.0;
+    //            _d_l(9) = -(tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //
+    //        } else if (target_base_ori_local_HS(1) > 0.0) {
+    //            _d_u(9) = (tmp_Friction1 * cos(target_base_ori_local_HS(1)) - N * sin(target_base_ori_local_HS(1)));
+    //            _d_l(9) = 0.0;
+    //        } else {
+    //            _d_u(9) = tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //            _d_l(9) = -tmp_Friction1 * cos(target_base_ori_local_HS(1));
+    //        }
+    //        _d_u(10) = tmp_Friction2;
+    //        _d_l(10) = -tmp_Friction2;
+    //    }
     if (Contact_Info_HS(0) == 0) {
         _d_u(0) = 0.0;
         _d_l(0) = 0.0;
@@ -7928,31 +7938,23 @@ void CRobot::Get_Opt_F_HS2(void) {
         semi_F_QP_global_yaw(i) = QP_work->solution->x[i];
     }
 
-    // target_C_WB_Y_12d_HS.block(0, 0, 3, 3) = target_C_WB_Y_HS;
-    // target_C_WB_Y_12d_HS.block(3, 3, 3, 3) = target_C_WB_Y_HS;
-    // target_C_WB_Y_12d_HS.block(6, 6, 3, 3) = target_C_WB_Y_HS;
-    // target_C_WB_Y_12d_HS.block(9, 9, 3, 3) = target_C_WB_Y_HS;
+    //    if (Leg_state(0) != 0) {
+    //        std::cout << "F(QP)=" << semi_F_QP_global_yaw((Leg_state(0) - 1)*3 + 0) << "," << semi_F_QP_global_yaw((Leg_state(0) - 1)*3 + 1) << "," << semi_F_QP_global_yaw((Leg_state(0) - 1)*3 + 2) << std::endl;
+    //    }
 
-    // F_QP_global = target_C_WB_Y_12d_HS * semi_F_QP_global_yaw;
-    // F_QP_local = target_C_WB_12d_HS.transpose() * F_QP_global;
- 
-    if (Leg_state(0) != 0) {
-        std::cout << "F(QP)=" << semi_F_QP_global_yaw((Leg_state(0) - 1)*3 + 0) << "," << semi_F_QP_global_yaw((Leg_state(0) - 1)*3 + 1) << "," << semi_F_QP_global_yaw((Leg_state(0) - 1)*3 + 2) << std::endl;
-    }
 
-    
     F_QP_local = target_C_WB_PR_12d_HS.transpose() * semi_F_QP_global_yaw;
     OSQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
-    // std::cout <<"Force(N)="<< F_QP_local(2) + F_QP_local(5) + F_QP_local(8) + F_QP_local(11) << std::endl;
-    //std::cout<<"-------------------"<<std::endl;
+    cout<<"osqp="<<semi_F_QP_global_yaw.transpose()<<endl;
+    cout << "Fz=" << semi_F_QP_global_yaw(2) + semi_F_QP_global_yaw(5) + semi_F_QP_global_yaw(8) + semi_F_QP_global_yaw(11) << endl;
 }
 
 void CRobot::TF_Global2Semi(void) {
 
-//    semi_target_EP_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(0, 2), target_EP_HS(2), target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(3, 2), target_EP_HS(5), target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(6, 2), target_EP_HS(8), target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(9, 2), target_EP_HS(11);
-//    semi_target_base_ori_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_base_ori_HS.segment(0, 2), target_base_ori_HS(2);
-//    semi_target_base_ori_vel_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_base_ori_vel_HS.segment(0, 2), target_base_ori_vel_HS(2);
-//    semi_target_com_pos_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_pos_HS.segment(0, 2), target_com_pos_HS(2);
+    //    semi_target_EP_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(0, 2), target_EP_HS(2), target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(3, 2), target_EP_HS(5), target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(6, 2), target_EP_HS(8), target_C_WB_Y_2d_HS.transpose() * target_EP_HS.segment(9, 2), target_EP_HS(11);
+    //    semi_target_base_ori_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_base_ori_HS.segment(0, 2), target_base_ori_HS(2);
+    //    semi_target_base_ori_vel_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_base_ori_vel_HS.segment(0, 2), target_base_ori_vel_HS(2);
+    //    semi_target_com_pos_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_pos_HS.segment(0, 2), target_com_pos_HS(2);
     semi_target_com_acc_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_acc_HS.segment(0, 2), target_com_acc_HS(2);
 }
 
@@ -8042,11 +8044,11 @@ void CRobot::Slope_Controller3(void) {
 //}
 
 void CRobot::Angle_Estimation2(void) {
-    Vector3d semi_w_n;
+    //Vector3d semi_w_n;
     //Vector3d semi_r_RL, semi_r_RR, semi_r_FL, semi_r_FR;
-    MatrixNd A_angle(4,3);
+    MatrixNd A_angle(4, 3);
     VectorNd b_angle(4);
-    MatrixNd tmp_A_angle(3,3);
+    MatrixNd tmp_A_angle(3, 3);
     VectorNd tmp_angle_coeff(3);
     double estimated_angle_size;
     VectorNd Angle_vec_semi_global(2);
@@ -8069,13 +8071,15 @@ void CRobot::Angle_Estimation2(void) {
         tmp_A_angle = A_angle.transpose() * A_angle;
         tmp_angle_coeff = tmp_A_angle.inverse() * A_angle.transpose() * b_angle;
 
-        semi_w_n << tmp_angle_coeff(1), tmp_angle_coeff(2), 1;
+        semi_w_n << -tmp_angle_coeff(1), -tmp_angle_coeff(2), 1;
 
         /* global*/
         estimated_angle_size = acos(semi_w_n(2) / sqrt(pow(semi_w_n(0), 2) + pow(semi_w_n(1), 2) + pow(semi_w_n(2), 2)));
 
         Angle_vec_semi_global = semi_w_n.segment(0, 2) / sqrt(pow(semi_w_n(0), 2) + pow(semi_w_n(1), 2)) * estimated_angle_size;
-        Plane_Angle << -Angle_vec_semi_global(1), -Angle_vec_semi_global(0);
+        Plane_Angle << Angle_vec_semi_global(1), Angle_vec_semi_global(0);
+        cout<<"Roll="<<Angle_vec_semi_global(1)*R2D<<endl;
+        cout<<"Pitch="<<Angle_vec_semi_global(0)*R2D<<endl;
     } else {
         slope_traj_gen_flag_HS = true;
     }
@@ -8083,20 +8087,20 @@ void CRobot::Angle_Estimation2(void) {
     Roll_set = Low_pass_Filter_HS(Plane_Angle(0), Roll_set(0), 0.999);
     Pitch_set = Low_pass_Filter_HS(Plane_Angle(1), Pitch_set(0), 0.999);
 
-//    std::cout << abs(Plane_Angle(0)) << std::endl;
-//    std::cout << "----------------------------" << std::endl;
-//    
+    //    std::cout << abs(Plane_Angle(0)) << std::endl;
+    //    std::cout << "----------------------------" << std::endl;
+    //    
     //if (abs(Plane_Angle(0)) < thres_roll) {
-        //filtered_Pitch_local_vec << 0.0, Pitch_set(0), 0.0;
-        //if (slope_traj_gen_flag_HS == true) {
-            filtered_Pitch_local_vec << 0.0, Plane_Angle(1), 0.0;
-            base_hold_flag = false;
-      //  }
+    //filtered_Pitch_local_vec << 0.0, Pitch_set(0), 0.0;
+    //if (slope_traj_gen_flag_HS == true) {
+    filtered_Pitch_local_vec << 0.0, Plane_Angle(1), 0.0;
+    base_hold_flag = false;
+    //  }
     //} else {
-      //  if (slope_traj_gen_flag_HS == true) {
-       //     filtered_Pitch_local_vec << 0.0, 0.0, 0.0;
-        //    base_hold_flag = true;
-       // }
+    //  if (slope_traj_gen_flag_HS == true) {
+    //     filtered_Pitch_local_vec << 0.0, 0.0, 0.0;
+    //    base_hold_flag = true;
+    // }
     ///}
 }
 
@@ -8151,51 +8155,54 @@ void CRobot::print_HS(void) {
     std::cout << "__________________________________________________________" << std::endl;
 }
 
-void CRobot::Base_Estimation_Test(void){
+void CRobot::Base_Estimation_Test(void) {
 
     VectorNd k_gain(2);
     double tmp_mat;
     VectorNd f(2);
-    MatrixNd A(2,2);
+    MatrixNd A(2, 2);
     VectorNd H(2);
-    MatrixNd Q(2,2);
+    MatrixNd Q(2, 2);
     double R;
     double a_z;
     double z_measure;
-    double g=9.81;
+    double g = 9.81;
     double theta;
 
-    Q<<0.001,0\
-       ,0,0.001;
+    Q << 0.001, 0\
+, 0, 0.001;
 
-//    R=50;
-    R=500;
+    R=30;
+        //R=50;
+    //R = 500;
 
     // System matrix
     A << 1, dt\
-        , 0, 1;
+, 0, 1;
 
     H << 1, 0;
 
     //theta=target_base_ori_local_HS(1);
-    theta=actual_base_ori_local_HS(1);
+    theta = actual_base_ori_local_HS(1);
     // Sensor
-    a_z = sin(theta) * linear_acc_x + cos(theta) * linear_acc_z;
+    
+    actual_base_acc_HS = actual_C_WB_PR_HS*actual_base_acc_local_HS;
+    //a_z = sin(theta) * linear_acc_x + cos(theta) * linear_acc_z;
     //z_measure = actual_plane_dist_HS;
     z_measure = measure_z;
 
     if (initial_flag_HS == true) {
         x_hat(0) = z_measure;
         x_hat(1) = 0.0;
-//        p_hat(0, 0) = 0.1;
+        //        p_hat(0, 0) = 0.1;
         //p_hat(1, 1) = 0.01;
         p_hat(0, 0) = 0.0;
         p_hat(1, 1) = 0.0;
-        pre_x_hat=x_hat;
+        pre_x_hat = x_hat;
     }
-   //Prediciton
-    x_bar(0) = x_hat(0) + dt * x_hat(1) + 1 / 2 * (a_z - g) * dt*dt;
-    x_bar(1) = x_hat(1)+(a_z - g) * dt;
+    //Prediciton
+    x_bar(0) = x_hat(0) + dt * x_hat(1) + 1 / 2 * (actual_base_acc_HS(2) - g) * dt*dt;
+    x_bar(1) = x_hat(1)+(actual_base_acc_HS(2) - g) * dt;
     p_bar = A * p_hat * A.transpose() + Q;
 
     //Kalman gain
@@ -8204,7 +8211,7 @@ void CRobot::Base_Estimation_Test(void){
     //Correction
     x_hat = x_bar + k_gain * (z_measure - H.transpose() * x_bar);
     p_hat = p_bar - k_gain * H.transpose() * p_bar.transpose();
-   
+
 }
 
 VectorNd CRobot::Base_Estimation2(VectorNd actual_EP_pos_local) {
@@ -8212,16 +8219,16 @@ VectorNd CRobot::Base_Estimation2(VectorNd actual_EP_pos_local) {
     double z_RL, z_RR, z_FL, z_FR;
     VectorNd tmp_Standard_leg = VectorNd::Zero(4);
     VectorNd tmp_actual_EP_pos_global;
-    
+
     //tmp_actual_EP_pos_global=target_C_WB_PR_12d_HS*actual_EP_pos_local;
     z_RL = abs(actual_EP_pos_local(2) / cos(abs(target_base_ori_local_HS(1))));
     z_RR = abs(actual_EP_pos_local(5) / cos(abs(target_base_ori_local_HS(1))));
     z_FL = abs(actual_EP_pos_local(8) / cos(abs(target_base_ori_local_HS(1))));
     z_FR = abs(actual_EP_pos_local(11) / cos(abs(target_base_ori_local_HS(1))));
-    
+
     std::cout << z_RL << "," << z_RR << "," << z_FL << "," << z_FR << std::endl;
     std::cout << "-----------------------" << std::endl;
-    
+
     if (z_RL >= z_RR) {
         if (z_RL >= z_FL) {
             if (z_RL >= z_FR) {
@@ -8254,392 +8261,968 @@ VectorNd CRobot::Base_Estimation2(VectorNd actual_EP_pos_local) {
     }
 
 
-     return tmp_Standard_leg;
+    return tmp_Standard_leg;
 }
 
 void CRobot::Break_leg(void) {
     if (Leg_state(Leg_state(0)) == -1) {
-        if (actual_EP_acc_HS((Leg_state(0) - 1) * 3 + 2) > 100) { 
-         Early_Contact_flag_HS = true;
+        if (actual_EP_acc_HS((Leg_state(0) - 1) * 3 + 2) > 100) {
+            Early_Contact_flag_HS = true;
         }
-        if(Early_Contact_flag_HS==true){
-//            target_EP_vel_HS((Leg_state(0) - 1)*3 + 0) = 0.0;
-//            target_EP_vel_HS((Leg_state(0) - 1)*3 + 1) = 0.0;
+        if (Early_Contact_flag_HS == true) {
+            target_EP_vel_HS((Leg_state(0) - 1)*3 + 0) = 0.0;
+            target_EP_vel_HS((Leg_state(0) - 1)*3 + 1) = 0.0;
             target_EP_vel_HS((Leg_state(0) - 1)*3 + 2) = 0.0;
         }
-    }
-    else {
-        Early_Contact_flag_HS=false;
+    } else {
+        Early_Contact_flag_HS = false;
     }
 }
 
-//void CRobot::QP_SOLVE_TEST(VectorNd EP_pos_global, VectorNd COM_pos_global) {
-//    quadprogpp::Matrix<double> G, CE, CI;
-//    quadprogpp::Vector<double> g0, ce0, ci0, x;
-//    
-//    MatrixNd A_BC(6, 12);
-//    MatrixNd tmp_A_BC(12, 6);
-//    VectorNd b_BC(6);
-//    MatrixNd W(12, 12);
-//    
-//    double Fz_RL_max, Fz_RL_min;
-//    double Fz_RR_max, Fz_RR_min;
-//    double Fz_FL_max, Fz_FL_min;
-//    double Fz_FR_max, Fz_FR_min;
-//
-//    double Rear_body_mass = 13.826;
-//    double Front_body_mass = 10.507;
-//    double One_leg_mass = 5.295;
-//    double Robot_mass = Rear_body_mass + Front_body_mass + One_leg_mass * 4;
-//    double Robot_Weight = Robot_mass*GRAVITY;
-//
-//    double one_leg_weight = 120;
-//
-//    
-//
-//    VectorNd r_RL(3);
-//    VectorNd r_RR(3);
-//    VectorNd r_FL(3);
-//    VectorNd r_FR(3);
-//    VectorNd r_COM(3);
-//
-//    VectorNd k_p_QP(6);
-//    VectorNd k_d_QP(6);
-//    double b1, b2, b3, b4, b5, b6;
-//
-//    VectorNd F_QP_global(12);
-//    VectorNd F_QP_local(12);
-//
-//    double alpha = 0.001;
-//    double beta = 1.0;
-//    double tmp_mu = 1.0;
-//    W = MatrixNd::Identity(12, 12);
-//
-//    VectorNd target_base_pos_rel(3);
-//    VectorNd actual_base_pos_rel(3);
-//    VectorNd target_com_pos_rel(3);
-//    VectorNd actual_com_pos_rel(3);
-//
-//    VectorNd target_base_vel_rel(3);
-//    VectorNd actual_base_vel_rel(3);
-//
-//    VectorNd Err_com_pos(3);
-//    VectorNd Err_com_vel(3);
-//
-//    VectorNd standard_info_HS(4);
-//    double standard_leg_height_HS;
-//
-//    double N;
-//
-//    VectorNd r_com_EP_local(12);
-//    VectorNd r_com_EP_semi_global(12);
-//    VectorNd r_com_RL(3);
-//    VectorNd r_com_RR(3);
-//    VectorNd r_com_FL(3);
-//    VectorNd r_com_FR(3);
-//
-//    semi_target_com_acc_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_acc_HS.segment(0, 2), target_com_acc_HS(2);
-//    
-//    k_p_QP << 10, 10, 4000, 3000, 3000, 0;
-//    k_d_QP << 0.1, 0.1, 40, 30, 30, 10;
-//
-//    r_com_EP_local<<actual_EP_local_HS.segment(0,3)-offset_B2C,actual_EP_local_HS.segment(3,3)-offset_B2C,actual_EP_local_HS.segment(6,3)-offset_B2C,actual_EP_local_HS.segment(9,3)-offset_B2C;
-//    r_com_EP_semi_global=target_C_WB_PR_12d_HS*r_com_EP_local;
-//
-//    r_com_RL << r_com_EP_semi_global(0), r_com_EP_semi_global(1), r_com_EP_semi_global(2);
-//    r_com_RR << r_com_EP_semi_global(3), r_com_EP_semi_global(4), r_com_EP_semi_global(5);
-//    r_com_FL << r_com_EP_semi_global(6), r_com_EP_semi_global(7), r_com_EP_semi_global(8);
-//    r_com_FR << r_com_EP_semi_global(9), r_com_EP_semi_global(10), r_com_EP_semi_global(11);
-//
-//
-//    A_BC << Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0, 0\
-//, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0\
-//, 0, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3)\
-//          , 0, -Contact_Info_HS(0) * (r_com_RL(2)), Contact_Info_HS(0) * (r_com_RL(1)), 0, -Contact_Info_HS(1) * (r_com_RR(2)), Contact_Info_HS(1) * (r_com_RR(1)), 0, -Contact_Info_HS(2) * (r_com_FL(2)), Contact_Info_HS(2) * (r_com_FL(1)), 0, -Contact_Info_HS(3) * (r_com_FR(2)), Contact_Info_HS(3) * (r_com_FR(1))\
-//          , Contact_Info_HS(0) * (r_com_RL(2)), 0, -Contact_Info_HS(0)*(r_com_RL(0)), Contact_Info_HS(1) * (r_com_RR(2)), 0, -Contact_Info_HS(1)*(r_com_RR(0)), Contact_Info_HS(2) * (r_com_FL(2)), 0, -Contact_Info_HS(2)*(r_com_FL(0)), Contact_Info_HS(3) * (r_com_FR(2)), 0, -Contact_Info_HS(3)*(r_com_FR(0))\
-//          , -Contact_Info_HS(0) * (r_com_RL(1)), Contact_Info_HS(0) * (r_com_RL(0)), 0, -Contact_Info_HS(1) * (r_com_RR(1)), Contact_Info_HS(1)*(r_com_RR(0)), 0, -Contact_Info_HS(2) * (r_com_FL(1)), Contact_Info_HS(2)*(r_com_FL(0)), 0, -Contact_Info_HS(3) * (r_com_FR(1)), Contact_Info_HS(3)*(r_com_FR(0)), 0;
-//
-//    tmp_A_BC = A_BC.transpose();
-//
-//    target_base_pos_rel = -(Contact_Info_HS(0) * target_EP_local_HS.segment(0, 3) + Contact_Info_HS(1) * target_EP_local_HS.segment(3, 3) + Contact_Info_HS(2) * target_EP_local_HS.segment(6, 3) + Contact_Info_HS(3) * target_EP_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-//    actual_base_pos_rel = -(Contact_Info_HS(0) * actual_EP_local_HS.segment(0, 3) + Contact_Info_HS(1) * actual_EP_local_HS.segment(3, 3) + Contact_Info_HS(2) * actual_EP_local_HS.segment(6, 3) + Contact_Info_HS(3) * actual_EP_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-//
-//    target_base_vel_rel = -(Contact_Info_HS(0) * target_EP_vel_local_HS.segment(0, 3) + Contact_Info_HS(1) * target_EP_vel_local_HS.segment(3, 3) + Contact_Info_HS(2) * target_EP_vel_local_HS.segment(6, 3) + Contact_Info_HS(3) * target_EP_vel_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-//    actual_base_vel_rel = -(Contact_Info_HS(0) * actual_EP_vel_local_HS.segment(0, 3) + Contact_Info_HS(1) * actual_EP_vel_local_HS.segment(3, 3) + Contact_Info_HS(2) * actual_EP_vel_local_HS.segment(6, 3) + Contact_Info_HS(3) * actual_EP_vel_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
-//
-//    target_com_pos_rel = Get_COM_pos_HS2(target_base_pos_rel);
-//    actual_com_pos_rel = Get_COM_pos_HS2(actual_base_pos_rel);
-//
-//    Err_com_pos = target_C_WB_PR_HS * (target_com_pos_rel - actual_com_pos_rel);
-//    Err_com_vel = target_C_WB_PR_HS * (target_base_vel_rel - actual_base_vel_rel);
-//
-//    target_plane_dist_HS = com_height_HS / cos(abs(target_base_ori_local_HS(1)));
-//    actual_plane_dist_HS = actual_base_pos_HS(2) + offset_B2C(2) / cos(abs(actual_base_ori_local_HS(1)));
-//
-//    if (initial_flag_HS == true) {
-//        pre_actual_plane_dist_HS = actual_plane_dist_HS;
-//    }
-//    actual_plane_dist_vel_HS = (actual_plane_dist_HS - pre_actual_plane_dist_HS) / dt;
-//    pre_actual_plane_dist_HS = actual_plane_dist_HS;
-//
-//    b1 = Robot_mass * (semi_target_com_acc_HS_yaw(0)) + k_p_QP(0) * Err_com_pos(0) + k_d_QP(0) * Err_com_vel(0);
-//    b2 = Robot_mass * (semi_target_com_acc_HS_yaw(1)) + k_p_QP(1) * Err_com_pos(1) + k_d_QP(1) * Err_com_vel(1);
-//    b3 = Robot_mass * (semi_target_com_acc_HS_yaw(2)) + k_p_QP(2)*(target_plane_dist_HS - actual_plane_dist_HS) + k_d_QP(2)*(0.0 - actual_plane_dist_vel_HS) + Robot_Weight;
-//
-//    b4 = k_p_QP(3)*(target_base_ori_local_HS(0) - actual_base_ori_local_HS(0)) + k_d_QP(3)*(target_base_ori_vel_local_HS(0) - actual_base_ori_vel_local_HS(0));
-//    b5 = k_p_QP(4)*(target_base_ori_local_HS(1) - actual_base_ori_local_HS(1)) + k_d_QP(4)*(target_base_ori_vel_local_HS(1) - actual_base_ori_vel_local_HS(1));
-//    b6 = k_d_QP(5)*(target_base_ori_vel_local_HS(2) - actual_base_ori_vel_local_HS(2));
-//
-//
-//    b_BC << b1, b2, b3, b4, b5, b6;
-//    
-//    // QP algorithm
-//    n = 12;
-//    m = 0;
-//    p = 24;
-//    lamda = 120 * 1; //[N]
-//
-//    tmp_G = 2 * (tmp_A_BC * A_BC + alpha * W);
-//    tmp_g0 = -2 * (tmp_A_BC * b_BC);
-//
-//    G.resize(n, n);
-//    {
-//        for (int i = 0; i < n; i++) {
-//            for (int j = 0; j < n; j++) {
-//                G[i][j] = tmp_G(i, j);
-//            }
-//        }
-//    }
-//    //std::cout << "G: " << G << std::endl;
-//    g0.resize(n);
-//    {
-//        for (int i = 0; i < n; i++) {
-//            g0[i] = tmp_g0[i];
-//        }
-//    }
-//    //std::cout << "g0: " << g0 << std::endl;
-//
-//    
-//   
-//    N = Robot_Weight / 4.0 * cos(actual_base_ori_local_HS(1));
-//    tmp_Friction1 = tmp_mu * N;
-//    tmp_Friction2 = tmp_mu * Robot_Weight / 4.0;
-//
-// 
-//    if (Contact_Info_HS(0) == 0) {
-//        _d_u(0) = 0.0;
-//        _d_l(0) = 0.0;
-//        _d_u(1) = 0.0;
-//        _d_l(1) = 0.0;
-//        _d_u(2) = 0.0;
-//        _d_l(2) = 0.0;
-//    } else {
-//        _d_u(2) = Robot_Weight * beta + tmp_Friction1 * sin(actual_base_ori_local_HS(1));
-//        _d_l(2) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(0) = 0.0;
-//            _d_l(0) = -(tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(0) = (tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//            _d_l(0) = 0.0;
-//        } else {
-//            _d_u(0) = tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//            _d_l(0) = -tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//        }
-//        _d_u(1) = tmp_Friction2;
-//        _d_l(1) = -tmp_Friction2;
-//
-//    }
-//
-//    if (Contact_Info_HS(1) == 0) {
-//        _d_u(3) = 0.0;
-//        _d_l(3) = 0.0;
-//        _d_u(4) = 0.0;
-//        _d_l(4) = 0.0;
-//        _d_u(5) = 0.0;
-//        _d_l(5) = 0.0;
-//    } else {
-//        _d_u(5) = Robot_Weight * beta + tmp_Friction1 * sin(actual_base_ori_local_HS(1));
-//        _d_l(5) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(3) = 0.0;
-//            _d_l(3) = -(tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(3) = (tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//            _d_l(3) = 0.0;
-//        } else {
-//            _d_u(3) = tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//            _d_l(3) = -tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//        }
-//
-//        _d_u(4) = tmp_Friction2;
-//        _d_l(4) = -tmp_Friction2;
-//    }
-//
-//    if (Contact_Info_HS(2) == 0) {
-//        _d_u(6) = 0.0;
-//        _d_l(6) = 0.0;
-//        _d_u(7) = 0.0;
-//        _d_l(7) = 0.0;
-//        _d_u(8) = 0.0;
-//        _d_l(8) = 0.0;
-//    } else {
-//        _d_u(8) = Robot_Weight * beta + tmp_Friction1 * sin(actual_base_ori_local_HS(1));
-//        _d_l(8) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(6) = 0.0;
-//            _d_l(6) = -(tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(6) = (tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//            _d_l(6) = 0.0;
-//        } else {
-//            _d_u(6) = tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//            _d_l(6) = -tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//        }
-//        _d_u(7) = tmp_Friction2;
-//        _d_l(7) = -tmp_Friction2;
-//    }
-//
-//
-//    if (Contact_Info_HS(3) == 0) {
-//        _d_u(9) = 0.0;
-//        _d_l(9) = 0.0;
-//        _d_u(10) = 0.0;
-//        _d_l(10) = 0.0;
-//        _d_u(11) = 0.0;
-//        _d_l(11) = 0.0;
-//    } else {
-//        _d_u(11) = Robot_Weight * beta + tmp_Friction1 * sin(actual_base_ori_local_HS(1));
-//        _d_l(11) = 0.0;
-//
-//        if (target_base_ori_local_HS(1) < 0.0) {
-//            _d_u(9) = 0.0;
-//            _d_l(9) = -(tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//
-//        } else if (target_base_ori_local_HS(1) > 0.0) {
-//            _d_u(9) = (tmp_Friction1 * cos(actual_base_ori_local_HS(1)) - N * sin(actual_base_ori_local_HS(1)));
-//            _d_l(9) = 0.0;
-//        } else {
-//            _d_u(9) = tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//            _d_l(9) = -tmp_Friction1 * cos(actual_base_ori_local_HS(1));
-//        }
-//        _d_u(10) = tmp_Friction2;
-//        _d_l(10) = -tmp_Friction2;
-//    }
-//     
-//
-//    CE.resize(n, m);
-//    {
-//        for (int i = 0; i < n; i++) {
-//            for (int j = 0; j < m; j++) {
-//                CE[i][j] = 0;
-//            }
-//        }
-//    }
-//    //std::cout << "CE: " << CE << std::endl;
-//    ce0.resize(m);
-//    {
-//        for (int j = 0; j < m; j++) {
-//            //            ce0[j] = -b_BC[j];
-//            ce0[j] = 0;
-//        }
-//    }
-//
-//    //std::cout << "ce0: " << ce0 << std::endl;
-//    CI.resize(n, p);
-//    {
-//        for (int i = 0; i < n; i++) {
-//            for (int j = 0; j < p; j++) {
-//                CI[i][j] = 0;
-//            }
-//        }
-//    }
-//    CI[0][0] = -1 * target_Contact_Info(0);
-//    CI[0][1] = 1 * target_Contact_Info(0);
-//    CI[1][2] = -1 * target_Contact_Info(0);
-//    CI[1][3] = 1 * target_Contact_Info(0);
-//    CI[2][4] = -1 * target_Contact_Info(0);
-//    CI[2][5] = 1 * target_Contact_Info(0);
-//    CI[3][6] = -1 * target_Contact_Info(1);
-//    CI[3][7] = 1 * target_Contact_Info(1);
-//    CI[4][8] = -1 * target_Contact_Info(1);
-//    CI[4][9] = 1 * target_Contact_Info(1);
-//    CI[5][10] = -1 * target_Contact_Info(1);
-//    CI[5][11] = 1 * target_Contact_Info(1);
-//    CI[6][12] = -1 * target_Contact_Info(2);
-//    CI[6][13] = 1 * target_Contact_Info(2);
-//    CI[7][14] = -1 * target_Contact_Info(2);
-//    CI[7][15] = 1 * target_Contact_Info(2);
-//    CI[8][16] = -1 * target_Contact_Info(2);
-//    CI[8][17] = 1 * target_Contact_Info(2);
-//    CI[9][18] = -1 * target_Contact_Info(3);
-//    CI[9][16] = 1 * target_Contact_Info(3);
-//    CI[10][17] = -1 * target_Contact_Info(3);
-//    CI[10][18] = 1 * target_Contact_Info(3);
-//    CI[11][22] = -1 * target_Contact_Info(3);
-//    CI[11][23] = 1 * target_Contact_Info(3);
-//
-//    ci0.resize(p);
-//    {
-//        for (int j = 0; j < p; j++) {
-//            ci0[j] = 0;
-//        }
-//    }
-//
-//    ci0[0] = lamda * target_Contact_Info(0);
-//    ci0[1] = lamda * target_Contact_Info(0);
-//    ci0[2] = lamda * target_Contact_Info(0);
-//    ci0[3] = lamda * target_Contact_Info(0);
-//    ci0[4] = Robot_Weight * target_Contact_Info(0) * beta;
-//    ci0[5] = 0;
-//
-//    ci0[6] = lamda * target_Contact_Info(1);
-//    ci0[7] = lamda * target_Contact_Info(1);
-//    ci0[8] = lamda * target_Contact_Info(1);
-//    ci0[9] = lamda * target_Contact_Info(1);
-//    ci0[10] = Robot_Weight * target_Contact_Info(1) * beta;
-//    ci0[11] = 0;
-//
-//
-//    ci0[12] = lamda * target_Contact_Info(2);
-//    ci0[13] = lamda * target_Contact_Info(2);
-//    ci0[14] = lamda * target_Contact_Info(2);
-//    ci0[15] = lamda * target_Contact_Info(2);
-//    ci0[16] = Robot_Weight * target_Contact_Info(2) * beta;
-//    ci0[17] = 0;
-//
-//
-//    ci0[18] = lamda * target_Contact_Info(3);
-//    ci0[19] = lamda * target_Contact_Info(3);
-//    ci0[20] = lamda * target_Contact_Info(3);
-//    ci0[21] = lamda * target_Contact_Info(3);
-//    ci0[22] = Robot_Weight * target_Contact_Info(3) * beta;
-//    ci0[23] = 0;
-//
-//    x.resize(n);
-//
-//    if (isfinite(solve_quadprog(G, g0, CE, ce0, CI, ci0, x))) {
-//        for (int j = 0; j < n; ++j) {
-//            x_saved(j) = x[j];
-//        }
-//        //std::cout<<"A"<<std::endl;
-//    } else {
-//        for (int j = 0; j < n; ++j) {
-//            x[j] = x_saved(j);
-//        }
-//        //std::cout<<"B"<<std::endl;
-//    }
-//    
-//    for (int j = 0; j < n; ++j) {
-//        semi_F_QP_global_yaw[j] = x[j];
-//    }
-//    
-//    F_QP_local = target_C_WB_PR_12d_HS.transpose() * semi_F_QP_global_yaw;
-//       
-//    QUADPROGPP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
-//};
+void CRobot::QuadPP_SOLVE_TEST(void) {
+    quadprogpp::Matrix<double> G, CE, CI;
+    quadprogpp::Vector<double> g0, ce0, ci0, x;
+    MatrixNd tmp_G(12, 12);
+    VectorNd tmp_g0(12);
+
+    int n, m, p;
+
+    MatrixNd A_BC(6, 12);
+    MatrixNd tmp_A_BC(12, 6);
+    VectorNd b_BC(6);
+    MatrixNd W(12, 12);
+
+    double Fz_RL_max, Fz_RL_min;
+    double Fz_RR_max, Fz_RR_min;
+    double Fz_FL_max, Fz_FL_min;
+    double Fz_FR_max, Fz_FR_min;
+
+    double Rear_body_mass = 13.826;
+    double Front_body_mass = 10.507;
+    double One_leg_mass = 5.295;
+    double Robot_mass = Rear_body_mass + Front_body_mass + One_leg_mass * 4;
+    double Robot_Weight = Robot_mass*GRAVITY;
+
+    double one_leg_weight = 120;
+
+    VectorNd r_RL(3);
+    VectorNd r_RR(3);
+    VectorNd r_FL(3);
+    VectorNd r_FR(3);
+    VectorNd r_COM(3);
+
+    VectorNd k_p_QP(6);
+    VectorNd k_d_QP(6);
+    double b1, b2, b3, b4, b5, b6;
+
+    VectorNd F_QP_global(12);
+    VectorNd F_QP_local(12);
+
+    double alpha = 0.001;
+    double beta = 1.0;
+    double tmp_mu = 1.0;
+    W = MatrixNd::Identity(12, 12);
+
+    VectorNd target_base_pos_rel(3);
+    VectorNd actual_base_pos_rel(3);
+    VectorNd target_com_pos_rel(3);
+    VectorNd actual_com_pos_rel(3);
+
+    VectorNd target_base_vel_rel(3);
+    VectorNd actual_base_vel_rel(3);
+
+    VectorNd Err_com_pos(3);
+    VectorNd Err_com_vel(3);
+
+    VectorNd standard_info_HS(4);
+    double standard_leg_height_HS;
+
+    double N;
+
+    VectorNd r_com_EP_local(12);
+    VectorNd r_com_EP_semi_global(12);
+    VectorNd r_com_RL(3);
+    VectorNd r_com_RR(3);
+    VectorNd r_com_FL(3);
+    VectorNd r_com_FR(3);
+
+    VectorNd tmp_t = VectorNd::Zero(3);
+    VectorNd tmp_b = VectorNd::Zero(3);
+
+
+    semi_target_com_acc_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_acc_HS.segment(0, 2), target_com_acc_HS(2);
+
+    VectorNd n_vec_HS = VectorNd(3);
+    VectorNd b_vec_HS = VectorNd(3);
+    VectorNd t_vec_HS = VectorNd(3);
+
+    k_p_QP << 10, 10, 4000, 3000, 3000, 0;
+    k_d_QP << 0.1, 0.1, 40, 30, 30, 10;
+
+    r_com_EP_local << actual_EP_local_HS.segment(0, 3) - offset_B2C, actual_EP_local_HS.segment(3, 3) - offset_B2C, actual_EP_local_HS.segment(6, 3) - offset_B2C, actual_EP_local_HS.segment(9, 3) - offset_B2C;
+    r_com_EP_semi_global = target_C_WB_PR_12d_HS*r_com_EP_local;
+
+    r_com_RL << r_com_EP_semi_global(0), r_com_EP_semi_global(1), r_com_EP_semi_global(2);
+    r_com_RR << r_com_EP_semi_global(3), r_com_EP_semi_global(4), r_com_EP_semi_global(5);
+    r_com_FL << r_com_EP_semi_global(6), r_com_EP_semi_global(7), r_com_EP_semi_global(8);
+    r_com_FR << r_com_EP_semi_global(9), r_com_EP_semi_global(10), r_com_EP_semi_global(11);
+
+
+    A_BC << Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0, 0\
+, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0\
+, 0, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3)\
+          , 0, -Contact_Info_HS(0) * (r_com_RL(2)), Contact_Info_HS(0) * (r_com_RL(1)), 0, -Contact_Info_HS(1) * (r_com_RR(2)), Contact_Info_HS(1) * (r_com_RR(1)), 0, -Contact_Info_HS(2) * (r_com_FL(2)), Contact_Info_HS(2) * (r_com_FL(1)), 0, -Contact_Info_HS(3) * (r_com_FR(2)), Contact_Info_HS(3) * (r_com_FR(1))\
+          , Contact_Info_HS(0) * (r_com_RL(2)), 0, -Contact_Info_HS(0)*(r_com_RL(0)), Contact_Info_HS(1) * (r_com_RR(2)), 0, -Contact_Info_HS(1)*(r_com_RR(0)), Contact_Info_HS(2) * (r_com_FL(2)), 0, -Contact_Info_HS(2)*(r_com_FL(0)), Contact_Info_HS(3) * (r_com_FR(2)), 0, -Contact_Info_HS(3)*(r_com_FR(0))\
+          , -Contact_Info_HS(0) * (r_com_RL(1)), Contact_Info_HS(0) * (r_com_RL(0)), 0, -Contact_Info_HS(1) * (r_com_RR(1)), Contact_Info_HS(1)*(r_com_RR(0)), 0, -Contact_Info_HS(2) * (r_com_FL(1)), Contact_Info_HS(2)*(r_com_FL(0)), 0, -Contact_Info_HS(3) * (r_com_FR(1)), Contact_Info_HS(3)*(r_com_FR(0)), 0;
+
+    tmp_A_BC = A_BC.transpose();
+
+    target_base_pos_rel = -(Contact_Info_HS(0) * target_EP_local_HS.segment(0, 3) + Contact_Info_HS(1) * target_EP_local_HS.segment(3, 3) + Contact_Info_HS(2) * target_EP_local_HS.segment(6, 3) + Contact_Info_HS(3) * target_EP_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    actual_base_pos_rel = -(Contact_Info_HS(0) * actual_EP_local_HS.segment(0, 3) + Contact_Info_HS(1) * actual_EP_local_HS.segment(3, 3) + Contact_Info_HS(2) * actual_EP_local_HS.segment(6, 3) + Contact_Info_HS(3) * actual_EP_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+
+    target_base_vel_rel = -(Contact_Info_HS(0) * target_EP_vel_local_HS.segment(0, 3) + Contact_Info_HS(1) * target_EP_vel_local_HS.segment(3, 3) + Contact_Info_HS(2) * target_EP_vel_local_HS.segment(6, 3) + Contact_Info_HS(3) * target_EP_vel_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    actual_base_vel_rel = -(Contact_Info_HS(0) * actual_EP_vel_local_HS.segment(0, 3) + Contact_Info_HS(1) * actual_EP_vel_local_HS.segment(3, 3) + Contact_Info_HS(2) * actual_EP_vel_local_HS.segment(6, 3) + Contact_Info_HS(3) * actual_EP_vel_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+
+    target_com_pos_rel = Get_COM_pos_HS2(target_base_pos_rel);
+    actual_com_pos_rel = Get_COM_pos_HS2(actual_base_pos_rel);
+
+    Err_com_pos = target_C_WB_PR_HS * (target_com_pos_rel - actual_com_pos_rel);
+    Err_com_vel = target_C_WB_PR_HS * (target_base_vel_rel - actual_base_vel_rel);
+
+    target_plane_dist_HS = com_height_HS / cos(abs(target_base_ori_local_HS(1)));
+    actual_plane_dist_HS = actual_base_pos_HS(2) + offset_B2C(2) / cos(abs(actual_base_ori_local_HS(1)));
+
+    if (initial_flag_HS == true) {
+        pre_actual_plane_dist_HS = actual_plane_dist_HS;
+    }
+    actual_plane_dist_vel_HS = (actual_plane_dist_HS - pre_actual_plane_dist_HS) / dt;
+    pre_actual_plane_dist_HS = actual_plane_dist_HS;
+
+    b1 = Robot_mass * (semi_target_com_acc_HS_yaw(0)) + k_p_QP(0) * Err_com_pos(0) + k_d_QP(0) * Err_com_vel(0);
+    b2 = Robot_mass * (semi_target_com_acc_HS_yaw(1)) + k_p_QP(1) * Err_com_pos(1) + k_d_QP(1) * Err_com_vel(1);
+    b3 = Robot_mass * (semi_target_com_acc_HS_yaw(2)) + k_p_QP(2)*(target_plane_dist_HS - actual_plane_dist_HS) + k_d_QP(2)*(0.0 - actual_plane_dist_vel_HS) + Robot_Weight;
+
+    b4 = k_p_QP(3)*(target_base_ori_local_HS(0) - actual_base_ori_local_HS(0)) + k_d_QP(3)*(target_base_ori_vel_local_HS(0) - actual_base_ori_vel_local_HS(0));
+    b5 = k_p_QP(4)*(target_base_ori_local_HS(1) - actual_base_ori_local_HS(1)) + k_d_QP(4)*(target_base_ori_vel_local_HS(1) - actual_base_ori_vel_local_HS(1));
+    b6 = k_d_QP(5)*(target_base_ori_vel_local_HS(2) - actual_base_ori_vel_local_HS(2));
+
+
+    b_BC << b1, b2, b3, b4, b5, b6;
+
+    // QP algorithm
+    n = 12;
+    m = 0;
+    p = 24;
+    //lamda = 120 * 1; //[N]
+
+    tmp_G = 2 * (tmp_A_BC * A_BC + alpha * W);
+    tmp_g0 = -2 * (tmp_A_BC * b_BC);
+
+    G.resize(n, n);
+    {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                G[i][j] = tmp_G(i, j);
+            }
+        }
+    }
+    //std::cout << "G: " << G << std::endl;
+    g0.resize(n);
+    {
+        for (int i = 0; i < n; i++) {
+            g0[i] = tmp_g0[i];
+        }
+    }
+    //std::cout << "g0: " << g0 << std::endl;
+
+    CE.resize(n, m);
+    {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                CE[i][j] = 0;
+            }
+        }
+    }
+    //std::cout << "CE: " << CE << std::endl;
+    ce0.resize(m);
+    {
+        for (int j = 0; j < m; j++) {
+            //            ce0[j] = -b_BC[j];
+            ce0[j] = 0;
+        }
+    }
+
+    N = Robot_Weight / 4.0 * cos(actual_base_ori_local_HS(1));
+    tmp_Friction1 = tmp_mu * N;
+    tmp_Friction2 = tmp_mu * Robot_Weight / 4.0;
+
+    MatrixNd tmp_CI = MatrixNd::Zero(p, n);
+
+    CI.resize(n, p);
+    {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                CI[i][j] = 0;
+            }
+        }
+    }
+
+    n_vec_HS = semi_w_n / sqrt(semi_w_n(0) * semi_w_n(0) + semi_w_n(1) * semi_w_n(1) + semi_w_n(2) * semi_w_n(2));
+    tmp_b << 0, 1, 0;
+    tmp_t << 1, 0, 0;
+
+    b_vec_HS = target_C_WB_PR_HS*tmp_b;
+    t_vec_HS = target_C_WB_PR_HS*tmp_t;
+
+
+    // std::cout << nx << "," << ny << "," << nz << std::endl;
+    // std::cout<<"---"<<std::endl;
+    tmp_mu = 1.0 / sqrt(2);
+    //tmp_mu = 0.8/sqrt(2);
+
+    tmp_CI.block(0, 0, 6, 3) << Contact_Info_HS(0) * n_vec_HS(0), Contact_Info_HS(0) * n_vec_HS(1), Contact_Info_HS(0) * n_vec_HS(2)\
+, Contact_Info_HS(0)*(-t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(0)*(-t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(0)*(-t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(0)*(t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(0)*(t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(0)*(t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(0)*(-b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(0)*(-b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(0)*(-b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(0)*(b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(0)*(b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(0)*(b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(0);
+
+    tmp_CI.block(6, 3, 6, 3) << Contact_Info_HS(1) * n_vec_HS(0), Contact_Info_HS(1) * n_vec_HS(1), Contact_Info_HS(1) * n_vec_HS(2)\
+, Contact_Info_HS(1)*(-t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(1)*(-t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(1)*(-t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(1)*(t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(1)*(t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(1)*(t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(1)*(-b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(1)*(-b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(1)*(-b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(1)*(b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(1)*(b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(1)*(b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(1);
+
+    tmp_CI.block(12, 6, 6, 3) << Contact_Info_HS(2) * n_vec_HS(0), Contact_Info_HS(2) * n_vec_HS(1), Contact_Info_HS(2) * n_vec_HS(2)\
+, Contact_Info_HS(2)*(-t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(2)*(-t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(2)*(-t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(2)*(t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(2)*(t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(2)*(t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(2)*(-b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(2)*(-b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(2)*(-b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(2)*(b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(2)*(b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(2)*(b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(2);
+
+    tmp_CI.block(18, 9, 6, 3) << Contact_Info_HS(3) * n_vec_HS(0), Contact_Info_HS(3) * n_vec_HS(1), Contact_Info_HS(3) * n_vec_HS(2)\
+, Contact_Info_HS(3)*(-t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(3)*(-t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(3)*(-t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(3)*(t_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(3)*(t_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(3)*(t_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(3)*(-b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(3)*(-b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(3)*(-b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, Contact_Info_HS(3)*(b_vec_HS(0) + tmp_mu * n_vec_HS(0)), Contact_Info_HS(3)*(b_vec_HS(1) + tmp_mu * n_vec_HS(1)), Contact_Info_HS(3)*(b_vec_HS(2) + tmp_mu * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(3);
+    //    tmp_CI.block(0, 0, 3, 3) << Contact_Info_HS(0) * nx, Contact_Info_HS(0) * ny, Contact_Info_HS(0) * nz\
+//, Contact_Info_HS(0)*(1 + tmp_mu * nx - nx * (nx + ny + nz)), Contact_Info_HS(0)*(1 + tmp_mu * ny - ny * (nx + ny + nz)), Contact_Info_HS(0)*(1 + tmp_mu * nz - nz * (nx + ny + nz))\
+//, -Contact_Info_HS(0)*(1 - tmp_mu * nx - nx * (nx + ny + nz)), -Contact_Info_HS(0)*(1 - tmp_mu * ny - ny * (nx + ny + nz)), -Contact_Info_HS(0)*(1 - tmp_mu * nz - nz * (nx + ny + nz));
+    //    
+    //    tmp_CI.block(3, 3, 3, 3) << Contact_Info_HS(1) * nx, Contact_Info_HS(1) * ny, Contact_Info_HS(1) * nz\
+//, Contact_Info_HS(1)*(1 + tmp_mu * nx - nx * (nx + ny + nz)), Contact_Info_HS(1)*(1 + tmp_mu * ny - ny * (nx + ny + nz)), Contact_Info_HS(1)*(1 + tmp_mu * nz - nz * (nx + ny + nz))\
+//, -Contact_Info_HS(1)*(1 - tmp_mu * nx - nx * (nx + ny + nz)), -Contact_Info_HS(1)*(1 - tmp_mu * ny - ny * (nx + ny + nz)), -Contact_Info_HS(1)*(1 - tmp_mu * nz - nz * (nx + ny + nz));
+    //    
+    //    tmp_CI.block(6, 6, 3, 3) << Contact_Info_HS(2) * nx, Contact_Info_HS(2) * ny, Contact_Info_HS(2) * nz\
+//, Contact_Info_HS(2)*(1 + tmp_mu * nx - nx * (nx + ny + nz)), Contact_Info_HS(2)*(1 + tmp_mu * ny - ny * (nx + ny + nz)), Contact_Info_HS(2)*(1 + tmp_mu * nz - nz * (nx + ny + nz))\
+//, -Contact_Info_HS(2)*(1 - tmp_mu * nx - nx * (nx + ny + nz)), -Contact_Info_HS(2)*(1 - tmp_mu * ny - ny * (nx + ny + nz)), -Contact_Info_HS(2)*(1 - tmp_mu * nz - nz * (nx + ny + nz));
+    //
+    //    tmp_CI.block(9, 9, 3, 3) << Contact_Info_HS(3) * nx, Contact_Info_HS(3) * ny, Contact_Info_HS(3) * nz\
+//, Contact_Info_HS(3)*(1 + tmp_mu * nx - nx * (nx + ny + nz)), Contact_Info_HS(3)*(1 + tmp_mu * ny - ny * (nx + ny + nz)), Contact_Info_HS(3)*(1 + tmp_mu * nz - nz * (nx + ny + nz))\
+//, -Contact_Info_HS(3)*(1 - tmp_mu * nx - nx * (nx + ny + nz)), -Contact_Info_HS(3)*(1 - tmp_mu * ny - ny * (nx + ny + nz)), -Contact_Info_HS(3)*(1 - tmp_mu * nz - nz * (nx + ny + nz));
+
+    //std::cout<<"1="  << tmp_CI << std::endl;
+    //std::cout << "-----" << std::endl;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < p; j++) {
+            CI[i][j] = tmp_CI(j, i);
+        }
+    }
+    //std::cout<<"=" << CI << std::endl;
+    //std::cout << "-----" << std::endl;
+    ci0.resize(p);
+    {
+        for (int j = 0; j < p; j++) {
+            ci0[j] = 0;
+        }
+    }
+
+    ci0[5] = Robot_Weight;
+    ci0[11] = Robot_Weight;
+    ci0[17] = Robot_Weight;
+    ci0[23] = Robot_Weight;
+
+    //    ci0[0] = 0;
+    //    ci0[1] = 0;
+    //    ci0[2] = 0;
+    //    
+    //    ci0[3] = 0;
+    //    ci0[4] = 0;
+    //    ci0[5] = 0;
+    //
+    //    ci0[6] = 0;
+    //    ci0[7] = 0;
+    //    ci0[8] = 0;
+    //    
+    //    ci0[9] = lamda * target_Contact_Info(1);
+    //    ci0[10] = Robot_Weight * target_Contact_Info(1) * beta;
+    //    ci0[11] = 0;
+
+    x.resize(n);
+
+    if (isfinite(solve_quadprog(G, g0, CE, ce0, CI, ci0, x))) {
+        for (int j = 0; j < n; ++j) {
+            x_saved(j) = x[j];
+        }
+        //std::cout<<"A"<<std::endl;
+    } else {
+        for (int j = 0; j < n; ++j) {
+            x[j] = x_saved(j);
+        }
+        //std::cout<<"B"<<std::endl;
+    }
+    //    
+    //std::cout << x_saved.transpose() << std::endl;
+    //std::cout << "----------" << std::endl;
+
+    for (int j = 0; j < n; ++j) {
+        semi_F_QP_global_yaw[j] = x[j];
+    }
+
+    F_QP_local = target_C_WB_PR_12d_HS.transpose() * semi_F_QP_global_yaw;
+    
+    cout<<"Quad="<<semi_F_QP_global_yaw.transpose()<<endl;
+    
+    QUADPROGPP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
+
+};
+
+void CRobot::set_osqp_HS(void) {
+    double Rear_body_mass = 13.826;
+    double Front_body_mass = 10.507;
+    double One_leg_mass = 5.295;
+    double Robot_mass = Rear_body_mass + Front_body_mass + One_leg_mass * 4;
+    double Robot_Weight = Robot_mass*GRAVITY;
+    double one_leg_weight = 120;
+
+    MatrixNd A_BC(6, 12);
+    MatrixNd tmp_A_BC(12, 6);
+    VectorNd b_BC(6);
+    MatrixNd W(12, 12);
+    double b1, b2, b3, b4, b5, b6;
+
+    VectorNd r_RL_local(3);
+    VectorNd r_RR_local(3);
+    VectorNd r_FL_local(3);
+    VectorNd r_FR_local(3);
+
+    VectorNd r_RL(3);
+    VectorNd r_RR(3);
+    VectorNd r_FL(3);
+    VectorNd r_FR(3);
+
+    double alpha = 0.001;
+    double beta = 1.0;
+    double tmp_mu_HS = 1.0;
+    W = MatrixNd::Identity(12, 12);
+
+    r_RL_local << -0.35, 0.22, -com_height_HS;
+    r_RR_local << -0.35, -0.22, -com_height_HS;
+    r_FL_local << 0.35, 0.22, -com_height_HS;
+    r_FR_local << 0.35, -0.22, -com_height_HS;
+
+    r_RL = r_RL_local - offset_B2C;
+    r_RR = r_RL_local - offset_B2C;
+    r_FL = r_RL_local - offset_B2C;
+    r_FR = r_RL_local - offset_B2C;
+
+    A_BC << 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0\
+, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0\
+, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1\
+, 0, -1 * (r_RL(2)), 1 * (r_RL(1)), 0, -1 * (r_RR(2)), 1 * (r_RR(1)), 0, -1 * (r_FL(2)), 1 * (r_FL(1)), 0, -1 * (r_FR(2)), 1 * (r_FR(1))\
+, 1 * (r_RL(2)), 0, -1 * (r_RL(0)), 1 * (r_RR(2)), 0, -1 * (r_RR(0)), 1 * (r_FL(2)), 0, -1 * (r_FL(0)), 1 * (r_FR(2)), 0, -1 * (r_FR(0))\
+, -1 * (r_RL(1)), 1 * (r_RL(0)), 0, -1 * (r_RR(1)), 1 * (r_RR(0)), 0, -1 * (r_FL(1)), 1 * (r_FL(0)), 0, -1 * (r_FR(1)), 1 * (r_FR(0)), 0;
+
+    tmp_A_BC = A_BC.transpose();
+
+    b1 = 0.0;
+    b2 = 0.0;
+    b3 = Robot_Weight;
+    b4 = 0.0;
+    b5 = 0.0;
+    b6 = 0.0;
+
+    b_BC << b1, b2, b3, b4, b5, b6;
+
+    _P_HS = (tmp_A_BC * A_BC + alpha * W);
+    _q_HS = -(tmp_A_BC * b_BC);
+
+    // **********************Objective Function**************************//
+    // ==================== OSQP  ====================== //
+    int jj = 0;
+    int kk = 0;
+    int max_jj = 0;
+
+    // ===================== P_x ====================== //
+    for (unsigned int i = 0; i < P_nnz_HS; ++i) {
+        P_x_HS[i] = _P(jj, kk);
+        jj = jj + 1;
+
+        if (jj > max_jj) {
+            jj = 0;
+            kk = kk + 1;
+            max_jj = max_jj + 1;
+        }
+           //cout << "i = " << i << ", P_x = " << P_x[i] << endl;
+    }
+
+    // ===================== P_i ====================== // position
+    jj = 0;
+    max_jj = 0;
+
+    for (unsigned int i = 0; i < P_nnz_HS; ++i) {
+        P_i_HS[i] = jj;
+        jj = jj + 1;
+
+        if (jj > max_jj) {
+            jj = 0;
+            max_jj = max_jj + 1;
+        }
+              // cout << "i = " << i << ", P_i = " << P_i[i] << endl;
+    }
+
+    // ===================== P_p ====================== //  //cumulative value
+    P_p_HS[0] = 0;
+    for (unsigned int i = 1; i < n_HS + 1; ++i) {
+        P_p_HS[i] = P_p_HS[i - 1] + i;
+
+              // cout << "i = " << i << ", P_p = " << P_p[i] << endl;
+    }
+    // cout << "i = " << A_nnz << ", P_p = " << P_p[A_nnz] << endl;
+    
+    // ===================== q ====================== //
+    for (unsigned int i = 0; i < n_HS; ++i) {
+        q_HS[i] = _q_HS(i);
+     //   cout << "i = " << i << ", q_HS = " << q_HS[i] << endl;
+    }
+
+    // **********************Constraints**************************//
+    n_vec_HS << 0, 0, 1;
+    b_vec_HS << 0, 1, 0;
+    t_vec_HS << 1, 0, 0;
+
+    H_RL_HS << Contact_Info_HS(0) * n_vec_HS(0), Contact_Info_HS(0) * n_vec_HS(1), Contact_Info_HS(0) * n_vec_HS(2)\
+, Contact_Info_HS(0)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(0)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(0)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(0)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(0);    
+
+    H_RR_HS << Contact_Info_HS(1) * n_vec_HS(0), Contact_Info_HS(1) * n_vec_HS(1), Contact_Info_HS(1) * n_vec_HS(2)\
+, Contact_Info_HS(1)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(1)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(1)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(1)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(1);
+
+    H_FL_HS << Contact_Info_HS(2) * n_vec_HS(0), Contact_Info_HS(2) * n_vec_HS(1), Contact_Info_HS(2) * n_vec_HS(2)\
+, Contact_Info_HS(2)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(2)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(2)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(2)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(2);
+
+    H_FR_HS << Contact_Info_HS(3) * n_vec_HS(0), Contact_Info_HS(3) * n_vec_HS(1), Contact_Info_HS(3) * n_vec_HS(2)\
+, Contact_Info_HS(3)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(3)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(3)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(3)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(3);
+   // std::cout << "H_RL=" << endl << H_RL << std::endl;
+    // ===================== A_x ====================== //
+
+    jj = 0;
+    kk = 0;
+
+    for (unsigned int i = 0; i < A_nnz_HS; ++i) { //A_nnz_HS=72(18*4)
+        if (i <= 18) {
+            if (i <= 17) {
+                A_x_HS[i] = H_RL_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 18) {
+                A_x_HS[i] = -Contact_Info_HS(0);
+            }
+        } else if (i <= 37) {
+            if (i <= 36) {
+                A_x_HS[i] = H_RR_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 37) {
+                A_x_HS[i] = -Contact_Info_HS(1);
+            }   
+        } else if (i <= 56) {
+            if (i <= 55) {
+                A_x_HS[i] = H_FL_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 56) {
+                A_x_HS[i] = -Contact_Info_HS(2);
+            }   
+        } else {
+            if (i <= 74) {
+                A_x_HS[i] = H_FR_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 75) {
+                A_x_HS[i] = -Contact_Info_HS(3);
+            }
+        } 
+        cout << "i = " << i << ", A_x_HS = " << A_x_HS[i] << endl;
+    }
+
+    // ===================== A_i ====================== //
+    jj = 0;
+    for (unsigned int i = 0; i < A_nnz_HS; ++i) {
+        if (i <= 18) {
+            if (i <= 17) {
+                A_i_HS[i] = jj;
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                }
+            }
+            if (i == 18) {
+                A_i_HS[i] = 24;
+            }
+        } else if (i <= 37) {
+            if (i <= 36) {
+                A_i_HS[i] = jj + 6;
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                }
+            }
+            if (i == 37) {
+                A_i_HS[i] = 24;
+            }
+        } else if (i <= 56) {
+            if (i <= 55) {
+                A_i_HS[i] = jj + 12;
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                }
+            }
+            if (i == 56) {
+                A_i_HS[i] = 24;
+            }
+        } else {
+            if (i <= 74) {
+                A_i_HS[i] = jj + 18;
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                }
+            }
+            if (i == 75) {
+                A_i_HS[i] = 24;
+            }
+        }
+        //cout << "i = " << i << ", A_i = " << A_i_HS[i] << endl;
+    }
+
+    // ===================== A_p ====================== //
+
+    for (unsigned int i = 0; i <= n_HS; ++i) {
+        A_p_HS[i] = num_HS;
+        
+        if (i == 2 || i == 5 || i == 8 || i == 11) {
+            num_HS = num_HS + 7;
+        } else {
+            num_HS = num_HS + 6;
+        }
+        
+        if (i == 12) {
+            num_HS = 0;
+        }
+       // cout << "i = " << i << ", A_p_HS = " << A_p_HS[i] << endl;
+    }
+    //        cout << "i = " << A_nnz << ", A_p = " << A_p[A_nnz] << endl;
+
+    // ===================== G_l & G_u ====================== //
+    for (unsigned int i = 0; i < m_HS; ++i) {
+        if (i == 5 || i == 11 || i == 17 || i == 23) {
+            l_HS[i] = -Robot_Weight * 1.0;
+        } else if (i == 24) {
+            l_HS[i] = -Robot_Weight * 1.5;
+        } else {
+            l_HS[i] = 0.0;
+        }
+
+        if (i == 5 || i == 11 || i == 17 || i == 23) {
+            u_HS[i] = 0.0;
+        } else if (i == 24) {
+            u_HS[i] = -Robot_Weight * 1.0;
+        } else {
+            u_HS[i] = 1000;
+        }
+
+       // cout << "i = " << i << ", G_l = " << l_HS[i] << endl;
+       // cout << "i = " << i << ", G_u = " << u_HS[i] << endl;
+        // cout << "==============================" << endl;
+    }
+
+    // Load problem data
+    // Exitflag
+    c_int exitflag = 0;
+
+    // Populate data
+    if (data_HS) {
+        data_HS->n = n_HS; //12
+        data_HS->m = m_HS; //25
+        data_HS->P = csc_matrix(data_HS->n, data_HS->n, P_nnz_HS, P_x_HS, P_i_HS, P_p_HS);
+        data_HS->q = q_HS;
+        data_HS->A = csc_matrix(data_HS->m, data_HS->n, A_nnz_HS, A_x_HS, A_i_HS, A_p_HS);
+        data_HS->l = l_HS;
+        data_HS->u = u_HS;
+    }
+
+    // Define solver settings as default
+    if (settings_HS) {
+        osqp_set_default_settings(settings_HS);
+        settings_HS->alpha = 1.0; // Change alpha parameter
+    }
+
+    // Setup workspace
+    exitflag = osqp_setup(&work_HS, data_HS, settings_HS);
+
+    // Solve Problem
+    osqp_solve(work_HS);
+    cout << "[RL] x = " << work_HS->solution->x[0] << ", y = " << work_HS->solution->x[1] << ", z = " << work_HS->solution->x[2] << endl;
+    cout << "[RR] x = " << work_HS->solution->x[3] << ", y = " << work_HS->solution->x[4] << ", z = " << work_HS->solution->x[5] << endl;
+    cout << "[FL] x = " << work_HS->solution->x[6] << ", y = " << work_HS->solution->x[7] << ", z = " << work_HS->solution->x[8] << endl;
+    cout << "[FR] x = " << work_HS->solution->x[9] << ", y = " << work_HS->solution->x[10] << ", z = " << work_HS->solution->x[11] << endl;
+    // Cleanup
+    if (data_HS) {
+        if (data_HS->A) c_free(data_HS->A);
+        if (data_HS->P) c_free(data_HS->P);
+        c_free(data_HS);
+    }
+    if (settings_HS) c_free(settings_HS);
+}
+
+void CRobot::Get_Opt_F_HS3(void) {
+    double Fz_RL_max, Fz_RL_min;
+    double Fz_RR_max, Fz_RR_min;
+    double Fz_FL_max, Fz_FL_min;
+    double Fz_FR_max, Fz_FR_min;
+
+    double Rear_body_mass = 13.826;
+    double Front_body_mass = 10.507;
+    double One_leg_mass = 5.295;
+    double Robot_mass = Rear_body_mass + Front_body_mass + One_leg_mass * 4;
+    double Robot_Weight = Robot_mass*GRAVITY;
+
+    double one_leg_weight = 120;
+
+    MatrixNd A_BC(6, 12);
+    MatrixNd tmp_A_BC(12, 6);
+    VectorNd b_BC(6);
+    MatrixNd W(12, 12);
+
+    VectorNd r_RL(3);
+    VectorNd r_RR(3);
+    VectorNd r_FL(3);
+    VectorNd r_FR(3);
+    VectorNd r_COM(3);
+
+    VectorNd k_p_QP(6);
+    VectorNd k_d_QP(6);
+    double b1, b2, b3, b4, b5, b6;
+
+    VectorNd F_QP_global(12);
+    VectorNd F_QP_local(12);
+
+    double alpha = 0.001;
+    double beta = 1.0;
+    double tmp_mu_HS = 0.0;
+    W = MatrixNd::Identity(12, 12);
+
+    VectorNd target_base_pos_rel(3);
+    VectorNd actual_base_pos_rel(3);
+    VectorNd target_com_pos_rel(3);
+    VectorNd actual_com_pos_rel(3);
+
+    VectorNd target_base_vel_rel(3);
+    VectorNd actual_base_vel_rel(3);
+
+    VectorNd Err_com_pos(3);
+    VectorNd Err_com_vel(3);
+
+    VectorNd standard_info_HS(4);
+    double standard_leg_height_HS;
+   
+    VectorNd r_com_EP_local(12);
+    VectorNd r_com_EP_semi_global(12);
+    VectorNd r_com_RL(3);
+    VectorNd r_com_RR(3);
+    VectorNd r_com_FL(3);
+    VectorNd r_com_FR(3);
+
+    VectorNd tmp_b = VectorNd::Zero(3);
+    VectorNd tmp_t = VectorNd::Zero(3);
+    
+    semi_target_com_acc_HS_yaw << target_C_WB_Y_2d_HS.transpose() * target_com_acc_HS.segment(0, 2), target_com_acc_HS(2);
+
+    k_p_QP << 10, 10, 4000, 3000, 3000, 0;
+    k_d_QP << 0.1, 0.1, 40, 30, 30, 10;
+
+    r_com_EP_local << actual_EP_local_HS.segment(0, 3) - offset_B2C, actual_EP_local_HS.segment(3, 3) - offset_B2C, actual_EP_local_HS.segment(6, 3) - offset_B2C, actual_EP_local_HS.segment(9, 3) - offset_B2C;
+    r_com_EP_semi_global = target_C_WB_PR_12d_HS*r_com_EP_local;
+
+    r_com_RL << r_com_EP_semi_global(0), r_com_EP_semi_global(1), r_com_EP_semi_global(2);
+    r_com_RR << r_com_EP_semi_global(3), r_com_EP_semi_global(4), r_com_EP_semi_global(5);
+    r_com_FL << r_com_EP_semi_global(6), r_com_EP_semi_global(7), r_com_EP_semi_global(8);
+    r_com_FR << r_com_EP_semi_global(9), r_com_EP_semi_global(10), r_com_EP_semi_global(11);
+
+    A_BC << Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0, 0\
+, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3), 0\
+, 0, 0, Contact_Info_HS(0), 0, 0, Contact_Info_HS(1), 0, 0, Contact_Info_HS(2), 0, 0, Contact_Info_HS(3)\
+          , 0, -Contact_Info_HS(0) * (r_com_RL(2)), Contact_Info_HS(0) * (r_com_RL(1)), 0, -Contact_Info_HS(1) * (r_com_RR(2)), Contact_Info_HS(1) * (r_com_RR(1)), 0, -Contact_Info_HS(2) * (r_com_FL(2)), Contact_Info_HS(2) * (r_com_FL(1)), 0, -Contact_Info_HS(3) * (r_com_FR(2)), Contact_Info_HS(3) * (r_com_FR(1))\
+          , Contact_Info_HS(0) * (r_com_RL(2)), 0, -Contact_Info_HS(0)*(r_com_RL(0)), Contact_Info_HS(1) * (r_com_RR(2)), 0, -Contact_Info_HS(1)*(r_com_RR(0)), Contact_Info_HS(2) * (r_com_FL(2)), 0, -Contact_Info_HS(2)*(r_com_FL(0)), Contact_Info_HS(3) * (r_com_FR(2)), 0, -Contact_Info_HS(3)*(r_com_FR(0))\
+          , -Contact_Info_HS(0) * (r_com_RL(1)), Contact_Info_HS(0) * (r_com_RL(0)), 0, -Contact_Info_HS(1) * (r_com_RR(1)), Contact_Info_HS(1)*(r_com_RR(0)), 0, -Contact_Info_HS(2) * (r_com_FL(1)), Contact_Info_HS(2)*(r_com_FL(0)), 0, -Contact_Info_HS(3) * (r_com_FR(1)), Contact_Info_HS(3)*(r_com_FR(0)), 0;
+
+    tmp_A_BC = A_BC.transpose();
+
+    target_base_pos_rel = -(Contact_Info_HS(0) * target_EP_local_HS.segment(0, 3) + Contact_Info_HS(1) * target_EP_local_HS.segment(3, 3) + Contact_Info_HS(2) * target_EP_local_HS.segment(6, 3) + Contact_Info_HS(3) * target_EP_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    actual_base_pos_rel = -(Contact_Info_HS(0) * actual_EP_local_HS.segment(0, 3) + Contact_Info_HS(1) * actual_EP_local_HS.segment(3, 3) + Contact_Info_HS(2) * actual_EP_local_HS.segment(6, 3) + Contact_Info_HS(3) * actual_EP_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+
+    target_base_vel_rel = -(Contact_Info_HS(0) * target_EP_vel_local_HS.segment(0, 3) + Contact_Info_HS(1) * target_EP_vel_local_HS.segment(3, 3) + Contact_Info_HS(2) * target_EP_vel_local_HS.segment(6, 3) + Contact_Info_HS(3) * target_EP_vel_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+    actual_base_vel_rel = -(Contact_Info_HS(0) * actual_EP_vel_local_HS.segment(0, 3) + Contact_Info_HS(1) * actual_EP_vel_local_HS.segment(3, 3) + Contact_Info_HS(2) * actual_EP_vel_local_HS.segment(6, 3) + Contact_Info_HS(3) * actual_EP_vel_local_HS.segment(9, 3)) / (Contact_Info_HS(0) + Contact_Info_HS(1) + Contact_Info_HS(2) + Contact_Info_HS(3));
+
+    target_com_pos_rel = Get_COM_pos_HS2(target_base_pos_rel);
+    actual_com_pos_rel = Get_COM_pos_HS2(actual_base_pos_rel);
+
+    Err_com_pos = target_C_WB_PR_HS * (target_com_pos_rel - actual_com_pos_rel);
+    Err_com_vel = target_C_WB_PR_HS * (target_base_vel_rel - actual_base_vel_rel);
+
+    //target_plane_dist_HS = com_height_HS / cos(abs(target_base_ori_local_HS(1)));
+    target_plane_dist_HS = com_height_HS;
+
+    //actual_plane_dist_HS = actual_base_pos_HS(2) + offset_B2C(2) / cos(abs(actual_base_ori_local_HS(1)));
+    actual_plane_dist_HS = actual_base_pos_HS(2);
+
+    if (initial_flag_HS == true) {
+        pre_actual_plane_dist_HS = actual_plane_dist_HS;
+    }
+    actual_plane_dist_vel_HS = (actual_plane_dist_HS - pre_actual_plane_dist_HS) / dt;
+    pre_actual_plane_dist_HS = actual_plane_dist_HS;
+
+    b1 = Robot_mass * (semi_target_com_acc_HS_yaw(0)) + k_p_QP(0) * Err_com_pos(0) + k_d_QP(0) * Err_com_vel(0);
+    b2 = Robot_mass * (semi_target_com_acc_HS_yaw(1)) + k_p_QP(1) * Err_com_pos(1) + k_d_QP(1) * Err_com_vel(1);
+    b3 = Robot_mass * (semi_target_com_acc_HS_yaw(2)) + k_p_QP(2)*(target_plane_dist_HS - actual_plane_dist_HS) + k_d_QP(2)*(0.0 - actual_plane_dist_vel_HS) + Robot_Weight;
+
+    b4 = k_p_QP(3)*(target_base_ori_local_HS(0) - actual_base_ori_local_HS(0)) + k_d_QP(3)*(target_base_ori_vel_local_HS(0) - actual_base_ori_vel_local_HS(0));
+    b5 = k_p_QP(4)*(target_base_ori_local_HS(1) - actual_base_ori_local_HS(1)) + k_d_QP(4)*(target_base_ori_vel_local_HS(1) - actual_base_ori_vel_local_HS(1));
+    b6 = k_d_QP(5)*(target_base_ori_vel_local_HS(2) - actual_base_ori_vel_local_HS(2));
+
+
+    b_BC << b1, b2, b3, b4, b5, b6;
+
+    _P = (tmp_A_BC * A_BC + alpha * W);
+    _q = -(tmp_A_BC * b_BC);
+
+    
+    // ===================== OSQP  ====================== //
+    int jj = 0;
+    int kk = 0;
+    int max_jj = 0;
+
+    for (unsigned int i = 0; i < P_nnz_HS; ++i) {
+        P_x_HS[i] = _P(jj, kk);
+        jj = jj + 1;
+
+        if (jj > max_jj) {
+            jj = 0;
+            kk = kk + 1;
+            max_jj = max_jj + 1;
+        }
+           //cout << "i = " << i << ", P_x = " << P_x[i] << endl;
+    }
+
+     // ===================== q ====================== //
+    for (unsigned int i = 0; i < n_HS; ++i) {
+        q_HS[i] = _q(i);
+     //   cout << "i = " << i << ", q_HS = " << q_HS[i] << endl;
+    }
+    
+    // ===================== A_x ====================== //
+    n_vec_HS = semi_w_n / sqrt(semi_w_n(0) * semi_w_n(0) + semi_w_n(1) * semi_w_n(1) + semi_w_n(2) * semi_w_n(2));
+    tmp_b << 0, 1, 0;
+    tmp_t << 1, 0, 0;
+
+    b_vec_HS = target_C_WB_PR_HS*tmp_b;
+    t_vec_HS = target_C_WB_PR_HS*tmp_t;
+    tmp_mu_HS = 1.0 / sqrt(2);
+
+    H_RL_HS << Contact_Info_HS(0) * n_vec_HS(0), Contact_Info_HS(0) * n_vec_HS(1), Contact_Info_HS(0) * n_vec_HS(2)\
+, Contact_Info_HS(0)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(0)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(0)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(0)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(0)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(0)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(0);
+
+    H_RR_HS << Contact_Info_HS(1) * n_vec_HS(0), Contact_Info_HS(1) * n_vec_HS(1), Contact_Info_HS(1) * n_vec_HS(2)\
+, Contact_Info_HS(1)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(1)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(1)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(1)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(1)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(1)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(1);
+
+    H_FL_HS << Contact_Info_HS(2) * n_vec_HS(0), Contact_Info_HS(2) * n_vec_HS(1), Contact_Info_HS(2) * n_vec_HS(2)\
+, Contact_Info_HS(2)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(2)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(2)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(2)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(2)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(2)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(2);
+
+    H_FR_HS << Contact_Info_HS(3) * n_vec_HS(0), Contact_Info_HS(3) * n_vec_HS(1), Contact_Info_HS(3) * n_vec_HS(2)\
+, Contact_Info_HS(3)*(-t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(-t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(-t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(3)*(t_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(t_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(t_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(3)*(-b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(-b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(-b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, Contact_Info_HS(3)*(b_vec_HS(0) + tmp_mu_HS * n_vec_HS(0)), Contact_Info_HS(3)*(b_vec_HS(1) + tmp_mu_HS * n_vec_HS(1)), Contact_Info_HS(3)*(b_vec_HS(2) + tmp_mu_HS * n_vec_HS(2))\
+, 0, 0, -Contact_Info_HS(3);
+    
+    jj = 0;
+    kk = 0;
+
+    for (unsigned int i = 0; i < A_nnz_HS; ++i) { //A_nnz_HS=72(18*4)
+        if (i <= 18) {
+            if (i <= 17) {
+                A_x_HS[i] = H_RL_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 18) {
+                A_x_HS[i] = -Contact_Info_HS(0);
+            }
+        } else if (i <= 37) {
+            if (i <= 36) {
+                A_x_HS[i] = H_RR_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 37) {
+                A_x_HS[i] = -Contact_Info_HS(1);
+            }   
+        } else if (i <= 56) {
+            if (i <= 55) {
+                A_x_HS[i] = H_FL_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 56) {
+                A_x_HS[i] = -Contact_Info_HS(2);
+            }   
+        } else {
+            if (i <= 74) {
+                A_x_HS[i] = H_FR_HS(jj, kk);
+                jj = jj + 1;
+                if (jj == 6) {
+                    jj = 0;
+                    kk = kk + 1;
+                }
+                if (kk == 3) {
+                    kk = 0;
+                    jj = 0;
+                }
+            }
+            if (i == 75) {
+                A_x_HS[i] = -Contact_Info_HS(3);
+            }
+        } 
+    }
+    
+     for (unsigned int i = 0; i < m_HS; ++i) {
+        if (i == 5 || i == 11 || i == 17 || i == 23) {
+            l_HS[i] = -Robot_Weight * 1.0;
+        } else if (i == 24) {
+            l_HS[i] = -Robot_Weight * 1.5;
+        } else {
+            l_HS[i] = 0.0;
+        }
+
+        if (i == 5 || i == 11 || i == 17 || i == 23) {
+            u_HS[i] = 0.0;
+        } else if (i == 24) {
+            //u_HS[i] = -Robot_Weight * 1.0;
+            u_HS[i] = -Robot_Weight * 0.8;
+        } else {
+            u_HS[i] = 1000;
+        }
+    }
+
+    osqp_update_P(work_HS, P_x_HS, OSQP_NULL, 78);
+    osqp_update_lin_cost(work_HS, q_HS);
+    osqp_update_A(work_HS, A_x_HS, OSQP_NULL, 76);
+    osqp_update_bounds(work_HS, l_HS, u_HS);
+
+    // Solve updated problem
+    osqp_solve(work_HS);
+
+    for (unsigned int i = 0; i < n_HS; ++i) {
+
+        semi_F_QP_global_yaw(i) = work_HS->solution->x[i];
+    }
+
+    F_QP_local = target_C_WB_PR_12d_HS.transpose() * semi_F_QP_global_yaw;
+    cout<<"osqp="<<semi_F_QP_global_yaw.transpose()<<endl;
+    cout << "Fz=" << semi_F_QP_global_yaw(2) + semi_F_QP_global_yaw(5) + semi_F_QP_global_yaw(8) + semi_F_QP_global_yaw(11) << endl;
+    OSQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
+}

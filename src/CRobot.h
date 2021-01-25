@@ -1336,6 +1336,7 @@ public:
     
     MatrixNd actual_C_WB_P_HS = MatrixNd::Zero(3, 3);
     MatrixNd actual_C_WB_R_HS = MatrixNd::Zero(3, 3);
+    MatrixNd actual_C_WB_PR_HS = MatrixNd::Zero(3, 3);
     MatrixNd actual_C_WB_YPR_HS = MatrixNd::Zero(3, 3);
     
 //    VectorNd pre_init_base_ori_HS = VectorNd::Zero(3);
@@ -1519,6 +1520,8 @@ public:
     VectorNd actual_base_pos_HS=VectorNd::Zero(3);
     VectorNd target_base_vel_HS=VectorNd::Zero(3);
     VectorNd actual_base_vel_HS = VectorNd::Zero(3);
+    VectorNd actual_base_acc_local_HS = VectorNd::Zero(3);
+    VectorNd actual_base_acc_HS = VectorNd::Zero(3);
     
     VectorNd target_base_pos_12d_HS = VectorNd::Zero(12);
     VectorNd actual_base_pos_12d_HS = VectorNd::Zero(12);
@@ -1550,6 +1553,49 @@ public:
     void Break_leg(void);
     bool Early_Contact_flag_HS=false;
     void Task_Space_Controller3(void);
+    VectorNd semi_w_n=VectorNd::Zero(3);
+    void QuadPP_SOLVE_TEST(void);
+    
+    VectorNd QUADPROGPP_Control_value_HS=VectorNd::Zero(19);
+    VectorNd x_saved = VectorNd::Zero(12);
+  
+        // Workspace structures
+    OSQPWorkspace *work_HS;
+    OSQPSettings *settings_HS = (OSQPSettings *) c_malloc(sizeof (OSQPSettings));
+    OSQPData *data_HS = (OSQPData *) c_malloc(sizeof (OSQPData));
+    
+    void set_osqp_HS(void);
+    void Get_Opt_F_HS3(void);
+    int num_HS = 0;
+       
+    c_int n_HS = 12; // number of variables
+    c_int m_HS = 25; // number of constraints 
+
+    c_int P_nnz_HS = 78;
+    c_float P_x_HS[78];
+    c_int P_i_HS[78];
+    c_int P_p_HS[13];  
+    c_float q_HS[12];
+    
+    MatrixNd _P_HS = MatrixNd::Zero(12, 12);
+    VectorNd _q_HS = VectorNd::Zero(12);
+
+    c_float A_x_HS[76]; // = [number of value] values
+    c_int A_nnz_HS = 76; //number of value
+    c_int A_i_HS[76]; // [number of value] row position of value
+    c_int A_p_HS[13]; //[colum number + 1] cumulative number of value
+    c_float l_HS[25]; // [number of lower constraints] lower constraints;
+    c_float u_HS[25]; // [number of upper constraints] lower constraints;
+    
+    VectorNd n_vec_HS = VectorNd::Zero(3);
+    VectorNd b_vec_HS = VectorNd::Zero(3);
+    VectorNd t_vec_HS = VectorNd::Zero(3);
+    
+    MatrixNd H_RL_HS=MatrixNd::Zero(6, 3);
+    MatrixNd H_RR_HS=MatrixNd::Zero(6, 3);
+    MatrixNd H_FL_HS=MatrixNd::Zero(6, 3);
+    MatrixNd H_FR_HS=MatrixNd::Zero(6, 3);
+   
 private:
 };
 

@@ -387,7 +387,9 @@ void gazebo::PongBotQ_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_
     //************************Time Setting*********************************//
     this->last_update_time = this->model->GetWorld()->GetSimTime();
     this->update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&PongBotQ_plugin::UpdateAlgorithm, this));
-
+    std::cout<<"Test Start"<<std::endl;
+    PongBotQ.set_osqp_HS();
+    std::cout<<"Test End"<<std::endl;
 }
 
 void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
@@ -1018,7 +1020,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
             PongBotQ.Kd_q[6] = 1000;
             PongBotQ.StateUpdate();
             PongBotQ.Global_Transform_Z_HS();
-
+            PongBotQ.Slope_Controller3();
             if (PongBotQ.WalkReady_flag_HS == true) {
                 PongBotQ.WalkReady_Pos_Traj_HS();
                 
@@ -1412,10 +1414,13 @@ void gazebo::PongBotQ_plugin::IMUSensorRead()
     PongBotQ.IMUPitch = pose.rot.GetPitch(); //PongBotQ.IMUPitch + PongBotQ.IMUPitch_dot*dt;
     PongBotQ.IMUYaw = pose.rot.GetYaw(); //PongBotQ.IMUYaw + PongBotQ.IMUYaw_dot*dt;
     
-    PongBotQ.linear_acc_x =-(this->IMU->LinearAcceleration(false)[0]);
-    PongBotQ.linear_acc_y =-(this->IMU->LinearAcceleration(false)[1]);
+//    PongBotQ.linear_acc_x =-(this->IMU->LinearAcceleration(false)[0]);
+//    PongBotQ.linear_acc_y =-(this->IMU->LinearAcceleration(false)[1]);
+    PongBotQ.linear_acc_x =(this->IMU->LinearAcceleration(false)[0]);
+    PongBotQ.linear_acc_y =(this->IMU->LinearAcceleration(false)[1]);
     PongBotQ.linear_acc_z =(this->IMU->LinearAcceleration(false)[2]);
     
+    PongBotQ.actual_base_acc_local_HS << PongBotQ.linear_acc_x, PongBotQ.linear_acc_y, PongBotQ.linear_acc_z;
 //    cout << endl << "============================= " << endl;
 //    cout << "[IMU] Pitch = " << PongBotQ.IMUPitch*R2D << endl;
 //    cout << "[IMU] Pitch dot = " << PongBotQ.IMURoll_dot*R2D << endl;
@@ -1627,8 +1632,8 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
     //********************* DH : Data plot ***************************//
 
     PongBotQ.tmp_data1[0] = PongBotQ.measure_z;
-    PongBotQ.tmp_data1[1] = PongBotQ.x_hat(0);
-    PongBotQ.tmp_data1[2] = Base_height;
+    PongBotQ.tmp_data1[1] = PongBotQ.measure_z;
+    PongBotQ.tmp_data1[2] = PongBotQ.actual_base_pos_HS(2);
     PongBotQ.tmp_data1[3] = PongBotQ.base_hold_flag;
     PongBotQ.tmp_data1[4] = PongBotQ.Plane_Angle(0)*R2D;
     
