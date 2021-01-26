@@ -146,6 +146,11 @@ namespace gazebo
         double Base_height=0.0;
         gazebo::math::Pose Base_pose;
         
+        gazebo::math::Pose RL_TIP_pose;
+        gazebo::math::Pose RR_TIP_pose;
+        gazebo::math::Pose FL_TIP_pose;
+        gazebo::math::Pose FR_TIP_pose;
+        
         //rqt telecommunication
         ros::NodeHandle n;
 
@@ -1033,6 +1038,18 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
 
             Base_pose=this->model->GetWorldPose();
             Base_height=Base_pose.pos.z;
+            
+            RL_TIP_pose=this->RL_TIP->GetWorldPose();
+            RR_TIP_pose=this->RR_TIP->GetWorldPose();
+            FL_TIP_pose=this->FL_TIP->GetWorldPose();
+            FR_TIP_pose=this->FR_TIP->GetWorldPose();
+            
+            cout << "Base's (x,y,z)=" << Base_pose.pos.x << "," << Base_pose.pos.y << "," << Base_pose.pos.z << endl;
+            cout << "RL's (x,y,z)=" << RL_TIP_pose.pos.x << "," << RL_TIP_pose.pos.y << "," << RL_TIP_pose.pos.z << endl;
+            cout << "RR's (x,y,z)=" << RR_TIP_pose.pos.x << "," << RR_TIP_pose.pos.y << "," << RR_TIP_pose.pos.z << endl;
+            cout << "FL's (x,y,z)=" << FL_TIP_pose.pos.x << "," << FL_TIP_pose.pos.y << "," << FL_TIP_pose.pos.z << endl;
+            cout << "FR's (x,y,z)=" << FR_TIP_pose.pos.x << "," << FR_TIP_pose.pos.y << "," << FR_TIP_pose.pos.z << endl;
+            cout<<"--------"<<endl;
             //Base_height=this->FRONT_BODY->GetWorldCoGPose().pos.z;
 //            std::cout<<Base_height<<std::endl;
 //            std::cout<<"--------"<<std::endl;
@@ -1631,16 +1648,16 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
 {
     //********************* DH : Data plot ***************************//
 
-    PongBotQ.tmp_data1[0] = PongBotQ.measure_z;
+    PongBotQ.tmp_data1[0] = Base_height;
     PongBotQ.tmp_data1[1] = PongBotQ.measure_z;
     PongBotQ.tmp_data1[2] = PongBotQ.actual_base_pos_HS(2);
     PongBotQ.tmp_data1[3] = PongBotQ.base_hold_flag;
     PongBotQ.tmp_data1[4] = PongBotQ.Plane_Angle(0)*R2D;
     
-    PongBotQ.tmp_data1[5] = PongBotQ.target_plane_dist_HS;
-    PongBotQ.tmp_data1[6] = PongBotQ.actual_plane_dist_HS;
-    PongBotQ.tmp_data1[7] = PongBotQ.actual_plane_dist_vel_HS;
-    PongBotQ.tmp_data1[8] = PongBotQ.initial_flag_HS;
+    PongBotQ.tmp_data1[5] = -PongBotQ.Contact_Info_HS(0) * PongBotQ.actual_EP_local_HS(2) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
+    PongBotQ.tmp_data1[6] = -PongBotQ.Contact_Info_HS(1) * PongBotQ.actual_EP_local_HS(5) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
+    PongBotQ.tmp_data1[7] = -PongBotQ.Contact_Info_HS(2) * PongBotQ.actual_EP_local_HS(8) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
+    PongBotQ.tmp_data1[8] = -PongBotQ.Contact_Info_HS(3) * PongBotQ.actual_EP_local_HS(11) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
     
 //    PongBotQ.tmp_data1[8] = PongBotQ.Task_Control_value_HS(9);
 //    PongBotQ.tmp_data1[9] = PongBotQ.Task_Control_value_HS(12);

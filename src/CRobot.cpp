@@ -7945,8 +7945,8 @@ void CRobot::Get_Opt_F_HS2(void) {
 
     F_QP_local = target_C_WB_PR_12d_HS.transpose() * semi_F_QP_global_yaw;
     OSQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
-    cout<<"osqp="<<semi_F_QP_global_yaw.transpose()<<endl;
-    cout << "Fz=" << semi_F_QP_global_yaw(2) + semi_F_QP_global_yaw(5) + semi_F_QP_global_yaw(8) + semi_F_QP_global_yaw(11) << endl;
+    //cout<<"osqp="<<semi_F_QP_global_yaw.transpose()<<endl;
+   // cout << "Fz=" << semi_F_QP_global_yaw(2) + semi_F_QP_global_yaw(5) + semi_F_QP_global_yaw(8) + semi_F_QP_global_yaw(11) << endl;
 }
 
 void CRobot::TF_Global2Semi(void) {
@@ -8078,8 +8078,8 @@ void CRobot::Angle_Estimation2(void) {
 
         Angle_vec_semi_global = semi_w_n.segment(0, 2) / sqrt(pow(semi_w_n(0), 2) + pow(semi_w_n(1), 2)) * estimated_angle_size;
         Plane_Angle << Angle_vec_semi_global(1), Angle_vec_semi_global(0);
-        cout<<"Roll="<<Angle_vec_semi_global(1)*R2D<<endl;
-        cout<<"Pitch="<<Angle_vec_semi_global(0)*R2D<<endl;
+        //cout<<"Roll="<<Angle_vec_semi_global(1)*R2D<<endl;
+        //cout<<"Pitch="<<Angle_vec_semi_global(0)*R2D<<endl;
     } else {
         slope_traj_gen_flag_HS = true;
     }
@@ -9222,7 +9222,7 @@ void CRobot::Get_Opt_F_HS3(void) {
     }
 
     F_QP_local = target_C_WB_PR_12d_HS.transpose() * semi_F_QP_global_yaw;
-    cout<<"osqp="<<semi_F_QP_global_yaw.transpose()<<endl;
-    cout << "Fz=" << semi_F_QP_global_yaw(2) + semi_F_QP_global_yaw(5) + semi_F_QP_global_yaw(8) + semi_F_QP_global_yaw(11) << endl;
+    //cout<<"osqp="<<semi_F_QP_global_yaw.transpose()<<endl;
+    //cout << "Fz=" << semi_F_QP_global_yaw(2) + semi_F_QP_global_yaw(5) + semi_F_QP_global_yaw(8) + semi_F_QP_global_yaw(11) << endl;
     OSQP_Control_value_HS << 0, 0, 0, 0, 0, 0, 0, F_QP_local;
 }
