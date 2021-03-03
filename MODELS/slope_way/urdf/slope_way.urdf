@@ -1,0 +1,43 @@
+<robot
+  name="slope_way">
+  <link
+    name="slope_way">
+    <inertial>
+      <origin
+        xyz="2 -0.5 0.045343"
+        rpy="0 0 0" />
+      <mass
+        value="40.353" />
+      <inertia
+        ixx="3.50199774244881"
+        ixy="2.23740097125781E-15"
+        ixz="-1.23091675709661E-15"
+        iyy="53.6780305335118"
+        iyz="3.05351874670857E-16"
+        izz="56.9014930917464" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slope_way/meshes/slope_way.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slope_way/meshes/slope_way.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

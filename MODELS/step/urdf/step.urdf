@@ -1,0 +1,43 @@
+<robot
+  name="step">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="8.5765E-07 1.3462 1.201"
+        rpy="0 0 0" />
+      <mass
+        value="139.19" />
+      <inertia
+        ixx="146.51"
+        ixy="-0.00049578"
+        ixz="0.0003904"
+        iyy="69.747"
+        iyz="61.858"
+        izz="105.43" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://step/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://step/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

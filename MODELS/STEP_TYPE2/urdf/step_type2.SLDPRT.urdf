@@ -1,0 +1,43 @@
+<robot
+  name="step_type2.SLDPRT">
+  <link
+    name="STEP_TYPE2">
+    <inertial>
+      <origin
+        xyz="1.86 -0.5 0.26139"
+        rpy="0 0 0" />
+      <mass
+        value="1677" />
+      <inertia
+        ixx="187.559962731067"
+        ixy="-1.43295098009592E-15"
+        ixz="3.13506582329139E-13"
+        iyy="1306.94348773107"
+        iyz="3.35896430364716E-15"
+        izz="1398.883525" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh
+          filename="package://STEP_TYPE2/meshes/STEP_TYPE2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh
+          filename="package://STEP_TYPE2/meshes/STEP_TYPE2.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

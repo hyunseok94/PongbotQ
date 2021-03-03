@@ -434,7 +434,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
 
     //* Read Sensors
     IMUSensorRead();
-//    FTSensorRead();
+    FTSensorRead();
     EncoderRead();
 
 
@@ -835,7 +835,7 @@ void gazebo::PongBotQ_plugin::UpdateAlgorithm(void)
 
     case PRONK_JUMP:
         //        printf("===========================================\n");
-        //        PongBotQ.Pronk_Jump();
+       // PongBotQ.Pronk_Jump();
         PongBotQ.StateUpdate();
         if(PongBotQ.move_cnt == 0){
 //            PongBotQ.moving_done_flag = false;
@@ -1199,7 +1199,20 @@ void gazebo::PongBotQ_plugin::Callback6(const sensor_msgs::Joy::ConstPtr &msg) {
             PongBotQ.ControlMode = CTRLMODE_SLOW_WALK_HS;
             PongBotQ.move_stop_flag = false;
         }
-    } else {
+    }else if(msg->buttons[2] == true){
+        // ========= [Pronk] ========== //
+        if (PongBotQ.moving_done_flag == true) {
+            PongBotQ.ControlMode = CTRLMODE_PRONK_JUMP;
+            PongBotQ.move_stop_flag = false;
+        }
+    } else if (msg->buttons[0] == true) {
+        // ========= [Pronk] ========== //
+        if (PongBotQ.moving_done_flag == true) {
+            PongBotQ.ControlMode = CTRLMODE_WALK_READY;
+            PongBotQ.move_stop_flag = false;
+        }
+    }
+    else {
         PongBotQ.ControlMode = 0;
     }
 
@@ -1648,61 +1661,85 @@ void gazebo::PongBotQ_plugin::ROSMsgPublish1()
 {
     //********************* DH : Data plot ***************************//
 
-    PongBotQ.tmp_data1[0] = Base_height;
-    PongBotQ.tmp_data1[1] = PongBotQ.measure_z;
-    PongBotQ.tmp_data1[2] = PongBotQ.actual_base_pos_HS(2);
-    PongBotQ.tmp_data1[3] = PongBotQ.base_hold_flag;
-    PongBotQ.tmp_data1[4] = PongBotQ.Plane_Angle(0)*R2D;
+    PongBotQ.tmp_data1[0] = PongBotQ.RL.ftSensor.Fx;
+    PongBotQ.tmp_data1[1] = PongBotQ.RL.ftSensor.Fy;
+    PongBotQ.tmp_data1[2] = PongBotQ.RL.ftSensor.Fz;
+    PongBotQ.tmp_data1[3] = PongBotQ.actual_pos[0];
+    PongBotQ.tmp_data1[4] = PongBotQ.actual_pos[1];
+    PongBotQ.tmp_data1[5] = PongBotQ.actual_pos[2];
     
-    PongBotQ.tmp_data1[5] = -PongBotQ.Contact_Info_HS(0) * PongBotQ.actual_EP_local_HS(2) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
-    PongBotQ.tmp_data1[6] = -PongBotQ.Contact_Info_HS(1) * PongBotQ.actual_EP_local_HS(5) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
-    PongBotQ.tmp_data1[7] = -PongBotQ.Contact_Info_HS(2) * PongBotQ.actual_EP_local_HS(8) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
-    PongBotQ.tmp_data1[8] = -PongBotQ.Contact_Info_HS(3) * PongBotQ.actual_EP_local_HS(11) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
+    PongBotQ.tmp_data1[6] = PongBotQ.RR.ftSensor.Fx;
+    PongBotQ.tmp_data1[7] = PongBotQ.RR.ftSensor.Fy;
+    PongBotQ.tmp_data1[8] = PongBotQ.RR.ftSensor.Fz;
+    PongBotQ.tmp_data1[9] = PongBotQ.actual_pos[3];
+    PongBotQ.tmp_data1[10] = PongBotQ.actual_pos[4];
+    PongBotQ.tmp_data1[11] = PongBotQ.actual_pos[5];
     
-//    PongBotQ.tmp_data1[8] = PongBotQ.Task_Control_value_HS(9);
-//    PongBotQ.tmp_data1[9] = PongBotQ.Task_Control_value_HS(12);
-//    PongBotQ.tmp_data1[10] = PongBotQ.Task_Control_value_HS[15];
-//    PongBotQ.tmp_data1[11] = PongBotQ.Task_Control_value_HS(18);
+    PongBotQ.tmp_data1[12] = PongBotQ.FL.ftSensor.Fx;
+    PongBotQ.tmp_data1[13] = PongBotQ.FL.ftSensor.Fy;
+    PongBotQ.tmp_data1[14] = PongBotQ.FL.ftSensor.Fz;
+    PongBotQ.tmp_data1[15] = PongBotQ.actual_pos[7];
+    PongBotQ.tmp_data1[16] = PongBotQ.actual_pos[8];
+    PongBotQ.tmp_data1[17] = PongBotQ.actual_pos[9];
     
-    //PongBotQ.tmp_data1[8] = PongBotQ.target_plane_dist_HS;
-    PongBotQ.tmp_data1[9] = PongBotQ.target_base_ori_local_HS(0)*R2D;
-    PongBotQ.tmp_data1[10] = PongBotQ.target_base_ori_local_HS(1)*R2D;
-    PongBotQ.tmp_data1[11] = PongBotQ.target_yaw_HS*R2D;
-//
-//    PongBotQ.tmp_data1[12] = PongBotQ.semi_F_QP_global_yaw(0);
-//    PongBotQ.tmp_data1[13] = PongBotQ.semi_F_QP_global_yaw(3);
-//    PongBotQ.tmp_data1[14] = PongBotQ.semi_F_QP_global_yaw[6];
-//    PongBotQ.tmp_data1[15] = PongBotQ.semi_F_QP_global_yaw(9);
-
-//    PongBotQ.tmp_data1[16] = PongBotQ.semi_F_QP_global_yaw[1];
-//    PongBotQ.tmp_data1[17] = PongBotQ.semi_F_QP_global_yaw[4];
-//    PongBotQ.tmp_data1[18] = PongBotQ.semi_F_QP_global_yaw[7];
-//    PongBotQ.tmp_data1[19] = PongBotQ.semi_F_QP_global_yaw[10];
-    PongBotQ.tmp_data1[12] = PongBotQ.actual_EP_HS[2];
-    PongBotQ.tmp_data1[13] = PongBotQ.actual_EP_HS[5];
-    PongBotQ.tmp_data1[14] = PongBotQ.actual_EP_HS[8];
-    PongBotQ.tmp_data1[15] = PongBotQ.actual_EP_HS[11];
+    PongBotQ.tmp_data1[18] = PongBotQ.FR.ftSensor.Fx;
+    PongBotQ.tmp_data1[19] = PongBotQ.FR.ftSensor.Fy;
+    PongBotQ.tmp_data1[20] = PongBotQ.FR.ftSensor.Fz;
+    PongBotQ.tmp_data1[21] = PongBotQ.actual_pos[10];
+    PongBotQ.tmp_data1[22] = PongBotQ.actual_pos[11];
+    PongBotQ.tmp_data1[23] = PongBotQ.actual_pos[12];
     
-    PongBotQ.tmp_data1[16] = PongBotQ.target_EP_HS[2];
-    PongBotQ.tmp_data1[17] = PongBotQ.target_EP_HS[5];
-    PongBotQ.tmp_data1[18] = PongBotQ.target_EP_HS[8];
-    PongBotQ.tmp_data1[19] = PongBotQ.target_EP_HS[11];
-    
-    
-//    PongBotQ.tmp_data1[20] = PongBotQ.semi_F_QP_global_yaw[2];
-//    PongBotQ.tmp_data1[21] = PongBotQ.semi_F_QP_global_yaw[5];
-//    PongBotQ.tmp_data1[22] = PongBotQ.semi_F_QP_global_yaw[8];
-//    PongBotQ.tmp_data1[23] = PongBotQ.semi_F_QP_global_yaw[11];
-    PongBotQ.tmp_data1[20] = PongBotQ.actual_EP_vel_HS[2];
-    PongBotQ.tmp_data1[21] = PongBotQ.actual_EP_vel_HS[5];
-    PongBotQ.tmp_data1[22] = PongBotQ.actual_EP_vel_HS[8];
-    PongBotQ.tmp_data1[23] = PongBotQ.actual_EP_vel_HS[11];
-    
-    PongBotQ.tmp_data1[24] = PongBotQ.target_EP_vel_HS(2);
-    PongBotQ.tmp_data1[25] = PongBotQ.target_EP_vel_HS(5);
-    PongBotQ.tmp_data1[26] = PongBotQ.target_EP_vel_HS(8);
-    PongBotQ.tmp_data1[27] = PongBotQ.target_EP_vel_HS(11);
-    PongBotQ.tmp_data1[28] = PongBotQ.Early_Contact_flag_HS;
+    PongBotQ.tmp_data1[24] = PongBotQ.jump_num;
+//    
+    //    PongBotQ.tmp_data1[6] = PongBotQ.pr_cnt * PongBotQ.dt;
+    //    
+    //    PongBotQ.tmp_data1[7] = -PongBotQ.Contact_Info_HS(2) * PongBotQ.actual_EP_local_HS(8) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
+    //    PongBotQ.tmp_data1[8] = -PongBotQ.Contact_Info_HS(3) * PongBotQ.actual_EP_local_HS(11) / cos(abs(PongBotQ.actual_base_ori_local_HS(1)));
+    //    
+    ////    PongBotQ.tmp_data1[8] = PongBotQ.Task_Control_value_HS(9);
+    ////    PongBotQ.tmp_data1[9] = PongBotQ.Task_Control_value_HS(12);
+    ////    PongBotQ.tmp_data1[10] = PongBotQ.Task_Control_value_HS[15];
+    ////    PongBotQ.tmp_data1[11] = PongBotQ.Task_Control_value_HS(18);
+    //    
+    //    //PongBotQ.tmp_data1[8] = PongBotQ.target_plane_dist_HS;
+    //    PongBotQ.tmp_data1[9] = PongBotQ.target_base_ori_local_HS(0)*R2D;
+    //    PongBotQ.tmp_data1[10] = PongBotQ.target_base_ori_local_HS(1)*R2D;
+    //    PongBotQ.tmp_data1[11] = PongBotQ.target_yaw_HS*R2D;
+    ////
+    ////    PongBotQ.tmp_data1[12] = PongBotQ.semi_F_QP_global_yaw(0);
+    ////    PongBotQ.tmp_data1[13] = PongBotQ.semi_F_QP_global_yaw(3);
+    ////    PongBotQ.tmp_data1[14] = PongBotQ.semi_F_QP_global_yaw[6];
+    ////    PongBotQ.tmp_data1[15] = PongBotQ.semi_F_QP_global_yaw(9);
+    //
+    ////    PongBotQ.tmp_data1[16] = PongBotQ.semi_F_QP_global_yaw[1];
+    ////    PongBotQ.tmp_data1[17] = PongBotQ.semi_F_QP_global_yaw[4];
+    ////    PongBotQ.tmp_data1[18] = PongBotQ.semi_F_QP_global_yaw[7];
+    ////    PongBotQ.tmp_data1[19] = PongBotQ.semi_F_QP_global_yaw[10];
+    //    PongBotQ.tmp_data1[12] = PongBotQ.actual_EP_HS[2];
+    //    PongBotQ.tmp_data1[13] = PongBotQ.actual_EP_HS[5];
+    //    PongBotQ.tmp_data1[14] = PongBotQ.actual_EP_HS[8];
+    //    PongBotQ.tmp_data1[15] = PongBotQ.actual_EP_HS[11];
+    //    
+    //    PongBotQ.tmp_data1[16] = PongBotQ.target_EP_HS[2];
+    //    PongBotQ.tmp_data1[17] = PongBotQ.target_EP_HS[5];
+    //    PongBotQ.tmp_data1[18] = PongBotQ.target_EP_HS[8];
+    //    PongBotQ.tmp_data1[19] = PongBotQ.target_EP_HS[11];
+    //    
+    //    
+    ////    PongBotQ.tmp_data1[20] = PongBotQ.semi_F_QP_global_yaw[2];
+    ////    PongBotQ.tmp_data1[21] = PongBotQ.semi_F_QP_global_yaw[5];
+    ////    PongBotQ.tmp_data1[22] = PongBotQ.semi_F_QP_global_yaw[8];
+    ////    PongBotQ.tmp_data1[23] = PongBotQ.semi_F_QP_global_yaw[11];
+    //    PongBotQ.tmp_data1[20] = PongBotQ.actual_EP_vel_HS[2];
+    //    PongBotQ.tmp_data1[21] = PongBotQ.actual_EP_vel_HS[5];
+    //    PongBotQ.tmp_data1[22] = PongBotQ.actual_EP_vel_HS[8];
+    //    PongBotQ.tmp_data1[23] = PongBotQ.actual_EP_vel_HS[11];
+    //    
+    //    PongBotQ.tmp_data1[24] = PongBotQ.target_EP_vel_HS(2);
+    //    PongBotQ.tmp_data1[25] = PongBotQ.target_EP_vel_HS(5);
+    //    PongBotQ.tmp_data1[26] = PongBotQ.target_EP_vel_HS(8);
+    //    PongBotQ.tmp_data1[27] = PongBotQ.target_EP_vel_HS(11);
+    //    PongBotQ.tmp_data1[28] = PongBotQ.Early_Contact_flag_HS;
     
 //    for (unsigned int i = 0; i < 80; ++i) {
     for (unsigned int i = 0; i < 30; ++i) {

@@ -1,0 +1,155 @@
+<robot
+  name="segway_KHS">
+  <link
+    name="body">
+    <inertial>
+      <origin
+        xyz="0.0044417 0.0037232 0.1937"
+        rpy="0 0 0" />
+      <mass
+        value="42.3" />
+      <inertia
+        ixx="4.4396"
+        ixy="-0.016922"
+        ixz="0.030132"
+        iyy="4.1418"
+        iyz="0.031966"
+        izz="0.68573" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://segway_KHS/meshes/body.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://segway_KHS/meshes/body.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="right_wheel">
+    <inertial>
+      <origin
+        xyz="1.7386E-10 -2.952E-06 -8.7126E-11"
+        rpy="0 0 0" />
+      <mass
+        value="3.7" />
+      <inertia
+        ixx="0.010817"
+        ixy="5.3421E-12"
+        ixz="-1.0432E-12"
+        iyy="0.021479"
+        iyz="-3.7794E-12"
+        izz="0.010817" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://segway_KHS/meshes/right_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.69804 0.69804 0.69804 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://segway_KHS/meshes/right_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_wheel_joint"
+    type="revolute">
+    <origin
+      xyz="0 -0.28582 0"
+      rpy="1.622E-33 0 0" />
+    <parent
+      link="body" />
+    <child
+      link="right_wheel" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="left_wheel">
+    <inertial>
+      <origin
+        xyz="-1.7703E-10 2.952E-06 -8.0486E-11"
+        rpy="0 0 0" />
+      <mass
+        value="3.7" />
+      <inertia
+        ixx="0.010817"
+        ixy="5.4814E-12"
+        ixz="1.0194E-12"
+        iyy="0.021479"
+        iyz="3.5746E-12"
+        izz="0.010817" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://segway_KHS/meshes/left_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.69804 0.69804 0.69804 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://segway_KHS/meshes/left_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_wheel_joint"
+    type="revolute">
+    <origin
+      xyz="0 0.28582 0"
+      rpy="1.622E-33 0 0" />
+    <parent
+      link="body" />
+    <child
+      link="left_wheel" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>

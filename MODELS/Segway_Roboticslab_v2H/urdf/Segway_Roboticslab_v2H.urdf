@@ -1,0 +1,155 @@
+<robot
+  name="Segway_Roboticslab_v2H">
+  <link
+    name="KUDOS_body">
+    <inertial>
+      <origin
+        xyz="0 0 0.14"
+        rpy="0 0 0" />
+      <mass
+        value="37.65" />
+      <inertia
+        ixx="4.97"
+        ixy="0.04"
+        ixz="-0.01"
+        iyy="4.64"
+        iyz="-0.02"
+        izz="0.82" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Segway_Roboticslab_v2H/meshes/KUDOS_body.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.77647 0.75686 0.73725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Segway_Roboticslab_v2H/meshes/KUDOS_body.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="KUDOS_wheel1">
+    <inertial>
+      <origin
+        xyz="0 0.011823 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.84888" />
+      <inertia
+        ixx="0.010817"
+        ixy="0"
+        ixz="0"
+        iyy="0.021479"
+        iyz="0"
+        izz="0.010817" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Segway_Roboticslab_v2H/meshes/KUDOS_wheel1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.69804 0.69804 0.69804 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Segway_Roboticslab_v2H/meshes/KUDOS_wheel1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="KUDOS_wheel1shaft"
+    type="continuous">
+    <origin
+      xyz="0 0.274 0"
+      rpy="3.1416 1.4851 3.1416" />
+    <parent
+      link="KUDOS_body" />
+    <child
+      link="KUDOS_wheel1" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      effort="1000"
+      velocity="0" />
+  </joint>
+  <link
+    name="KUDOS_wheel2">
+    <inertial>
+      <origin
+        xyz="0 0.011823 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.84888" />
+      <inertia
+        ixx="0.010817"
+        ixy="0"
+        ixz="0"
+        iyy="0.021479"
+        iyz="0"
+        izz="0.010817" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Segway_Roboticslab_v2H/meshes/KUDOS_wheel2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.69804 0.69804 0.69804 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Segway_Roboticslab_v2H/meshes/KUDOS_wheel2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="KUDOS_wheel2shaft"
+    type="continuous">
+    <origin
+      xyz="0 -0.274 0"
+      rpy="1.8287E-27 1.4851 -3.1416" />
+    <parent
+      link="KUDOS_body" />
+    <child
+      link="KUDOS_wheel2" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      effort="1000"
+      velocity="0" />
+  </joint>
+</robot>

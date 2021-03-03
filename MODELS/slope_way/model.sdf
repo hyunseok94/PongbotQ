@@ -1,0 +1,43 @@
+<sdf version='1.6'>
+  <model name='slope_way'>
+
+    <joint name="fixed to ground" type="fixed">
+      <parent>world</parent>
+      <child>slope_way</child>
+    </joint>
+
+    <link name='slope_way'>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>2 -0.5 0.045343 0 -0 0</pose>
+        <mass>40.353</mass>
+        <inertia>
+          <ixx>3.502</ixx>
+          <ixy>2.2374e-15</ixy>
+          <ixz>-1.23092e-15</ixz>
+          <iyy>53.678</iyy>
+          <iyz>3.05352e-16</iyz>
+          <izz>56.9015</izz>
+        </inertia>
+      </inertial>
+      <collision name='slope_way_collision'>
+        <pose frame=''>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://slope_way/meshes/slope_way.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='slope_way_visual'>
+        <pose frame=''>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://slope_way/meshes/slope_way.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

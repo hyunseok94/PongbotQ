@@ -1,0 +1,202 @@
+<sdf version='1.6'>
+  <model name='PONGBOT_LEG'>
+    <link name='thigh'>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0 -0.0162 -0.0264 0 -0 0</pose>
+        <mass>1.8748</mass>
+        <inertia>
+          <ixx>0.0112</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0117</iyy>
+          <iyz>-0.0008</iyz>
+          <izz>0.0017</izz>
+        </inertia>
+      </inertial>
+      <collision name='thigh_collision'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/thigh.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='thigh_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/thigh.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name='rotator1'>
+      <pose frame=''>0 0.02765 0 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0.0021 -0.0028 -0.0058 0 -0 0</pose>
+        <mass>0.072</mass>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0001</iyy>
+          <iyz>0</iyz>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <collision name='rotator1_collision'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/rotator1.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='rotator1_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/rotator1.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='rotator1_joint' type='revolute'>
+      <child>rotator1</child>
+      <parent>thigh</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-3.14</lower>
+          <upper>0</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='rotator2'>
+      <pose frame=''>0.017101 0.0345 -0.046985 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0 0 -0.1525 0 -0 0</pose>
+        <mass>0.2047</mass>
+        <inertia>
+          <ixx>0.0018</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0018</iyy>
+          <iyz>0</iyz>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <collision name='rotator2_collision'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/rotator2.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='rotator2_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/rotator2.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='rotator2_joint' type='revolute'>
+      <child>rotator2</child>
+      <parent>rotator1</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-3.14</lower>
+          <upper>3.14</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='rotator3'>
+      <pose frame=''>0.017101 0.0345 -0.351985 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0.0183 -0.0326 -0.0427 0 -0 0</pose>
+        <mass>0.402</mass>
+        <inertia>
+          <ixx>0.0052</ixx>
+          <ixy>0</ixy>
+          <ixz>0.0002</ixz>
+          <iyy>0.0051</iyy>
+          <iyz>0</iyz>
+          <izz>0.0002</izz>
+        </inertia>
+      </inertial>
+      <collision name='rotator3_collision'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/rotator3.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='rotator3_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://PONGBOT_LEG/meshes/rotator3.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='rotator3_joint' type='revolute'>
+      <child>rotator3</child>
+      <parent>rotator2</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-3.14</lower>
+          <upper>3.14</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <joint name='thigh_calf_joint' type='revolute'>
+      <child>rotator3</child>
+      <parent>thigh</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-3.14</lower>
+          <upper>3.14</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+      <pose frame=''>-0.0171 -0.0345 0.04698 0 -0 0</pose>
+    </joint>
+  </model>
+</sdf>

@@ -1,0 +1,361 @@
+<robot
+  name="SLAVE_ARM2">
+  <link
+    name="BASE">
+    <inertial>
+      <origin
+        xyz="0.29533 -0.048851 0.1022"
+        rpy="0 0 0" />
+      <mass
+        value="17.574" />
+      <inertia
+        ixx="0.46316"
+        ixy="-0.017348"
+        ixz="0"
+        iyy="0.78313"
+        iyz="0"
+        izz="0.97746" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/BASE.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/BASE.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="LINK1">
+    <inertial>
+      <origin
+        xyz="0.11039 -0.013719 0.018917"
+        rpy="0 0 0" />
+      <mass
+        value="10.337" />
+      <inertia
+        ixx="0.16943"
+        ixy="-0.014979"
+        ixz="0.0092941"
+        iyy="0.10174"
+        iyz="0"
+        izz="0.20482" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="LINK1_JOINT"
+    type="continuous">
+    <origin
+      xyz="0.608 -0.052 0.111"
+      rpy="0 0 0" />
+    <parent
+      link="BASE" />
+    <child
+      link="LINK1" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="LINK2">
+    <inertial>
+      <origin
+        xyz="0.38704 0.0012819 0.021917"
+        rpy="0 0 0" />
+      <mass
+        value="9.5413" />
+      <inertia
+        ixx="0.1866"
+        ixy="-0.016571"
+        ixz="0.023672"
+        iyy="0.52143"
+        iyz="0"
+        izz="0.64609" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="LINK2_JOINT"
+    type="continuous">
+    <origin
+      xyz="0.2 0 0.09"
+      rpy="0 0 0" />
+    <parent
+      link="LINK1" />
+    <child
+      link="LINK2" />
+    <axis
+      xyz="0 1 0" />
+  </joint>
+  <link
+    name="LINK3">
+    <inertial>
+      <origin
+        xyz="0.25126 0.0060177 0.030861"
+        rpy="0 0 0" />
+      <mass
+        value="4.6229" />
+      <inertia
+        ixx="0.064981"
+        ixy="0"
+        ixz="0"
+        iyy="0.1378"
+        iyz="0"
+        izz="0.18077" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="LINK3_JOINT"
+    type="continuous">
+    <origin
+      xyz="0.765 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="LINK2" />
+    <child
+      link="LINK3" />
+    <axis
+      xyz="0 1 0" />
+  </joint>
+  <link
+    name="LINK4">
+    <inertial>
+      <origin
+        xyz="0.096298 0.0059709 -0.013363"
+        rpy="0 0 0" />
+      <mass
+        value="6.0768" />
+      <inertia
+        ixx="0.032953"
+        ixy="-0.01246"
+        ixz="0"
+        iyy="0.1069"
+        iyz="0"
+        izz="0.11961" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="LINK4_JOINT"
+    type="continuous">
+    <origin
+      xyz="0.582 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="LINK3" />
+    <child
+      link="LINK4" />
+    <axis
+      xyz="0 1 0" />
+  </joint>
+  <link
+    name="LINK5">
+    <inertial>
+      <origin
+        xyz="0.15128 -0.0003963 0.0011881"
+        rpy="0 0 0" />
+      <mass
+        value="7.0927" />
+      <inertia
+        ixx="0.044594"
+        ixy="0.00072634"
+        ixz="0.0010377"
+        iyy="0.059768"
+        iyz="-0.00044615"
+        izz="0.05698" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK5.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="LINK5_JOINT"
+    type="continuous">
+    <origin
+      xyz="0.34 0 -0.01"
+      rpy="0 0 0" />
+    <parent
+      link="LINK4" />
+    <child
+      link="LINK5" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="LINK6">
+    <inertial>
+      <origin
+        xyz="0.11622 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="7.1931" />
+      <inertia
+        ixx="0.084239"
+        ixy="0"
+        ixz="0"
+        iyy="0.10785"
+        iyz="0"
+        izz="0.082741" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK6.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://SLAVE_ARM2/meshes/LINK6.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="LINK6_JOINT"
+    type="continuous">
+    <origin
+      xyz="0.29162 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="LINK5" />
+    <child
+      link="LINK6" />
+    <axis
+      xyz="1 0 0" />
+  </joint>
+</robot>

@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='segway_KHS'>
+    <link name='body'>
+      <!-- body 기준좌표계 위치와 방향-->
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertial>
+      <!-- body 무게중심 위치와 방향 -->
+        <pose frame=''>0 0 0.14385 0 -0 0</pose>
+        <mass>42.3</mass>
+        <inertia>
+          <!-- <ixx>4.4396</ixx> -->
+          <ixx>4.4396</ixx>
+          <ixy>-0</ixy>
+          <ixz>0</ixz>
+          <!-- <iyy>4.1418</iyy> -->
+          <iyy>4.1418</iyy>
+          <iyz>0</iyz>
+          <!-- <izz>0.68573</izz> -->
+          <izz>0.68573</izz>
+        </inertia>
+      </inertial>
+     <!--collision name='KUDOS_body_collision'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://Segway_Roboticslab_v2H/meshes/KUDOS_body.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>-->
+      <visual name='body_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://segway_KHS/meshes/body.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+     <sensor name='IMU' type='imu'>
+         <!-- imu 위치와 방향-->
+	<pose frame=''>0 0 0.14385 0 -0 0</pose>
+	  <imu>
+	    <angular_velocity>
+	      <x>
+	        <noise type='none'></noise>
+	      </x>
+	      <y>
+	        <noise type='none'></noise>
+	      </y>
+	      <z>
+	        <noise type='none'></noise>
+	      </z>
+            </angular_velocity>
+	    <linear_acceleration>
+	      <x>
+	        <noise type='none'></noise>
+	      </x>
+	      <y>
+	        <noise type="none"></noise>
+	      </y>
+	      <z>
+	        <noise type='none'></noise>
+	      </z>
+	    </linear_acceleration>
+	  </imu>
+	<always_on>1</always_on>
+	<update_rate>1000</update_rate>
+	<visualize>true</visualize>
+      </sensor>
+    </link>
+
+    <link name='left_wheel'>
+      <!-- left_wheel 좌표계 위치와 방향-->
+      <pose frame=''>0 0.28582 0 0 -0 0</pose>
+      <inertial>
+        <!-- left_wheel 무게중심 위치와 방향-->
+        <pose frame=''>-0 0 -0 0 -0 0</pose>
+        <mass>3.7</mass>
+        <inertia>
+          <ixx>0.010817</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.021479</iyy>
+          <iyz>0</iyz>
+          <izz>0.010817</izz>
+        </inertia>
+      </inertial>
+
+      <collision name='left_wheel_collision'>
+        <!-- left_wheel_collision 영역 위치와 방향-->
+        <pose frame=''>0 0 0.01 1.57 -0 0</pose>
+        <geometry>
+        <cylinder>
+           <radius> 0.1925 </radius>
+           <length> 0.034 </length>
+        </cylinder>
+          <!-- <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://segway_KHS/meshes/left_wheel.STL</uri>
+          </mesh> -->
+        </geometry>
+      </collision>
+
+      <visual name='left_wheel_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://segway_KHS/meshes/left_wheel.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name='left_wheel_joint' type='revolute'>
+      <child>left_wheel</child>
+      <parent>body</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='right_wheel'>
+      <!-- right_wheel 기준좌표 위치와 방향-->
+      <pose frame=''>0 -0.28582 0 0 -0 0</pose>
+      <inertial>
+        <!-- right_wheel 무게중심 위치와 방향-->
+        <pose frame=''>0 0 -0 0 -0 0</pose>
+        <mass>3.7</mass>
+        <inertia>
+          <ixx>0.010817</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.021479</iyy>
+          <iyz>0</iyz>
+          <izz>0.010817</izz>
+
+        </inertia>
+      </inertial>
+
+      <collision name='right_wheel_collision'>
+        <!-- right_wheel collision 영역 위치와 방향-->
+        <pose frame=''>0 0 0.01 1.57 -0 0</pose>
+        <geometry>
+        <cylinder>
+           <radius> 0.1925 </radius>
+           <length> 0.034 </length>
+        </cylinder>
+          <!-- <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://segway_KHS/meshes/right_wheel.STL</uri>
+          </mesh> -->
+        </geometry>
+      </collision>
+
+      <visual name='right_wheel_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://segway_KHS/meshes/right_wheel.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name='right_wheel_joint' type='revolute'>
+      <child>right_wheel</child>
+      <parent>body</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+<plugin name ="model_push" filename="libplugin.so"/>
+  </model>
+</sdf>

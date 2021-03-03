@@ -1,0 +1,41 @@
+<sdf version='1.6'>
+  <model name='STEP_TYPE3'>
+ <joint name="fixed to ground" type="fixed">
+      <parent>world</parent>
+      <child>STEP_TYPE3</child>
+    </joint>
+    <link name='STEP_TYPE3'>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0.49856 2.8411 0.10248 0 -0 0</pose>
+        <mass>1436.2</mass>
+        <inertia>
+          <ixx>11444.9</ixx>
+          <ixy>0.619773</ixy>
+          <ixz>-1.32447</ixz>
+          <iyy>437.578</iyy>
+          <iyz>469.155</iyz>
+          <izz>11249.8</izz>
+        </inertia>
+      </inertial>
+      <collision name='STEP_TYPE3_collision'>
+        <pose frame=''>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://STEP_TYPE3/meshes/STEP_TYPE3.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='STEP_TYPE3_visual'>
+        <pose frame=''>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://STEP_TYPE3/meshes/STEP_TYPE3.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

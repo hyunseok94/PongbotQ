@@ -1,0 +1,42 @@
+<sdf version='1.6'>
+  <model name='step'>
+ <joint name="fixed to ground" type="fixed">
+      <parent>world</parent>
+      <child>base_link</child>
+    </joint>
+
+    <link name='base_link'>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>1e-06 1.3462 1.201 0 -0 0</pose>
+        <mass>139.19</mass>
+        <inertia>
+          <ixx>146.51</ixx>
+          <ixy>-0.00049578</ixy>
+          <ixz>0.0003904</ixz>
+          <iyy>69.747</iyy>
+          <iyz>61.858</iyz>
+          <izz>105.43</izz>
+        </inertia>
+      </inertial>
+      <collision name='base_link_collision'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://step/meshes/base_link.STL</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='base_link_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://step/meshes/base_link.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

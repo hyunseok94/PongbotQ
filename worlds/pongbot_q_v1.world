@@ -68,11 +68,11 @@
        <pose frame=''> 2.0 0.5 0.65 0 0 -1.57075</pose>
      </include>-->
 
-   <include>
+   <!--include>
       <uri>model://SLOPE_GENERATOR</uri>
       <pose frame=''> 4.5 1.5 2.5 0 0 0</pose>
       <plugin name="plugin" filename="libslope_generator_pkgs.so"/>
-    </include>
+    </include-->
 
     <!--include>
       <uri>model://SLOPE_GENERATOR2</uri>

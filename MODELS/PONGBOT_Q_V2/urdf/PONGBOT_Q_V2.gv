@@ -1,0 +1,44 @@
+digraph G {
+node [shape=box];
+"REAR_BODY" [label="REAR_BODY"];
+"RL_HIP" [label="RL_HIP"];
+"RL_THIGH" [label="RL_THIGH"];
+"RL_CALF" [label="RL_CALF"];
+"RR_HIP" [label="RR_HIP"];
+"RR_THIGH" [label="RR_THIGH"];
+"RR_CALF" [label="RR_CALF"];
+"FRONT_BODY" [label="FRONT_BODY"];
+"FL_HIP" [label="FL_HIP"];
+"FL_THIGH" [label="FL_THIGH"];
+"FL_CALF" [label="FL_CALF"];
+"FR_HIP" [label="FR_HIP"];
+"FR_THIGH" [label="FR_THIGH"];
+"FR_CALF" [label="FR_CALF"];
+node [shape=ellipse, color=blue, fontcolor=blue];
+"REAR_BODY" -> "RL_HIP_JOINT" [label="xyz: 0 0.11502 -0.00031465 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"RL_HIP_JOINT" -> "RL_HIP"
+"RL_HIP" -> "RL_THIGH_JOINT" [label="xyz: 0 0.105 0.00028723 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"RL_THIGH_JOINT" -> "RL_THIGH"
+"RL_THIGH" -> "RL_CALF_JOINT" [label="xyz: 0 0.00083432 -0.305 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"RL_CALF_JOINT" -> "RL_CALF"
+"REAR_BODY" -> "RR_HIP_JOINT" [label="xyz: 0 -0.11502 -0.00031465 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"RR_HIP_JOINT" -> "RR_HIP"
+"RR_HIP" -> "RR_THIGH_JOINT" [label="xyz: 0 -0.105 -0.00028723 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"RR_THIGH_JOINT" -> "RR_THIGH"
+"RR_THIGH" -> "RR_CALF_JOINT" [label="xyz: 0 0.00083432 -0.305 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"RR_CALF_JOINT" -> "RR_CALF"
+"REAR_BODY" -> "WAIST_JOINT" [label="xyz: 0.35 0 0.035238 \nrpy: 9.8608e-32 -1.0675e-30 3.9443e-31"]
+"WAIST_JOINT" -> "FRONT_BODY"
+"FRONT_BODY" -> "FL_HIP_JOINT" [label="xyz: 0.35 0.11502 -0.03555 \nrpy: 0 -1.0675e-30 -3.9443e-31"]
+"FL_HIP_JOINT" -> "FL_HIP"
+"FL_HIP" -> "FL_THIGH_JOINT" [label="xyz: 0 0.105 0 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"FL_THIGH_JOINT" -> "FL_THIGH"
+"FL_THIGH" -> "FL_CALF_JOINT" [label="xyz: 0 0 -0.305 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"FL_CALF_JOINT" -> "FL_CALF"
+"FRONT_BODY" -> "FR_HIP_JOINT" [label="xyz: 0.35 -0.11502 -0.03555 \nrpy: 9.8608e-32 -1.0675e-30 -3.9443e-31"]
+"FR_HIP_JOINT" -> "FR_HIP"
+"FR_HIP" -> "FR_THIGH_JOINT" [label="xyz: 0 -0.105 0 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"FR_THIGH_JOINT" -> "FR_THIGH"
+"FR_THIGH" -> "FR_CALF_JOINT" [label="xyz: 0 0 -0.305 \nrpy: 9.8608e-32 -1.0675e-30 0"]
+"FR_CALF_JOINT" -> "FR_CALF"
+}
